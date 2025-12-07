@@ -1,0 +1,95 @@
+package com.sky.AgentCore.service.serviceImpl;
+
+import cn.hutool.core.bean.BeanUtil;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.sky.AgentCore.Exceptions.BusinessException;
+import com.sky.AgentCore.dto.login.LoginRequest;
+import com.sky.AgentCore.dto.login.RegisterRequest;
+import com.sky.AgentCore.dto.user.UserEntity;
+import com.sky.AgentCore.enums.AuthFeatureKey;
+import com.sky.AgentCore.mapper.UserMapper;
+import com.sky.AgentCore.service.AuthSettingAppService;
+import com.sky.AgentCore.service.LoginAppService;
+import com.sky.AgentCore.utils.EmailService;
+import com.sky.AgentCore.utils.JwtUtils;
+import com.sky.AgentCore.utils.PasswordUtils;
+import com.sky.AgentCore.utils.VerificationCode;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+
+import java.util.UUID;
+
+@Service
+public class LoginAppServiceImpl extends ServiceImpl<UserMapper,UserEntity> implements LoginAppService {
+    @Autowired
+    private AuthSettingAppService authSettingDomainService;
+    @Autowired
+    private VerificationCode verificationCode;
+    @Autowired
+    private EmailService emailService;
+    @Override
+    public String login(LoginRequest loginRequest) {
+        // 检查普通登录是否启用
+        if (!authSettingDomainService.isFeatureEnabled(AuthFeatureKey.NORMAL_LOGIN)) {
+            throw new BusinessException("普通登录已禁用");
+        }
+        UserEntity userEntity = lambdaQuery().eq(UserEntity::getEmail, loginRequest.getAccount()).or().eq(UserEntity::getPhone, loginRequest.getAccount()).one();
+        if (userEntity==null || !PasswordUtils.matches(loginRequest.getPassword(),userEntity.getPassword())) throw new BusinessException("账号密码错误");
+
+        return JwtUtils.generateToken(userEntity.getId());
+    }
+
+    @Override
+    public void register(RegisterRequest registerRequest) {
+        if (!authSettingDomainService.isFeatureEnabled(AuthFeatureKey.USER_REGISTER)){
+            throw new BusinessException("用户注册已禁用");
+        }
+    if (StringUtils.hasText(registerRequest.getEmail()) && !StringUtils.hasText(registerRequest.getPhone())){
+        if (!StringUtils.hasText(registerRequest.getCode())){
+            throw new BusinessException("邮箱注册时必须提供验证码");
+        }
+        boolean isValid = verificationCode.verifyCode(registerRequest.getEmail(), registerRequest.getCode());
+        if (!isValid) throw new BusinessException("验证码无效或者过期");
+    }
+        checkAccountExists(registerRequest.getEmail(),registerRequest.getPhone());
+        fillRegister(registerRequest);
+
+    }
+    /** 发送注册邮箱验证码 */
+    @Override
+    public void sendEmailVerificationCode(String email, String captchaUuid, String captchaCode, String ip) {
+        // 检查用户注册是否启用
+        if (!authSettingDomainService.isFeatureEnabled(AuthFeatureKey.USER_REGISTER)) {
+            throw new BusinessException("用户注册已禁用");
+        }
+
+        // 检查邮箱是否已存在
+        boolean exists = lambdaQuery().eq(UserEntity::getEmail, email).exists();
+        if (exists) throw new BusinessException("账号已存在,不可重复账注册");
+
+        // 生成验证码并发送邮件
+        String code = verificationCode.generateCode(email, captchaUuid, captchaCode, ip);
+        emailService.sendVerificationCode(email, code);
+    }
+
+    public void fillRegister(RegisterRequest registerRequest) {
+        UserEntity userEntity = new UserEntity();
+        BeanUtil.copyProperties(registerRequest,userEntity);
+        userEntity.setPassword(PasswordUtils.encode(registerRequest.getPassword()));
+        userEntity.valid();
+        userEntity.setNickname(generateNickname());
+        userEntity.setLoginPlatform("normal");
+        save(userEntity);
+    }
+    public void checkAccountExists(String email,String phone) {
+        if (lambdaQuery().eq(UserEntity::getEmail, email).or().eq(UserEntity::getPhone, phone).count() > 0) {
+            throw new BusinessException("邮箱或手机号已存在");
+        }
+    }
+    /** 随机生成用户昵称
+     * @return 用户昵称 */
+    private String generateNickname() {
+        return "agent-x" + UUID.randomUUID().toString().replace("-", "").substring(0, 6);
+    }
+}
