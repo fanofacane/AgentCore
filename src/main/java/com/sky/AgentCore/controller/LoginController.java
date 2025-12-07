@@ -1,0 +1,95 @@
+package com.sky.AgentCore.controller;
+
+import com.sky.AgentCore.dto.captcha.CaptchaResponse;
+import com.sky.AgentCore.dto.captcha.GetCaptchaRequest;
+import com.sky.AgentCore.dto.captcha.SendEmailCodeRequest;
+import com.sky.AgentCore.dto.login.LoginRequest;
+import com.sky.AgentCore.dto.common.Result;
+import com.sky.AgentCore.dto.login.RegisterRequest;
+import com.sky.AgentCore.service.LoginAppService;
+import com.sky.AgentCore.utils.CaptchaUtils;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Map;
+
+/** 登录注册 */
+@RestController
+@RequestMapping
+public class LoginController {
+    @Autowired
+    private LoginAppService loginAppService;
+    /** 登录
+     * @param loginRequest
+     * @return */
+    @PostMapping("/login")
+    public Result<Map<String, Object>> login(@RequestBody @Validated LoginRequest loginRequest) {
+        String token = loginAppService.login(loginRequest);
+        return Result.success("登录成功", Map.of("token", token));
+    }
+
+    /** 注册
+     * @param registerRequest
+     * @return */
+    @PostMapping("/register")
+    public Result<?> register(@RequestBody @Validated RegisterRequest registerRequest) {
+        loginAppService.register(registerRequest);
+        return Result.success().message("注册成功");
+    }
+    /** 获取图形验证码
+     * @param request
+     * @return */
+    @PostMapping("/get-captcha")
+    public Result<CaptchaResponse> getCaptcha(@RequestBody(required = false) GetCaptchaRequest request) {
+        CaptchaUtils.CaptchaResult captchaResult = CaptchaUtils.generateCaptcha();
+        CaptchaResponse response = new CaptchaResponse(captchaResult.getUuid(), captchaResult.getImageBase64());
+        return Result.success(response);
+    }
+    /** 发送邮箱验证码接口
+     * @param request
+     * @param httpRequest
+     * @return */
+    @PostMapping("/send-email-code")
+    public Result<?> sendEmailCode(@RequestBody @Validated SendEmailCodeRequest request,
+                                   HttpServletRequest httpRequest) {
+        // 获取客户端IP
+        String clientIp = getClientIp(httpRequest);
+
+        loginAppService.sendEmailVerificationCode(request.getEmail(), request.getCaptchaUuid(),
+                request.getCaptchaCode(), clientIp);
+        return Result.success().message("验证码已发送，请查收邮件");
+    }
+    /** 获取客户端IP
+     * @param request
+     * @return */
+    private String getClientIp(HttpServletRequest request) {
+        String ip = request.getHeader("X-Forwarded-For");
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("Proxy-Client-IP");
+        }
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("WL-Proxy-Client-IP");
+        }
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("HTTP_CLIENT_IP");
+        }
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("HTTP_X_FORWARDED_FOR");
+        }
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getRemoteAddr();
+        }
+
+        // 对于通过多个代理的情况，第一个IP为客户端真实IP
+        if (ip != null && ip.contains(",")) {
+            ip = ip.split(",")[0].trim();
+        }
+
+        return ip;
+    }
+}

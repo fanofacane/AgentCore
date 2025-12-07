@@ -1,0 +1,37 @@
+server:
+  port: 8088
+  servlet:
+    context-path: /api
+spring:
+  task:
+    execution:
+      pool:
+        core-size: 5
+        max-size: 10
+        queue-capacity: 100
+      thread-name-prefix: async-executor-
+  application:
+    name: AgentCore
+  datasource:
+    url: jdbc:mysql://localhost/agent
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: 1234
+  mybatis-plus:
+    configuration:
+      log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+mail:
+  smtp:
+    host: smtp.qq.com
+    port: 465
+    username: 2915719323@qq.com
+    password: kjevagntuztldcid
+  verification:
+    template: 您的验证码是:%s，有效期10分钟，请勿泄露给他人。
+    subject: AgentX - 邮箱验证码
+
+logging:
+  level:
+    org.springframework.jdbc.support.JdbcTransactionManager: debug
+
+

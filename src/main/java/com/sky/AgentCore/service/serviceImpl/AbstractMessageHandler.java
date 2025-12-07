@@ -1,0 +1,261 @@
+package com.sky.AgentCore.service.serviceImpl;
+
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
+import com.sky.AgentCore.PromptTemplates.AgentPromptTemplates;
+import com.sky.AgentCore.config.LLMServiceFactory;
+import com.sky.AgentCore.dto.agent.AgentChatResponse;
+import com.sky.AgentCore.dto.agent.AgentEntity;
+import com.sky.AgentCore.dto.chat.ChatContext;
+import com.sky.AgentCore.dto.message.MessageEntity;
+import com.sky.AgentCore.enums.MessageType;
+import com.sky.AgentCore.enums.Role;
+import com.sky.AgentCore.service.Agent;
+import com.sky.AgentCore.service.MessageDomainService;
+import com.sky.AgentCore.transport.MessageTransport;
+import dev.langchain4j.agent.tool.ToolSpecification;
+import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.data.message.ImageContent;
+import dev.langchain4j.data.message.SystemMessage;
+import dev.langchain4j.data.message.UserMessage;
+import dev.langchain4j.memory.chat.MessageWindowChatMemory;
+import dev.langchain4j.model.chat.StreamingChatModel;
+import dev.langchain4j.service.AiServices;
+import dev.langchain4j.service.TokenStream;
+import dev.langchain4j.service.tool.ToolExecutor;
+import dev.langchain4j.service.tool.ToolProvider;
+import dev.langchain4j.store.memory.chat.InMemoryChatMemoryStore;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
+
+public abstract class AbstractMessageHandler {
+    protected final LLMServiceFactory llmServiceFactory;
+    protected final MessageDomainService messageDomainService;
+    /** 连接超时时间（毫秒） */
+    protected static final long CONNECTION_TIMEOUT = 3000000L;
+    public AbstractMessageHandler(LLMServiceFactory llmServiceFactory,MessageDomainService messageDomainService){
+    this.llmServiceFactory=llmServiceFactory;
+    this.messageDomainService=messageDomainService;
+    }
+    /** 处理对话的模板方法
+     *
+     * @param chatContext 对话环境
+     * @param transport 消息传输实现
+     * @return 连接对象
+     * @param <T> 连接类型 */
+    public <T> T chat(ChatContext chatContext, MessageTransport<T> transport) {
+        // 1. 创建连接
+        T connection = transport.createConnection(CONNECTION_TIMEOUT);
+
+        // 2. 检查用户余额是否足够
+        //checkBalanceBeforeChat(chatContext.getUserId(), transport, connection);
+
+        // 3. 创建消息实体
+        MessageEntity llmMessageEntity = createLlmMessage(chatContext);
+        MessageEntity userMessageEntity = createUserMessage(chatContext);
+
+        // 3. 初始化聊天内存
+        MessageWindowChatMemory memory = initMemory();
+
+        // 4. 构建历史消息
+        buildHistoryMessage(chatContext, memory);
+
+        // 5. 根据子类决定是否需要工具
+        ToolProvider toolProvider = provideTools(chatContext);
+
+        // 6. 根据是否流式选择不同的处理方式
+        if (chatContext.isStreaming()) {
+            processStreamingChat(chatContext, connection, transport, userMessageEntity, llmMessageEntity, memory,
+                    toolProvider);
+        }
+/*        else {
+            processSyncChat(chatContext, connection, transport, userMessageEntity, llmMessageEntity, memory,
+                    toolProvider);
+        }*/
+
+        return connection;
+    }
+    /** 流式聊天处理 */
+    protected <T> void processStreamingChat(ChatContext chatContext, T connection, MessageTransport<T> transport,
+                                            MessageEntity userEntity, MessageEntity llmEntity, MessageWindowChatMemory memory,
+                                            ToolProvider toolProvider) {
+
+        // 获取流式LLM客户端
+        StreamingChatModel streamingClient = llmServiceFactory.getStreamingClient(chatContext.getProvider(),
+                chatContext.getModel());
+
+        // 创建流式Agent
+        Agent agent = buildStreamingAgent(streamingClient, memory, toolProvider, chatContext.getAgent());
+
+        // 使用现有的流式处理逻辑
+        processChat(agent, connection, transport, chatContext, userEntity, llmEntity);
+    }
+    /** 子类实现具体的聊天处理逻辑 */
+    protected <T> void processChat(Agent agent, T connection, MessageTransport<T> transport, ChatContext chatContext,
+                                   MessageEntity userEntity, MessageEntity llmEntity) {
+
+        messageDomainService.saveMessageAndUpdateContext(Collections.singletonList(userEntity),
+                chatContext.getContextEntity());
+
+        AtomicReference<StringBuilder> messageBuilder = new AtomicReference<>(new StringBuilder());
+        TokenStream tokenStream = agent.chat(chatContext.getUserMessage());
+
+        // 记录调用开始时间
+        long startTime = System.currentTimeMillis();
+
+        tokenStream.onError(throwable -> {
+            transport.sendMessage(connection,
+                    AgentChatResponse.buildEndMessage(throwable.getMessage(), MessageType.TEXT));
+
+            // 上报调用失败结果
+/*            long latency = System.currentTimeMillis() - startTime;
+            highAvailabilityDomainService.reportCallResult(chatContext.getInstanceId(), chatContext.getModel().getId(),
+                    false, latency, throwable.getMessage());*/
+        });
+
+        // 部分响应处理
+        tokenStream.onPartialResponse(reply -> {
+            messageBuilder.get().append(reply);
+            // 删除换行后消息为空字符串
+            if (messageBuilder.get().toString().trim().isEmpty()) {
+                return;
+            }
+            transport.sendMessage(connection, AgentChatResponse.build(reply, MessageType.TEXT));
+        });
+
+        // 完整响应处理
+        tokenStream.onCompleteResponse(chatResponse -> {
+//            this.setMessageTokenCount(chatContext.getMessageHistory(), userEntity, llmEntity, chatResponse);
+
+            messageDomainService.updateMessage(userEntity);
+            // 保存AI消息
+            messageDomainService.saveMessageAndUpdateContext(Collections.singletonList(llmEntity),
+                    chatContext.getContextEntity());
+
+            // 发送结束消息
+            transport.sendEndMessage(connection, AgentChatResponse.buildEndMessage(MessageType.TEXT));
+
+            // 上报调用成功结果
+  /*          long latency = System.currentTimeMillis() - startTime;
+            highAvailabilityDomainService.reportCallResult(chatContext.getInstanceId(), chatContext.getModel().getId(),
+                    true, latency, null);*/
+
+            // 执行模型调用计费
+/*            performBillingWithErrorHandling(chatContext, chatResponse.tokenUsage().inputTokenCount(),
+                    chatResponse.tokenUsage().outputTokenCount(), transport, connection);
+
+            smartRenameSession(chatContext);*/
+        });
+
+        // 错误处理
+        // tokenStream.onError(throwable -> handleError(
+        // connection, transport, chatContext,
+        // messageBuilder.toString(), llmEntity, throwable));
+
+        // 工具执行处理
+        tokenStream.onToolExecuted(toolExecution -> {
+            if (!messageBuilder.get().isEmpty()) {
+                transport.sendMessage(connection, AgentChatResponse.buildEndMessage(MessageType.TEXT));
+                llmEntity.setContent(messageBuilder.get().toString());
+                messageDomainService.saveMessageAndUpdateContext(Collections.singletonList(llmEntity),
+                        chatContext.getContextEntity());
+                messageBuilder.set(new StringBuilder());
+            }
+            String message = "执行工具：" + toolExecution.request().name();
+            MessageEntity toolMessage = createLlmMessage(chatContext);
+            toolMessage.setMessageType(MessageType.TOOL_CALL);
+            toolMessage.setContent(message);
+            messageDomainService.saveMessageAndUpdateContext(Collections.singletonList(toolMessage),
+                    chatContext.getContextEntity());
+
+            transport.sendMessage(connection, AgentChatResponse.buildEndMessage(message, MessageType.TOOL_CALL));
+        });
+
+        // 启动流处理
+        tokenStream.start();
+    }
+    /** 子类可以覆盖这个方法提供工具 */
+    protected ToolProvider provideTools(ChatContext chatContext) {
+        return null; // 默认不提供工具
+    }
+    /** 构建流式Agent */
+    protected Agent buildStreamingAgent(StreamingChatModel model, MessageWindowChatMemory memory,
+                                        ToolProvider toolProvider, AgentEntity agent) {
+
+//        Map<ToolSpecification, ToolExecutor> ragTools = ragToolManager.createRagTools(agent);
+        Map<ToolSpecification, ToolExecutor> ragTools = null;
+        AiServices<Agent> agentService = AiServices.builder(Agent.class).streamingChatModel(model).chatMemory(memory);
+
+        if (ragTools != null) {
+            agentService.tools(ragTools);
+        }
+
+        if (toolProvider != null) {
+            agentService.toolProvider(toolProvider);
+        }
+
+        return agentService.build();
+    }
+    /** 构建历史消息到内存中 */
+    protected void buildHistoryMessage(ChatContext chatContext, MessageWindowChatMemory memory) {
+        String summary = chatContext.getContextEntity().getSummary();
+        if (StringUtils.isNotEmpty(summary)) {
+            // 添加为AI消息，但明确标识这是摘要
+            memory.add(new AiMessage(AgentPromptTemplates.getSummaryPrefix() + summary));
+        }
+
+        String presetToolPrompt = "";
+        // 设置预先工具设置的参数到系统提示词中
+        Map<String, Map<String, Map<String, String>>> toolPresetParams = chatContext.getAgent().getToolPresetParams();
+        if (toolPresetParams != null) {
+            presetToolPrompt = AgentPromptTemplates.generatePresetToolPrompt(toolPresetParams);
+        }
+
+        memory.add(new SystemMessage(chatContext.getAgent().getSystemPrompt() + "\n" + presetToolPrompt));
+        List<MessageEntity> messageHistory = chatContext.getMessageHistory();
+        for (MessageEntity messageEntity : messageHistory) {
+            if (messageEntity.isUserMessage()) {
+                List<String> fileUrls = messageEntity.getFileUrls();
+                for (String fileUrl : fileUrls) {
+                    memory.add(UserMessage.from(ImageContent.from(fileUrl)));
+                }
+                if (!StringUtils.isEmpty(messageEntity.getContent())) {
+                    memory.add(new UserMessage(messageEntity.getContent()));
+                }
+            } else if (messageEntity.isAIMessage()) {
+                memory.add(new AiMessage(messageEntity.getContent()));
+            } else if (messageEntity.isSystemMessage()) {
+                memory.add(new SystemMessage(messageEntity.getContent()));
+            }
+            // 获取摘要消息
+        }
+
+        // 将摘要消息插入到 message 第一条
+    }
+    /** 创建用户消息实体 */
+    protected MessageEntity createUserMessage(ChatContext environment) {
+        MessageEntity messageEntity = new MessageEntity();
+        messageEntity.setRole(Role.USER);
+        messageEntity.setContent(environment.getUserMessage());
+        messageEntity.setSessionId(environment.getSessionId());
+        messageEntity.setFileUrls(environment.getFileUrls());
+        return messageEntity;
+    }
+
+    /** 创建LLM消息实体 */
+    protected MessageEntity createLlmMessage(ChatContext environment) {
+        MessageEntity messageEntity = new MessageEntity();
+        messageEntity.setRole(Role.ASSISTANT);
+        messageEntity.setSessionId(environment.getSessionId());
+        messageEntity.setModel(environment.getModel().getModelId());
+        messageEntity.setProvider(environment.getProvider().getId());
+        return messageEntity;
+    }
+    /** 初始化内存 */
+    protected MessageWindowChatMemory initMemory() {
+        return MessageWindowChatMemory.builder().maxMessages(1000).chatMemoryStore(new InMemoryChatMemoryStore())
+                .build();
+    }
+}
