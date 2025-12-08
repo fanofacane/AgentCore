@@ -18,6 +18,10 @@
         <java.version>21</java.version>
         <langchain4j.version>1.9.1</langchain4j.version>
         <jjwt.version>0.12.5</jjwt.version>
+        <httpclient.version>4.5.14</httpclient.version>
+        <forest.version>1.7.1</forest.version>
+        <fastjson.version>2.0.47</fastjson.version>
+        <mybatis-plus.version>3.5.11</mybatis-plus.version>
     </properties>
     <dependencies>
         <dependency>
@@ -57,6 +61,27 @@
             <artifactId>jakarta.mail</artifactId>
             <version>2.0.2</version>
         </dependency>
+        <!-- HTTP客户端 -->
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>${httpclient.version}</version>
+        </dependency>
+
+        <!--HTTP 请求工具-->
+        <dependency>
+            <groupId>com.dtflys.forest</groupId>
+            <artifactId>forest-spring-boot3-starter</artifactId>
+            <version>${forest.version}</version>
+        </dependency>
+
+        <!-- 工具库 -->
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>fastjson</artifactId>
+            <version>${fastjson.version}</version>
+        </dependency>
+
         <!-- JWT认证 -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
@@ -82,10 +107,15 @@
             <version>5.8.38</version>
         </dependency>
         <!--mybatis-->
-        <dependency>
+<!--        <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
             <version>3.5.7</version>
+        </dependency>-->
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
+            <version>${mybatis-plus.version}</version>
         </dependency>
         <!-- SLF4J -->
         <dependency>

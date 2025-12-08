@@ -73,6 +73,25 @@ public class LoginAppServiceImpl extends ServiceImpl<UserMapper,UserEntity> impl
         emailService.sendVerificationCode(email, code);
     }
 
+    @Override
+    public void sendResetPasswordCode(String email, String captchaUuid, String captchaCode, String ip) {
+        // 检查普通登录是否启用
+        if (!authSettingDomainService.isFeatureEnabled(AuthFeatureKey.NORMAL_LOGIN)) {
+            throw new BusinessException("普通登录已禁用，无法重置密码");
+        }
+
+        // 检查邮箱是否存在，不存在则抛出异常
+        UserEntity user = lambdaQuery().eq(UserEntity::getEmail, email).one();
+        if (user == null) {
+            throw new BusinessException("该邮箱未注册");
+        }
+
+        // 生成验证码并发送邮件
+        String code = verificationCode.generateCode(email, captchaUuid, captchaCode, ip,
+                VerificationCode.BUSINESS_TYPE_RESET_PASSWORD);
+        emailService.sendVerificationCode(email, code);
+    }
+
     public void fillRegister(RegisterRequest registerRequest) {
         UserEntity userEntity = new UserEntity();
         BeanUtil.copyProperties(registerRequest,userEntity);

@@ -11,4 +11,6 @@ public interface LoginAppService extends IService<UserEntity> {
     void register(RegisterRequest registerRequest);
 
     void sendEmailVerificationCode(String email, String captchaUuid, String captchaCode, String clientIp);
+
+    void sendResetPasswordCode(String email, String captchaUuid, String captchaCode, String clientIp);
 }

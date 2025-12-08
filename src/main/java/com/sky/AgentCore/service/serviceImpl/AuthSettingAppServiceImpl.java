@@ -1,7 +1,12 @@
 package com.sky.AgentCore.service.serviceImpl;
 
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.json.JSONUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.sky.AgentCore.dto.auth.AuthConfigDTO;
+import com.sky.AgentCore.dto.auth.AuthSetting;
 import com.sky.AgentCore.dto.auth.AuthSettingEntity;
 import com.sky.AgentCore.dto.login.LoginMethodDTO;
 import com.sky.AgentCore.enums.AuthFeatureKey;
@@ -9,14 +14,16 @@ import com.sky.AgentCore.enums.FeatureType;
 import com.sky.AgentCore.enums.SsoProvider;
 import com.sky.AgentCore.mapper.AuthMapper;
 import com.sky.AgentCore.service.AuthSettingAppService;
+import com.sky.AgentCore.utils.JsonUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @Service
-public class AuthSettingAppServiceImpl extends ServiceImpl<AuthMapper,AuthSettingEntity> implements AuthSettingAppService {
+public class AuthSettingAppServiceImpl extends ServiceImpl<AuthMapper,AuthSetting> implements AuthSettingAppService {
 
     /**
      * 获取前端认证配置
@@ -26,9 +33,9 @@ public class AuthSettingAppServiceImpl extends ServiceImpl<AuthMapper,AuthSettin
     @Override
     public AuthConfigDTO getAuthConfig() {
         // 获取启用的登录方式
-        List<AuthSettingEntity> loginSettings = lambdaQuery().eq(AuthSettingEntity::getFeatureType, FeatureType.LOGIN).eq(AuthSettingEntity::getEnabled, true).orderByAsc(AuthSettingEntity::getDisplayOrder).list();
+        List<AuthSetting> loginSettings = lambdaQuery().eq(AuthSetting::getFeatureType, FeatureType.LOGIN).eq(AuthSetting::getEnabled, true).orderByAsc(AuthSetting::getDisplayOrder).list();
         Map<String, LoginMethodDTO> loginMethods = new HashMap<>();
-        for (AuthSettingEntity setting : loginSettings) {
+        for (AuthSetting setting : loginSettings) {
             LoginMethodDTO method = new LoginMethodDTO();
             method.setEnabled(setting.getEnabled());
             method.setName(setting.getFeatureName());
@@ -43,7 +50,7 @@ public class AuthSettingAppServiceImpl extends ServiceImpl<AuthMapper,AuthSettin
         }
 
         // 检查注册是否启用
-        List<AuthSettingEntity> list = lambdaQuery().eq(AuthSettingEntity::getFeatureType, AuthFeatureKey.USER_REGISTER).eq(AuthSettingEntity::getEnabled, true).list();
+        List<AuthSetting> list = lambdaQuery().eq(AuthSetting::getFeatureType, AuthFeatureKey.USER_REGISTER).eq(AuthSetting::getEnabled, true).list();
         boolean registerEnabled = list.isEmpty();
         AuthConfigDTO config = new AuthConfigDTO();
         config.setLoginMethods(loginMethods);
@@ -54,9 +61,24 @@ public class AuthSettingAppServiceImpl extends ServiceImpl<AuthMapper,AuthSettin
 
     @Override
     public boolean isFeatureEnabled(AuthFeatureKey authFeatureKey) {
-        return lambdaQuery().eq(AuthSettingEntity::getFeatureKey, authFeatureKey.getCode())
-                .eq(AuthSettingEntity::getEnabled, true)
+        return lambdaQuery().eq(AuthSetting::getFeatureKey, authFeatureKey.getCode())
+                .eq(AuthSetting::getEnabled, true)
                 .count() > 0;
+    }
+
+
+    /** 根据功能键获取认证配置
+     *
+     * @param featureKey 功能键
+     * @return 认证配置实体 */
+    @Override
+    public AuthSettingEntity getByFeatureKey(AuthFeatureKey featureKey) {
+        AuthSetting authSetting = lambdaQuery().eq(AuthSetting::getFeatureKey, featureKey.getCode()).one();
+        Map<String, Object> stringObjectMap = JsonUtils.parseMap(authSetting.getConfigData());
+        return new AuthSettingEntity(authSetting.getId(), authSetting.getFeatureType(),
+                authSetting.getFeatureKey(), authSetting.getFeatureName(),
+                authSetting.getEnabled(),stringObjectMap, authSetting.getDisplayOrder(),
+                authSetting.getDescription());
     }
 
     /**

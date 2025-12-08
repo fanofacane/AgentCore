@@ -6,7 +6,7 @@ import java.util.Map;
 
 /** Map对象JSON转换器 */
 @MappedTypes(Map.class)
-public class MapConverter extends JsonToStringConverter<Map> {
+public class MapConverter extends MySqlJsonTypeHandler<Map> {
 
     public MapConverter() {
         super(Map.class);

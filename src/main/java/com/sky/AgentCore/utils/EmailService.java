@@ -8,6 +8,8 @@ import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 @Service
 public class EmailService {
@@ -45,7 +47,7 @@ public class EmailService {
 
         try {
             Message message = new MimeMessage(session);
-            message.setFrom(new InternetAddress(username));
+            message.setFrom(new InternetAddress(username, "AgentCore", StandardCharsets.UTF_8.name()));
             message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(to));
             message.setSubject(verificationSubject);
             message.setText(String.format(verificationTemplate, code));
@@ -53,6 +55,8 @@ public class EmailService {
             Transport.send(message);
         } catch (MessagingException e) {
             throw new BusinessException("发送邮件失败: " + e.getMessage(), e);
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
         }
     }
 }
