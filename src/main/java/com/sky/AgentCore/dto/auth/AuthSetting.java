@@ -8,14 +8,13 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import com.sky.AgentCore.converter.MapConverter;
 import com.sky.AgentCore.dto.common.BaseEntity;
 import lombok.Data;
-import org.apache.ibatis.type.JdbcType;
 
 import java.util.Map;
 
 /** 认证配置实体类 */
 @TableName("auth_settings")
 @Data
-public class AuthSettingEntity extends BaseEntity {
+public class AuthSetting extends BaseEntity {
 
     @TableId(type = IdType.ASSIGN_UUID)
     private String id;
@@ -33,24 +32,12 @@ public class AuthSettingEntity extends BaseEntity {
     private Boolean enabled;
 
     @TableField(value = "config_data")
-    private Map<String, Object> configData;
+    private String configData;
 
     @TableField("display_order")
     private Integer displayOrder;
 
     @TableField("description")
     private String description;
-
-    public AuthSettingEntity(String id, String featureType, String featureKey, String featureName, Boolean enabled, Map<String, Object> configData, Integer displayOrder, String description) {
-        this.id = id;
-        this.featureType = featureType;
-        this.featureKey = featureKey;
-        this.featureName = featureName;
-        this.enabled = enabled;
-        this.configData = configData;
-        this.displayOrder = displayOrder;
-        this.description = description;
-    }
-    public AuthSettingEntity() {
-    }
 }
+

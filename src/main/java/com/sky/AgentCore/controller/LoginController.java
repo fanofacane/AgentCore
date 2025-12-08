@@ -64,6 +64,20 @@ public class LoginController {
                 request.getCaptchaCode(), clientIp);
         return Result.success().message("验证码已发送，请查收邮件");
     }
+    /** 发送重置密码邮箱验证码接口
+     * @param request
+     * @param httpRequest
+     * @return */
+    @PostMapping("/send-reset-password-code")
+    public Result<?> sendResetPasswordCode(@RequestBody @Validated SendEmailCodeRequest request,
+                                           HttpServletRequest httpRequest) {
+        // 获取客户端IP
+        String clientIp = getClientIp(httpRequest);
+
+        loginAppService.sendResetPasswordCode(request.getEmail(), request.getCaptchaUuid(), request.getCaptchaCode(),
+                clientIp);
+        return Result.success().message("验证码已发送，请查收邮件");
+    }
     /** 获取客户端IP
      * @param request
      * @return */
