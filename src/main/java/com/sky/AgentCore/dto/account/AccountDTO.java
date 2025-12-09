@@ -37,4 +37,11 @@ public class AccountDTO {
 
     /** 更新时间 */
     private LocalDateTime updatedAt;
+    /** 获取可用余额（余额+信用额度） */
+    @JsonFormat(shape = JsonFormat.Shape.NUMBER, pattern = "0.00")
+    public BigDecimal getAvailableBalance() {
+        BigDecimal availableBalance = balance != null ? balance : BigDecimal.ZERO;
+        BigDecimal creditAmount = credit != null ? credit : BigDecimal.ZERO;
+        return availableBalance.add(creditAmount);
+    }
 }

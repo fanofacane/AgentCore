@@ -9,6 +9,7 @@ import com.sky.AgentCore.mapper.AccountMapper;
 import com.sky.AgentCore.service.AccountAppService;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -25,6 +26,56 @@ public class AccountAppServiceImpl extends ServiceImpl<AccountMapper,AccountEnti
         AccountEntity entity = getOrCreateAccount(userId);
         BeanUtil.copyProperties(entity,accountDTO);
         return accountDTO;
+    }
+    /** 检查账户余额是否充足
+     * @param userId 用户ID
+     * @param amount 需要检查的金额
+     * @return 是否充足 */
+    @Override
+    public boolean checkSufficientBalance(String userId, BigDecimal amount) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) < 0) {
+            throw new BusinessException("检查金额必须大于等于0");
+        }
+
+        AccountEntity account = lambdaQuery().eq(AccountEntity::getUserId, userId).one();
+        if (account == null) {
+            return false;
+        }
+
+        return account.checkSufficientBalance(amount);
+    }
+    /** 账户扣费（deductBalance的别名）
+     * @param userId 用户ID
+     * @param amount 扣费金额 */
+    @Override
+    public void deduct(String userId, BigDecimal amount) {
+        deductBalance(userId, amount);
+    }
+    /** 扣除账户余额（带锁保护）
+     * @param userId 用户ID
+     * @param amount 扣除金额
+     * @throws BusinessException 余额不足或其他业务异常 */
+    public void deductBalance(String userId, BigDecimal amount) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new BusinessException("扣费金额必须大于0");
+        }
+
+        ReentrantLock lock = getUserLock(userId);
+        lock.lock();
+        try {
+            // 获取最新的账户信息
+            AccountEntity account = getOrCreateAccount(userId);
+
+            // 扣除余额
+            account.deduct(amount);
+
+            // 更新数据库
+            boolean b = updateById(account);
+            if (!b) throw new BusinessException("更新数据失败");
+
+        } finally {
+            lock.unlock();
+        }
     }
     private AccountEntity getOrCreateAccount(String userId){
         if (userId==null || userId.trim().isEmpty()) throw new BusinessException("用户ID不可为空");

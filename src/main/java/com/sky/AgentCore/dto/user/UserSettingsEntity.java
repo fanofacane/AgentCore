@@ -1,5 +1,7 @@
 package com.sky.AgentCore.dto.user;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.sky.AgentCore.dto.common.BaseEntity;
 import lombok.Data;
@@ -8,7 +10,7 @@ import lombok.Data;
 @Data
 @TableName("user_settings")
 public class UserSettingsEntity extends BaseEntity {
-
+    @TableId(type = IdType.ASSIGN_UUID)
     private String id;
 
     /**
@@ -20,19 +22,4 @@ public class UserSettingsEntity extends BaseEntity {
      * 设置配置
      */
     private String settingConfig;
-    /** 获取默认模型ID */
-/*    public String getDefaultModelId() {
-        if (settingConfig == null) {
-            return null;
-        }
-        return settingConfig.getDefaultModel();
-    }*/
-
-    /** 设置默认模型ID */
-/*    public void setDefaultModelId(String modelId) {
-        if (settingConfig == null) {
-            settingConfig = new UserSettingsConfig();
-        }
-        settingConfig.setDefaultModel(modelId);
-    }*/
 }
