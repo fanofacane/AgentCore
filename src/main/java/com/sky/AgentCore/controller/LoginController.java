@@ -6,7 +6,7 @@ import com.sky.AgentCore.dto.captcha.SendEmailCodeRequest;
 import com.sky.AgentCore.dto.login.LoginRequest;
 import com.sky.AgentCore.dto.common.Result;
 import com.sky.AgentCore.dto.login.RegisterRequest;
-import com.sky.AgentCore.service.LoginAppService;
+import com.sky.AgentCore.service.login.LoginAppService;
 import com.sky.AgentCore.utils.CaptchaUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;

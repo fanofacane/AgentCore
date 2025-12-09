@@ -1,7 +1,7 @@
 package com.sky.AgentCore.controller;
 
 import com.sky.AgentCore.dto.common.Result;
-import com.sky.AgentCore.service.SsoAppService;
+import com.sky.AgentCore.service.login.SsoAppService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 

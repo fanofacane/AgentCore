@@ -3,7 +3,7 @@ package com.sky.AgentCore.config;
 import com.sky.AgentCore.dto.model.ModelEntity;
 import com.sky.AgentCore.dto.model.ProviderConfig;
 import com.sky.AgentCore.dto.model.ProviderEntity;
-import com.sky.AgentCore.service.serviceImpl.LLMProviderService;
+import com.sky.AgentCore.service.llm.Impl.LLMProviderService;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import org.springframework.stereotype.Component;

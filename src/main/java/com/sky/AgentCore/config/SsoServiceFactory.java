@@ -3,8 +3,8 @@ package com.sky.AgentCore.config;
 import com.sky.AgentCore.Exceptions.BusinessException;
 import com.sky.AgentCore.enums.AuthFeatureKey;
 import com.sky.AgentCore.enums.SsoProvider;
-import com.sky.AgentCore.service.AuthSettingAppService;
-import com.sky.AgentCore.service.SsoService;
+import com.sky.AgentCore.service.auth.AuthSettingAppService;
+import com.sky.AgentCore.service.login.SsoService;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
