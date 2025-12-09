@@ -1,11 +1,17 @@
 package com.sky.AgentCore.dto.model;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.sky.AgentCore.Exceptions.BusinessException;
+import com.sky.AgentCore.converter.ModelTypeConverter;
+import com.sky.AgentCore.dto.common.BaseEntity;
+import com.sky.AgentCore.enums.ModelType;
 import lombok.Data;
+import org.apache.ibatis.type.JdbcType;
+
 @Data
 @TableName("models")
-public class ModelEntity {
+public class ModelEntity extends BaseEntity {
 
     private String id;
 
@@ -19,6 +25,9 @@ public class ModelEntity {
     private String modelEndpoint;
 
     private Boolean isOfficial;
+
+    @TableField(typeHandler = ModelTypeConverter.class, jdbcType = JdbcType.VARCHAR)
+    private ModelType type;
 
     private Boolean status;
     public void isActive() {

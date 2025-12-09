@@ -24,7 +24,6 @@ public class SsoConfigProvider {
      * @return GitHub配置 */
     public GitHubSsoConfig getGitHubConfig() {
         AuthSettingEntity entity = authSettingDomainService.getByFeatureKey(AuthFeatureKey.GITHUB_LOGIN);
-        System.out.println("JsonUtils Debug - getGitHubConfig input: " + entity);
         if (entity == null || entity.getConfigData() == null) {
             return new GitHubSsoConfig();
         }
