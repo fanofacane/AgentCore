@@ -4,7 +4,7 @@ import com.sky.AgentCore.dto.common.Result;
 import com.sky.AgentCore.dto.model.ModelDTO;
 import com.sky.AgentCore.enums.ModelType;
 import com.sky.AgentCore.enums.ProviderType;
-import com.sky.AgentCore.service.LLMAppService;
+import com.sky.AgentCore.service.llm.LLMAppService;
 import com.sky.AgentCore.utils.UserContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;

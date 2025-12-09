@@ -3,7 +3,7 @@ package com.sky.AgentCore.config;
 
 import com.sky.AgentCore.Exceptions.BusinessException;
 import com.sky.AgentCore.enums.RuleHandlerKey;
-import com.sky.AgentCore.service.RuleStrategy;
+import com.sky.AgentCore.service.rule.RuleStrategy;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;

@@ -1,7 +1,7 @@
 package com.sky.AgentCore.controller;
 
 import com.sky.AgentCore.dto.agent.AgentPreviewRequest;
-import com.sky.AgentCore.service.ConversationAppService;
+import com.sky.AgentCore.service.chat.ConversationAppService;
 import com.sky.AgentCore.utils.UserContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
