@@ -8,12 +8,16 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import com.sky.AgentCore.converter.LLMModelConfigConverter;
 import com.sky.AgentCore.dto.LLMModelConfig;
 import com.sky.AgentCore.dto.common.BaseEntity;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.apache.ibatis.type.JdbcType;
 
 /** Agent工作区实体类 用于记录用户添加到工作区的Agent */
-@TableName(value = "agent_workspace", autoResultMap = true)
 @Data
+@TableName(value = "agent_workspace", autoResultMap = true)
+@AllArgsConstructor
+@NoArgsConstructor
 public class AgentWorkspaceEntity extends BaseEntity {
 
     /** 主键ID */
@@ -40,5 +44,8 @@ public class AgentWorkspaceEntity extends BaseEntity {
 
     public AgentWorkspaceEntity(String agentId) {
         this.agentId = agentId;
+    }
+    public AgentWorkspaceEntity(LLMModelConfig llmModelConfig) {
+        this.llmModelConfig = llmModelConfig;
     }
 }

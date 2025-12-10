@@ -27,8 +27,14 @@ public class ChatContext {
     /** 模型实体 */
     private ModelEntity model;
 
+    /** 原始模型实体（用于追踪模型切换） */
+    private ModelEntity originalModel;
+
     /** 服务商实体 */
     private ProviderEntity provider;
+
+    /** 原始服务商实体（用于追踪服务商切换） */
+    private ProviderEntity originalProvider;
 
     /** 大模型配置 */
     private LLMModelConfig llmModelConfig;
@@ -50,4 +56,13 @@ public class ChatContext {
 
     /** 是否流式响应 */
     private boolean streaming = true;
+
+    /** 追踪上下文 */
+    private TraceContext traceContext;
+
+    /** 是否为公开访问（嵌入模式） */
+    private boolean publicAccess = false;
+
+    /** 公开访问ID（嵌入模式使用） */
+    private String publicId;
 }

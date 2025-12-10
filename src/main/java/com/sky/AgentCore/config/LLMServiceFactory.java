@@ -18,8 +18,10 @@ public class LLMServiceFactory {
      * @return 流式聊天语言模型 */
     public StreamingChatModel getStreamingClient(ProviderEntity provider, ModelEntity model) {
         ProviderConfig config = new ProviderConfig();
-        config.setApiKey(provider.getApiKey());
-        config.setBaseUrl(provider.getBaseUrl());
+        System.out.println("apikey="+provider.getConfig().getApiKey());
+        System.out.println("baseUrl="+provider.getConfig().getBaseUrl());
+        config.setApiKey(provider.getConfig().getApiKey());
+        config.setBaseUrl(provider.getConfig().getBaseUrl());
         ProviderConfig providerConfig = new ProviderConfig(config.getApiKey(), config.getBaseUrl(), model.getModelEndpoint(), provider.getProtocol());
 
         return LLMProviderService.getStream(provider.getProtocol(), providerConfig);
@@ -32,8 +34,8 @@ public class LLMServiceFactory {
      * @return 流式聊天语言模型 */
     public ChatModel getStrandClient(ProviderEntity provider, ModelEntity model) {
         ProviderConfig config = new ProviderConfig();
-        config.setApiKey(provider.getApiKey());
-        config.setBaseUrl(provider.getBaseUrl());
+        config.setApiKey(provider.getConfig().getApiKey());
+        config.setBaseUrl(provider.getConfig().getBaseUrl());
 
         ProviderConfig providerConfig = new ProviderConfig(config.getApiKey(), config.getBaseUrl(),
                 model.getModelEndpoint(), provider.getProtocol());

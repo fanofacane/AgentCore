@@ -6,7 +6,7 @@ import com.sky.AgentCore.dto.chat.ChatContext;
 import com.sky.AgentCore.dto.message.MessageEntity;
 import com.sky.AgentCore.enums.MessageType;
 import com.sky.AgentCore.service.agent.Agent;
-import com.sky.AgentCore.service.serviceImpl.AbstractMessageHandler;
+import com.sky.AgentCore.service.service.AbstractMessageHandler;
 import com.sky.AgentCore.transport.MessageTransport;
 import dev.langchain4j.service.TokenStream;
 import org.springframework.stereotype.Component;
@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicReference;
 /** 预览消息处理器 专门用于Agent预览功能，不会保存消息到数据库 */
 @Component(value = "previewMessageHandler")
 public class PreviewMessageHandler extends AbstractMessageHandler {
-    public PreviewMessageHandler(LLMServiceFactory llmServiceFactory, MessageDomainService messageDomainService) {
+    public PreviewMessageHandler(LLMServiceFactory llmServiceFactory, MessageService messageDomainService) {
         super(llmServiceFactory, messageDomainService);
     }
 
