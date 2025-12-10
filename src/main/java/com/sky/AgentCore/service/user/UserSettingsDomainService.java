@@ -6,6 +6,8 @@ import com.sky.AgentCore.dto.user.UserSettingsDTO;
 import com.sky.AgentCore.dto.user.UserSettingsEntity;
 import com.sky.AgentCore.dto.user.UserSettingsUpdateRequest;
 
+import java.util.List;
+
 public interface UserSettingsDomainService extends IService<UserSettingsEntity> {
     /** 获取用户默认模型ID
      * @param userId 用户ID
@@ -15,4 +17,6 @@ public interface UserSettingsDomainService extends IService<UserSettingsEntity> 
     UserSettingsDTO getUserSettings(String userId);
 
     UserSettingsDTO updateUserSettings(UserSettingsUpdateRequest request, String userId);
+
+    List<String> getUserFallbackChain(String userId);
 }

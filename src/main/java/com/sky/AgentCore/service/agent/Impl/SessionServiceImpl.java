@@ -1,0 +1,62 @@
+package com.sky.AgentCore.service.agent.Impl;
+
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.sky.AgentCore.dto.message.MessageEntity;
+import com.sky.AgentCore.dto.session.SessionEntity;
+import com.sky.AgentCore.mapper.SessionMapper;
+import com.sky.AgentCore.service.agent.SessionService;
+import com.sky.AgentCore.service.chat.MessageService;
+import lombok.Data;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class SessionServiceImpl extends ServiceImpl<SessionMapper, SessionEntity> implements SessionService {
+    /** 创建会话
+     * @param agentId 助理id
+     * @param userId 用户id */
+    @Override
+    public SessionEntity createSession(String agentId, String userId) {
+        SessionEntity session = new SessionEntity();
+        session.setAgentId(agentId);
+        session.setUserId(userId);
+        session.setTitle("新会话");
+        save(session);
+        return session;
+    }
+
+    @Override
+    public SessionEntity find(String sessionId, String userId) {
+        SessionEntity session = lambdaQuery().eq(SessionEntity::getId, sessionId).eq(SessionEntity::getUserId, userId).one();
+        if (session == null) throw new RuntimeException("会话不存在");
+        return session;
+    }
+
+    @Override
+    public void updateSession(String id, String userId, String title) {
+        SessionEntity session = new SessionEntity();
+        session.setTitle(title);
+        session.setId(id);
+        session.setUserId(userId);
+        lambdaUpdate().eq(SessionEntity::getId, id).eq(SessionEntity::getUserId, userId)
+                .update(session);
+    }
+
+    @Override
+    public void deleteSession(String sessionId, String userId) {
+        this.lambdaUpdate().eq(SessionEntity::getId, sessionId)
+                .eq(SessionEntity::getUserId, userId).remove();
+    }
+
+    @Override
+    public SessionEntity getSession(String sessionId, String userId) {
+        SessionEntity session = lambdaQuery()
+                .eq(SessionEntity::getId, sessionId)
+                .eq(SessionEntity::getUserId, userId).one();
+        if (session == null) throw new RuntimeException("会话不存在");
+        return session;
+    }
+
+
+}

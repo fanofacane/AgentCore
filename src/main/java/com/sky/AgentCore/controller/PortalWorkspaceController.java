@@ -2,12 +2,12 @@ package com.sky.AgentCore.controller;
 
 import com.sky.AgentCore.dto.agent.AgentDTO;
 import com.sky.AgentCore.dto.common.Result;
+import com.sky.AgentCore.dto.model.UpdateModelConfigRequest;
 import com.sky.AgentCore.service.agent.AgentWorkspaceService;
 import com.sky.AgentCore.utils.UserContext;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -24,5 +24,26 @@ public class PortalWorkspaceController {
     public Result<List<AgentDTO>> getAgents() {
         String userId = UserContext.getCurrentUserId();
         return Result.success(agentWorkspaceAppService.getAgents(userId));
+    }
+    /** 设置agent的模型配置
+     * @param config 模型配置
+     * @param agentId agentId
+     * @return */
+    @PutMapping("/{agentId}/model/config")
+    public Result<Void> saveModelConfig(@RequestBody @Validated UpdateModelConfigRequest config,
+                                        @PathVariable String agentId) {
+        String userId = UserContext.getCurrentUserId();
+        agentWorkspaceAppService.updateModelConfig(agentId, userId, config);
+        return Result.success();
+    }
+    /** 删除工作区中的助理
+     *
+     * @param id 助理id */
+    @DeleteMapping("/agents/{id}")
+    public Result<Void> deleteAgent(@PathVariable String id) {
+        String userId = UserContext.getCurrentUserId();
+        //todo
+        agentWorkspaceAppService.deleteAgent(id, userId);
+        return Result.success();
     }
 }

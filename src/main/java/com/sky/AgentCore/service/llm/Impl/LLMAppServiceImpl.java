@@ -1,8 +1,10 @@
 package com.sky.AgentCore.service.llm.Impl;
 
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.sky.AgentCore.Exceptions.BusinessException;
 import com.sky.AgentCore.converter.ModelAssembler;
 import com.sky.AgentCore.dto.model.ModelDTO;
 import com.sky.AgentCore.dto.model.ModelEntity;
@@ -60,6 +62,25 @@ public class LLMAppServiceImpl extends ServiceImpl<ProvidersMapper, ProviderEnti
         String defaultModelId = userSettingsService.getUserDefaultModelId(userId);
         ModelEntity modelEntity = modelsMapper.selectById(defaultModelId);
         return ModelAssembler.toDTO(modelEntity);
+    }
+
+    @Override
+    public ModelEntity getModelById(String modelId) {
+        ModelEntity modelEntity = modelsMapper.selectById(modelId);
+        if (modelEntity == null) {
+            throw new BusinessException("模型不存在");
+        }
+        return modelEntity;
+    }
+
+    @Override
+    public ProviderEntity getProvider(String providerId) {
+
+        ProviderEntity provider = getById(providerId);
+        if (provider == null) {
+            throw new BusinessException("服务商不存在");
+        }
+        return provider;
     }
 
     /** 构建服务商聚合根，只包含激活的模型

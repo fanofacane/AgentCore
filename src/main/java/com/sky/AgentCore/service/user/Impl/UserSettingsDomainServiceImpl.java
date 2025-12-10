@@ -2,8 +2,13 @@ package com.sky.AgentCore.service.user.Impl;
 
 import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.conditions.update.LambdaUpdateChainWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.sky.AgentCore.Exceptions.BusinessException;
+import com.sky.AgentCore.converter.UserSettingsAssembler;
+import com.sky.AgentCore.dto.FallbackConfig;
 import com.sky.AgentCore.dto.user.UserSettingsConfig;
 import com.sky.AgentCore.dto.user.UserSettingsDTO;
 import com.sky.AgentCore.dto.user.UserSettingsEntity;
@@ -13,6 +18,9 @@ import com.sky.AgentCore.service.user.UserSettingsDomainService;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Service
 public class UserSettingsDomainServiceImpl extends ServiceImpl<UserSettingMapper, UserSettingsEntity> implements UserSettingsDomainService {
     @Resource
@@ -20,26 +28,46 @@ public class UserSettingsDomainServiceImpl extends ServiceImpl<UserSettingMapper
     @Override
     public String getUserDefaultModelId(String userId) {
         UserSettingsDTO userSettings = getUserSettings(userId);
+        System.out.println("当前用户设置"+userSettings.getSettingConfig());
         return userSettings.getSettingConfig().getDefaultModel();
     }
     /** 获取用户设置
      * @param userId 用户ID
      * @return 用户设置实体 */
     public UserSettingsDTO getUserSettings(String userId) {
-        UserSettingsEntity userSettings = lambdaQuery().eq(UserSettingsEntity::getUserId, userId).one();
-        UserSettingsConfig userSettingsConfig = JSON.parseObject(userSettings.getSettingConfig(), UserSettingsConfig.class);
-        return new UserSettingsDTO(userSettings.getId(), userSettings.getUserId(), userSettingsConfig);
+        UserSettingsEntity entity = lambdaQuery().eq(UserSettingsEntity::getUserId, userId).one();
+        System.out.println("当前用户"+entity);
+        return UserSettingsAssembler.toDTO(entity);
     }
 
     @Override
     public UserSettingsDTO updateUserSettings(UserSettingsUpdateRequest request, String userId) {
-        UserSettingsEntity userSettings = new UserSettingsEntity();
-        userSettings.setUserId(userId);
-        userSettings.setSettingConfig(JSONUtil.toJsonStr(request.getSettingConfig()));
-        LambdaUpdateChainWrapper<UserSettingsEntity> set = lambdaUpdate()
-                .eq(UserSettingsEntity::getUserId, userId)
-                .set(UserSettingsEntity::getSettingConfig, userSettings.getSettingConfig());
-        userSettingMapper.update(null, set);
+        // 2. 执行条件更新（MP链式更新，无需手动创建实体）
+        boolean updateSuccess = lambdaUpdate()
+                .eq(UserSettingsEntity::getUserId, userId) // 仅更新当前用户的配置
+                .set(UserSettingsEntity::getSettingConfig, JSONUtil.toJsonStr(request.getSettingConfig())) // 仅更新配置字段
+                .update();
+
+        // 3. 更新结果校验，失败抛业务异常
+        if (!updateSuccess) {
+            throw new BusinessException("用户配置更新失败，配置不存在或无操作权限");
+        }
         return new UserSettingsDTO(userId,request.getSettingConfig());
     }
+    /** 获取用户降级链配置
+     * @param userId 用户ID
+     * @return 降级模型ID列表，如果未启用降级则返回null */
+    @Override
+    public List<String> getUserFallbackChain(String userId) {
+        UserSettingsEntity settings = lambdaQuery().eq(UserSettingsEntity::getUserId, userId).one();
+        if (settings == null || settings.getSettingConfig() == null) return new ArrayList<>();
+
+        FallbackConfig fallbackConfig = settings.getSettingConfig().getFallbackConfig();
+        if (fallbackConfig == null || !fallbackConfig.isEnabled() || fallbackConfig.getFallbackChain().isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        return fallbackConfig.getFallbackChain();
+    }
+
 }

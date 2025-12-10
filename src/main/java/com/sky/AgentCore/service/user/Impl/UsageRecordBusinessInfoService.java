@@ -5,7 +5,7 @@ import com.sky.AgentCore.dto.model.ModelEntity;
 import com.sky.AgentCore.dto.product.ProductEntity;
 import com.sky.AgentCore.enums.BillingType;
 import com.sky.AgentCore.mapper.AgentMapper;
-import com.sky.AgentCore.service.llm.LlmDomainService;
+import com.sky.AgentCore.service.llm.LLMDomainService;
 import com.sky.AgentCore.service.product.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,7 +22,7 @@ public class UsageRecordBusinessInfoService {
     @Autowired
     private ProductService productService;
     @Autowired
-    private LlmDomainService llmDomainService;
+    private LLMDomainService llmDomainService;
     @Autowired
     private AgentMapper agentMapper;
     /** 批量获取商品业务信息映射，避免循环查询

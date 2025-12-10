@@ -1,7 +1,7 @@
-package com.sky.AgentCore.service.serviceImpl;
+package com.sky.AgentCore.service.service;
 
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
-import com.sky.AgentCore.PromptTemplates.AgentPromptTemplates;
+import com.sky.AgentCore.dto.PromptTemplates.AgentPromptTemplates;
 import com.sky.AgentCore.config.LLMServiceFactory;
 import com.sky.AgentCore.dto.agent.AgentChatResponse;
 import com.sky.AgentCore.dto.agent.AgentEntity;
@@ -10,7 +10,7 @@ import com.sky.AgentCore.dto.message.MessageEntity;
 import com.sky.AgentCore.enums.MessageType;
 import com.sky.AgentCore.enums.Role;
 import com.sky.AgentCore.service.agent.Agent;
-import com.sky.AgentCore.service.chat.MessageDomainService;
+import com.sky.AgentCore.service.chat.MessageService;
 import com.sky.AgentCore.transport.MessageTransport;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
@@ -32,10 +32,10 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public abstract class AbstractMessageHandler {
     protected final LLMServiceFactory llmServiceFactory;
-    protected final MessageDomainService messageDomainService;
+    protected final MessageService messageDomainService;
     /** 连接超时时间（毫秒） */
     protected static final long CONNECTION_TIMEOUT = 3000000L;
-    public AbstractMessageHandler(LLMServiceFactory llmServiceFactory,MessageDomainService messageDomainService){
+    public AbstractMessageHandler(LLMServiceFactory llmServiceFactory, MessageService messageDomainService){
     this.llmServiceFactory=llmServiceFactory;
     this.messageDomainService=messageDomainService;
     }

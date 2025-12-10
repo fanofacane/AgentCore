@@ -1,5 +1,8 @@
 package com.sky.AgentCore.service.agent.Impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.conditions.update.LambdaUpdateChainWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.sky.AgentCore.Exceptions.BusinessException;
 import com.sky.AgentCore.Exceptions.InsufficientBalanceException;
@@ -11,10 +14,12 @@ import com.sky.AgentCore.dto.billing.RuleContext;
 import com.sky.AgentCore.enums.BillingType;
 import com.sky.AgentCore.mapper.AgentMapper;
 import com.sky.AgentCore.service.agent.AgentAppService;
+import com.sky.AgentCore.service.agent.AgentVersionService;
 import com.sky.AgentCore.service.agent.AgentWorkspaceService;
 import com.sky.AgentCore.service.billing.BillingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +27,8 @@ import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.Map;
+
+import static cn.hutool.core.io.FileUtil.exist;
 
 
 @Service
@@ -31,6 +38,8 @@ public class AgentAppServiceImpl extends ServiceImpl<AgentMapper, AgentEntity> i
     private BillingService billingService;
     @Autowired
     private AgentWorkspaceService agentWorkspaceService;
+    @Autowired
+    private AgentVersionService agentVersionService;
     /** 创建新Agent */
     @Override
     @Transactional
@@ -86,6 +95,95 @@ public class AgentAppServiceImpl extends ServiceImpl<AgentMapper, AgentEntity> i
         System.out.println("agentid="+agentId+"userid"+userId);
         if (agent == null)  throw new BusinessException("Agent不存在");
         return AgentAssembler.toDTO(agent);
+    }
+
+    @Override
+    public AgentDTO updateAgent(UpdateAgentRequest request, String userId) {
+        // 使用组装器创建更新实体
+        AgentEntity updateEntity = AgentAssembler.toEntity(request, userId);
+
+        // 调用领域服务更新Agent
+        boolean success = lambdaUpdate().eq(AgentEntity::getId, updateEntity.getId()).eq(AgentEntity::getUserId, userId).update(updateEntity);
+        if (!success) {
+            throw new BusinessException("Agent更新失败，数据不存在或无操作权限");
+        }
+        return AgentAssembler.toDTO(updateEntity);
+    }
+
+    @Override
+    public AgentDTO toggleAgentStatus(String agentId) {
+        AgentEntity agent = getById(agentId);
+        if (agent == null) {
+            throw new BusinessException("Agent不存在:"+agentId);
+        }
+        if (Boolean.TRUE==agent.getEnabled()) {
+            agent.disable();
+        } else {
+            agent.enable();
+        }
+        boolean success = updateById(agent);
+        if (!success) throw new BusinessException("Agent状态更新失败");
+
+        return AgentAssembler.toDTO(agent);
+    }
+
+    @Override
+    @Transactional
+    public void deleteAgent(String agentId, String userId) {
+        // 先删除Agent关联的定时任务（包括取消延迟队列中的任务）TODO
+        //scheduledTaskExecutionService.deleteTasksByAgentId(agentId, userId);
+        // 再删除Agent本身
+        boolean success = remove(new LambdaQueryWrapper<AgentEntity>().eq(AgentEntity::getId, agentId).eq(AgentEntity::getUserId, userId));
+        if (!success) throw new BusinessException("Agent删除失败");
+        // 最后删除agent版本  TODO
+
+    }
+
+    @Override
+    public AgentEntity getAgentWithPermissionCheck(String agentId, String userId) {
+        // 检查工作区是否存在
+        boolean b1 = agentWorkspaceService.lambdaQuery().eq(AgentWorkspaceEntity::getAgentId, agentId)
+                .eq(AgentWorkspaceEntity::getUserId, userId).exists();
+
+        boolean b2 = exist(agentId, userId);
+        if (!b1 && !b2) throw new BusinessException("助理不存在");
+
+        AgentEntity agentEntity = lambdaQuery().eq(AgentEntity::getId, agentId).one();
+
+        // 如果有版本则使用版本
+        String publishedVersion = agentEntity.getPublishedVersion();
+        if (StringUtils.hasText(publishedVersion)) {
+            System.out.println("有版本");
+            AgentVersionEntity agentVersionEntity = agentVersionService.getById(publishedVersion);
+            BeanUtils.copyProperties(agentVersionEntity, agentEntity);
+        }
+
+        return agentEntity;
+    }
+
+    @Override
+    public AgentEntity getAgentById(String agentId) {
+        return getById(agentId);
+    }
+
+    @Override
+    public AgentVersionEntity getLatestAgentVersion(String agentId) {
+        AgentVersionEntity version = agentVersionService.lambdaQuery()
+                .eq(AgentVersionEntity::getAgentId, agentId)
+                .orderByDesc(AgentVersionEntity::getPublishedAt)
+                .last("LIMIT 1").one();
+        if (version == null) return null;
+        return version;
+    }
+
+
+    /** 校验 agent 是否存在 */
+    public boolean exist(String agentId, String userId) {
+
+        AgentEntity agent = lambdaQuery()
+                .eq(AgentEntity::getId, agentId)
+                .eq(AgentEntity::getUserId, userId).one();
+        return agent != null;
     }
 
     /** 生成用于计费的唯一请求ID

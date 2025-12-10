@@ -4,6 +4,7 @@ package com.sky.AgentCore.dto.model;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.sky.AgentCore.Exceptions.BusinessException;
+import com.sky.AgentCore.converter.ProviderConfigConverter;
 import com.sky.AgentCore.converter.ProviderProtocolConverter;
 import com.sky.AgentCore.dto.common.BaseEntity;
 import com.sky.AgentCore.enums.ProviderProtocol;
@@ -25,8 +26,8 @@ public class ProviderEntity extends BaseEntity {
     private String name;
     private String description;
 
-    private String apiKey;
-    private String baseUrl;
+    @TableField(typeHandler = ProviderConfigConverter.class)
+    private ProviderConfig config;
 
     private Boolean isOfficial;
     private Boolean status;

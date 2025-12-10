@@ -2,12 +2,14 @@ package com.sky.AgentCore.dto.model;
 
 
 import com.sky.AgentCore.enums.ProviderProtocol;
+import lombok.Data;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 /** 服务提供商DTO */
+@Data
 public class ProviderDTO {
 
     /** 服务商id */

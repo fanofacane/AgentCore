@@ -1,4 +1,4 @@
-package com.sky.AgentCore.PromptTemplates;
+package com.sky.AgentCore.dto.PromptTemplates;
 
 
 import java.util.HashSet;
