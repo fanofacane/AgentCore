@@ -35,7 +35,6 @@ public class LlmDomainServiceImpl extends ServiceImpl<ModelsMapper,ModelEntity> 
     public ProviderEntity getProvider(String providerId) {
         Wrapper<ProviderEntity> wrapper = Wrappers.<ProviderEntity>lambdaQuery().eq(ProviderEntity::getId, providerId);
         ProviderEntity provider = providersMapper.selectOne(wrapper);
-        System.out.println("服务商"+ provider);
         if (provider == null) {
             throw new BusinessException("服务商不存在");
         }

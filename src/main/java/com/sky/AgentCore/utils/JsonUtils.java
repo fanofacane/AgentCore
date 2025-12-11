@@ -43,10 +43,7 @@ public class JsonUtils {
         }
 
         try {
-            System.out.println("JsonUtils Debug - toJsonString input: " + obj + " (type: " + obj.getClass() + ")");
-            String result = objectMapper.writeValueAsString(obj);
-            System.out.println("JsonUtils Debug - toJsonString result: " + result);
-            return result;
+            return objectMapper.writeValueAsString(obj);
         } catch (Exception e) {
             log.error("JSON序列化失败: {}, 错误: {}", obj.getClass().getSimpleName(), e.getMessage(), e);
             return "{}";
@@ -103,14 +100,11 @@ public class JsonUtils {
         }
 
         try {
-            System.out.println("JsonUtils Debug - parseMap input: " + json);
-            Map<String, Object> result = objectMapper.readValue(json, new TypeReference<Map<String, Object>>() {
+
+            return objectMapper.readValue(json, new TypeReference<Map<String, Object>>() {
             });
-            System.out.println("JsonUtils Debug - parseMap result: " + result);
-            return result;
         } catch (Exception e) {
             log.error("JSON Map反序列化失败: {}", e.getMessage(), e);
-            System.out.println("JsonUtils Debug - parseMap failed for input: " + json + ", error: " + e.getMessage());
             return null;
         }
     }

@@ -32,12 +32,6 @@ public class UserAuthInterceptor implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         String requestURI = request.getRequestURI();
         String method = request.getMethod();
-        // ========== 核心：先放行OPTIONS预检请求 ==========
-/*        if ("OPTIONS".equalsIgnoreCase(method)) {
-            // 日志提示（可选）
-            System.out.println("放行OPTIONS预检请求：" + requestURI);
-            return true;
-        }*/
         logger.debug("JWT认证拦截器处理请求: {} {}", method, requestURI);
 
         try {

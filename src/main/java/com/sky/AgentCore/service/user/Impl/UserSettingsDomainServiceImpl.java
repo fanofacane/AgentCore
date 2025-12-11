@@ -28,7 +28,6 @@ public class UserSettingsDomainServiceImpl extends ServiceImpl<UserSettingMapper
     @Override
     public String getUserDefaultModelId(String userId) {
         UserSettingsDTO userSettings = getUserSettings(userId);
-        System.out.println("当前用户设置"+userSettings.getSettingConfig());
         return userSettings.getSettingConfig().getDefaultModel();
     }
     /** 获取用户设置
@@ -36,7 +35,6 @@ public class UserSettingsDomainServiceImpl extends ServiceImpl<UserSettingMapper
      * @return 用户设置实体 */
     public UserSettingsDTO getUserSettings(String userId) {
         UserSettingsEntity entity = lambdaQuery().eq(UserSettingsEntity::getUserId, userId).one();
-        System.out.println("当前用户"+entity);
         return UserSettingsAssembler.toDTO(entity);
     }
 

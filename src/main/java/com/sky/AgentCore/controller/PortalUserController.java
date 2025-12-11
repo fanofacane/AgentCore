@@ -57,7 +57,6 @@ public class PortalUserController {
     public Result<UserSettingsDTO> getUserSettings() {
         String userId = UserContext.getCurrentUserId();
         UserSettingsDTO settings = userSettingsService.getUserSettings(userId);
-        System.out.println("当前用户设置"+settings);
         return Result.success(settings);
     }
     /** 更新用户设置
@@ -84,7 +83,6 @@ public class PortalUserController {
         String userId = UserContext.getCurrentUserId();
         // OCR模型实际上是对话模型，但支持视觉输入，所以复用CHAT类型
         List<ModelDTO> models = llmAppService.getActiveModelsByType(ProviderType.ALL, userId, ModelType.CHAT);
-        System.out.println("可用OCR模型列表"+ models);
         return Result.success(models);
     }
     /** 获取可用的嵌入模型列表（按模型类型筛选）

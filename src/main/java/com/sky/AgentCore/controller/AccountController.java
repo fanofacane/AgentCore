@@ -22,7 +22,6 @@ public class AccountController {
     public Result<AccountDTO> getCurrentUserAccount() {
         String userId = UserContext.getCurrentUserId();
         AccountDTO account = accountAppService.getUserAccount(userId);
-        System.out.println(account);
         return Result.success(account);
     }
 }

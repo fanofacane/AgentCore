@@ -48,7 +48,6 @@ public class LLMAppServiceImpl extends ServiceImpl<ProvidersMapper, ProviderEnti
             default :
                 wrapper.eq(ProviderEntity::getUserId, userId).or().eq(ProviderEntity::getIsOfficial, 1);
         }
-        System.out.println("查询服务商列表"+list(wrapper));
         List<ProviderAggregate> providerAggregates = buildProviderAggregatesWithActiveModels(this.list(wrapper));
         return providerAggregates.stream().filter(ProviderAggregate::getStatus)
                 .flatMap(provider -> provider.getModels().stream()
