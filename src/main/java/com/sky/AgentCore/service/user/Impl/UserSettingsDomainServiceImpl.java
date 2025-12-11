@@ -2,6 +2,7 @@ package com.sky.AgentCore.service.user.Impl;
 
 import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.conditions.update.LambdaUpdateChainWrapper;
@@ -40,6 +41,7 @@ public class UserSettingsDomainServiceImpl extends ServiceImpl<UserSettingMapper
 
     @Override
     public UserSettingsDTO updateUserSettings(UserSettingsUpdateRequest request, String userId) {
+        System.out.println("更新配置"+request);
         // 2. 执行条件更新（MP链式更新，无需手动创建实体）
         boolean updateSuccess = lambdaUpdate()
                 .eq(UserSettingsEntity::getUserId, userId) // 仅更新当前用户的配置
@@ -66,6 +68,23 @@ public class UserSettingsDomainServiceImpl extends ServiceImpl<UserSettingMapper
         }
 
         return fallbackConfig.getFallbackChain();
+    }
+
+    @Override
+    public void setUserDefaultModelId(String userId, String modelId) {
+        UserSettingsEntity settings = lambdaQuery().eq(UserSettingsEntity::getUserId, userId).one();
+        if (settings == null) {
+            // 创建新的用户设置
+            settings = new UserSettingsEntity();
+            settings.setUserId(userId);
+            settings.setDefaultModelId(modelId);
+            save(settings);
+        } else {
+            // 更新现有设置
+            settings.setDefaultModelId(modelId);
+            lambdaUpdate().eq(UserSettingsEntity::getUserId, userId)
+                            .set(UserSettingsEntity::getDefaultModelId, modelId).update();
+        }
     }
 
 }

@@ -1,8 +1,16 @@
 package com.sky.AgentCore.converter;
 
 
+import com.sky.AgentCore.dto.model.ModelCreateRequest;
 import com.sky.AgentCore.dto.model.ModelDTO;
 import com.sky.AgentCore.dto.model.ModelEntity;
+import com.sky.AgentCore.dto.model.ModelUpdateRequest;
+import org.springframework.util.ObjectUtils;
+
+import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /** 模型对象转换器 */
 public class ModelAssembler {
@@ -36,6 +44,53 @@ public class ModelAssembler {
             dto.setProviderName(providerName);
         }
         return dto;
+    }
+
+    /** 将多个领域对象转换为DTO列表 */
+    public static List<ModelDTO> toDTOs(List<ModelEntity> models) {
+        if (models == null || models.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return models.stream().map(ModelAssembler::toDTO).collect(Collectors.toList());
+    }
+
+    /** 将创建请求转换为领域对象 */
+    public static ModelEntity toEntity(ModelCreateRequest request, String userId) {
+        ModelEntity model = new ModelEntity();
+        model.setUserId(userId);
+        model.setProviderId(request.getProviderId());
+        model.setModelId(request.getModelId());
+        model.setName(request.getName());
+        model.setDescription(request.getDescription());
+        model.setType(request.getType());
+        model.setCreatedAt(LocalDateTime.now());
+        model.setModelEndpoint(request.getModelEndpoint());
+        model.setUpdatedAt(LocalDateTime.now());
+        model.setModelEndpoint(request.getModelEndpoint());
+        if (ObjectUtils.isEmpty(request.getModelEndpoint())) {
+            model.setModelEndpoint(request.getModelId());
+
+        }
+
+        return model;
+    }
+
+    public static ModelEntity toEntity(ModelUpdateRequest request, String userId) {
+        ModelEntity model = new ModelEntity();
+        model.setUserId(userId);
+        model.setName(request.getName());
+        model.setDescription(request.getDescription());
+        model.setModelId(request.getModelId());
+        model.setModelEndpoint(request.getModelEndpoint());
+        model.setCreatedAt(LocalDateTime.now());
+        model.setUpdatedAt(LocalDateTime.now());
+        model.setId(request.getId());
+        model.setModelEndpoint(request.getModelEndpoint());
+        if (ObjectUtils.isEmpty(request.getModelEndpoint())) {
+            model.setModelEndpoint(request.getModelId());
+        }
+
+        return model;
     }
 
 }

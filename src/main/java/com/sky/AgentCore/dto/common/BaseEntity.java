@@ -1,6 +1,8 @@
 package com.sky.AgentCore.dto.common;
 
 
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.sky.AgentCore.enums.Operator;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -12,5 +14,10 @@ public class BaseEntity {
 
     protected LocalDateTime deletedAt;
 
-//    private Operator operatedBy = Operator.USER;
+    @TableField(exist = false)
+    private Operator operatedBy = Operator.USER;
+
+    public boolean needCheckUserId() {
+        return this.operatedBy == Operator.USER;
+    }
 }

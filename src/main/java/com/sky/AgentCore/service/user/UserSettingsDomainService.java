@@ -19,4 +19,6 @@ public interface UserSettingsDomainService extends IService<UserSettingsEntity> 
     UserSettingsDTO updateUserSettings(UserSettingsUpdateRequest request, String userId);
 
     List<String> getUserFallbackChain(String userId);
+
+    void setUserDefaultModelId(String userId, String id);
 }
