@@ -15,4 +15,6 @@ public interface AgentWorkspaceService extends IService<AgentWorkspaceEntity> {
     void deleteAgent(String id, String userId);
 
     AgentWorkspaceEntity getWorkspace(String agentId, String userId);
+
+    List<AgentWorkspaceEntity> listAgents(List<String> agentIds, String userId);
 }

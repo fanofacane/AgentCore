@@ -23,4 +23,12 @@ public interface AgentAppService extends IService<AgentEntity> {
     AgentEntity getAgentById(String agentId);
 
     AgentVersionEntity getLatestAgentVersion(String agentId);
+
+    List<AgentVersionDTO> getPublishedAgentsByName(SearchAgentsRequest searchAgentsRequest, String userId);
+
+    AgentVersionDTO publishAgentVersion(String agentId, PublishAgentVersionRequest request, String userId);
+
+    AgentVersionDTO getAgentVersion(String agentId, String versionNumber);
+
+    List<AgentVersionDTO> getAgentVersions(String agentId, String userId);
 }

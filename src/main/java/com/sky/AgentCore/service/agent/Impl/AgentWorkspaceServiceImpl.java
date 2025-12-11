@@ -79,4 +79,10 @@ public class AgentWorkspaceServiceImpl extends ServiceImpl<AgentWorkspaceMapper,
         }
         return agentWorkspaceEntity;
     }
+
+    @Override
+    public List<AgentWorkspaceEntity> listAgents(List<String> agentIds, String userId) {
+        return lambdaQuery().eq(AgentWorkspaceEntity::getUserId, userId)
+                .in(AgentWorkspaceEntity::getAgentId, agentIds).list();
+    }
 }

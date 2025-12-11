@@ -20,7 +20,6 @@ public class AuthConfigController {
     @GetMapping("/config")
     public Result<AuthConfigDTO> getAuthConfig() {
         AuthConfigDTO config = authSettingAppService.getAuthConfig();
-        System.out.println(config);
         return Result.success(config);
     }
 }
