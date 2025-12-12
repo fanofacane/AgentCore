@@ -24,7 +24,7 @@ public class UserAuthInterceptor implements HandlerInterceptor {
     private static final String BEARER_PREFIX = "Bearer ";
 
     // 不需要检查的路径列表，与WebMvcConfig保持一致
-    private static final List<String> EXCLUDED_PATHS = Arrays.asList("/login", "/health", "/register", "/auth/config",
+    private static final List<String> EXCLUDED_PATHS = Arrays.asList("/login","/email-login","send-login-email-code", "/health", "/register", "/auth/config",
             "/send-email-code", "/verify-email-code", "/get-captcha", "/reset-password", "/send-reset-password-code",
             "/oauth/github/authorize", "/oauth/github/callback");
 

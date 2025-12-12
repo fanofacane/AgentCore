@@ -39,7 +39,9 @@ public class CodeStorageImpl implements CodeStorage {
 
     @Override
     public String getCode(String key) {
+        System.out.println("验证码key"+codeMap);
         CodeInfo codeInfo = codeMap.get(key);
+        System.out.println("验证码信息"+codeInfo);
         if (codeInfo == null) {
             return null;
         }

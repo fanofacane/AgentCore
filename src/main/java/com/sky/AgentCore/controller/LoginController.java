@@ -3,6 +3,7 @@ package com.sky.AgentCore.controller;
 import com.sky.AgentCore.dto.captcha.CaptchaResponse;
 import com.sky.AgentCore.dto.captcha.GetCaptchaRequest;
 import com.sky.AgentCore.dto.captcha.SendEmailCodeRequest;
+import com.sky.AgentCore.dto.login.EmailLoginRequest;
 import com.sky.AgentCore.dto.login.LoginRequest;
 import com.sky.AgentCore.dto.common.Result;
 import com.sky.AgentCore.dto.login.RegisterRequest;
@@ -18,6 +19,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
 
+import static com.sky.AgentCore.utils.VerificationCode.BUSINESS_TYPE_EMAIL_LOGIN;
+import static com.sky.AgentCore.utils.VerificationCode.BUSINESS_TYPE_REGISTER;
+
 /** 登录注册 */
 @RestController
 @RequestMapping
@@ -30,6 +34,14 @@ public class LoginController {
     @PostMapping("/login")
     public Result<Map<String, Object>> login(@RequestBody @Validated LoginRequest loginRequest) {
         String token = loginAppService.login(loginRequest);
+        return Result.success("登录成功", Map.of("token", token));
+    }
+    /** 邮箱登录
+     * @param emailLoginRequest
+     * @return */
+    @PostMapping("/email-login")
+    public Result<Map<String, Object>> emailLogin(@RequestBody @Validated EmailLoginRequest emailLoginRequest) {
+        String token = loginAppService.emailLogin(emailLoginRequest);
         return Result.success("登录成功", Map.of("token", token));
     }
 
@@ -61,7 +73,22 @@ public class LoginController {
         String clientIp = getClientIp(httpRequest);
 
         loginAppService.sendEmailVerificationCode(request.getEmail(), request.getCaptchaUuid(),
-                request.getCaptchaCode(), clientIp);
+                request.getCaptchaCode(), clientIp,BUSINESS_TYPE_REGISTER);
+        return Result.success().message("验证码已发送，请查收邮件");
+    }
+
+    /** 发送邮箱登录验证码接口
+     * @param request
+     * @param httpRequest
+     * @return */
+    @PostMapping("/send-login-email-code")
+    public Result<?> sendLoginEmailCode(@RequestBody @Validated SendEmailCodeRequest request,
+                                   HttpServletRequest httpRequest) {
+        // 获取客户端IP
+        String clientIp = getClientIp(httpRequest);
+
+        loginAppService.sendEmailLoginVerificationCode(request.getEmail(), request.getCaptchaUuid(),
+                request.getCaptchaCode(), clientIp,BUSINESS_TYPE_EMAIL_LOGIN);
         return Result.success().message("验证码已发送，请查收邮件");
     }
     /** 发送重置密码邮箱验证码接口

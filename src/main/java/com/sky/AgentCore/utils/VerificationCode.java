@@ -16,6 +16,7 @@ public class VerificationCode {
     // 业务类型常量
     public static final String BUSINESS_TYPE_REGISTER = "register";
     public static final String BUSINESS_TYPE_RESET_PASSWORD = "reset_password";
+    public static final String BUSINESS_TYPE_EMAIL_LOGIN = "email_login";
 
     // 存储邮箱和发送次数的映射，用于防刷
     private final Map<String, LimitInfo> limitMap = new ConcurrentHashMap<>();
@@ -98,6 +99,7 @@ public class VerificationCode {
      * @return 验证结果 */
     public boolean verifyCode(String email, String code, String businessType) {
         String storageKey = generateStorageKey(email, businessType);
+        System.out.println("key"+storageKey);
         return codeStorage.verifyCode(storageKey, code);
     }
 

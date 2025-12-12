@@ -20,6 +20,7 @@ public class AuthConfigController {
     @GetMapping("/config")
     public Result<AuthConfigDTO> getAuthConfig() {
         AuthConfigDTO config = authSettingAppService.getAuthConfig();
+        System.out.println("获取的认证配置为："+config);
         return Result.success(config);
     }
 }

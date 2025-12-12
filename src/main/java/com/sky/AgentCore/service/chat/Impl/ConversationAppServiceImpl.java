@@ -408,8 +408,8 @@ public class ConversationAppServiceImpl implements ConversationAppService {
         LLMModelConfig llmModelConfig = createDefaultLLMModelConfig(modelId);
 
         // 5. 创建并配置环境对象
-        ChatContext chatContext = createPreviewChatContext(previewRequest, userId, virtualAgent, model, provider,
-                llmModelConfig, mcpServerNames);
+        ChatContext chatContext = createPreviewChatContext(previewRequest, userId, virtualAgent, model
+                , provider, llmModelConfig, mcpServerNames);
         setupPreviewContextAndHistory(chatContext, previewRequest);
 
         return chatContext;
@@ -445,13 +445,8 @@ public class ConversationAppServiceImpl implements ConversationAppService {
             finalModelId = llmModelConfig.getModelId();
         }
 
-        ModelEntity model = new ModelEntity();
-        if (finalModelId == null) {
-            String userDefaultModelId = userSettingsDomainService.getUserDefaultModelId(userId);
-            model = llmDomainService.selectModelById(userDefaultModelId);
-        } else{
-            model = llmDomainService.selectModelById(finalModelId);
-        }
+        if (finalModelId == null) finalModelId = userSettingsDomainService.getUserDefaultModelId(userId);
+        ModelEntity model = llmDomainService.selectModelById(finalModelId);
         model.isActive();
         return model;
     }
