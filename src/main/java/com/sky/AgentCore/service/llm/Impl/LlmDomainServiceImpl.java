@@ -151,7 +151,7 @@ public class LlmDomainServiceImpl extends ServiceImpl<ModelsMapper,ModelEntity> 
      * @return 激活的模型列表 */
     public List<ModelEntity> getActiveModelList(String providerId, String userId) {
         return lambdaQuery().eq(ModelEntity::getProviderId, providerId)
-                .eq(ModelEntity::getUserId, userId).eq(ModelEntity::getStatus, true).list();
+                .eq(ModelEntity::getUserId, userId).list();
     }
     private ProviderEntity getProviderByUserIdAndProviderId(String providerId, String userId) {
 

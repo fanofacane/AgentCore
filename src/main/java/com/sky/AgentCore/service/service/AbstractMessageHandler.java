@@ -188,13 +188,9 @@ public abstract class AbstractMessageHandler {
         Map<ToolSpecification, ToolExecutor> ragTools = null;
         AiServices<Agent> agentService = AiServices.builder(Agent.class).streamingChatModel(model).chatMemory(memory);
 
-        if (ragTools != null) {
-            agentService.tools(ragTools);
-        }
+        if (ragTools != null) agentService.tools(ragTools);
 
-        if (toolProvider != null) {
-            agentService.toolProvider(toolProvider);
-        }
+        if (toolProvider != null) agentService.toolProvider(toolProvider);
 
         return agentService.build();
     }

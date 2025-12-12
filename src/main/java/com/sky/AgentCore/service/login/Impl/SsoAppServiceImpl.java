@@ -30,7 +30,6 @@ public class SsoAppServiceImpl implements SsoAppService {
     public String handleSsoCallback(String provider, String authCode) {
         SsoService ssoService = ssoServiceFactory.getSsoService(provider);
         SsoUserInfo ssoUserInfo = ssoService.getUserInfo(authCode);
-
         // 根据SSO用户信息创建或获取本地用户
         UserEntity userEntity = findOrCreateUser(ssoUserInfo);
 

@@ -37,9 +37,7 @@ public class AuthSettingAppServiceImpl extends ServiceImpl<AuthMapper,AuthSettin
 
             // 根据功能键设置provider
             String providerCode = getProviderCodeByFeatureKey(setting.getFeatureKey());
-            if (providerCode != null) {
-                method.setProvider(providerCode);
-            }
+            if (providerCode != null) method.setProvider(providerCode);
 
             loginMethods.put(setting.getFeatureKey(), method);
         }

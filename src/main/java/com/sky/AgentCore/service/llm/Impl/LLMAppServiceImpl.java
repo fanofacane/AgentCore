@@ -42,14 +42,14 @@ public class LLMAppServiceImpl extends ServiceImpl<ProvidersMapper, ProviderEnti
         LambdaQueryWrapper<ProviderEntity> wrapper = Wrappers.lambdaQuery();
         switch (providerType) {
             case OFFICIAL :
-                wrapper.eq(ProviderEntity::getIsOfficial, 1);
+                wrapper.eq(ProviderEntity::getIsOfficial, true);
                 break;
             case CUSTOM :
-                wrapper.eq(ProviderEntity::getUserId, userId).eq(ProviderEntity::getIsOfficial, 0);
+                wrapper.eq(ProviderEntity::getUserId, userId).eq(ProviderEntity::getIsOfficial, false);
                 break;
             case ALL :
             default :
-                wrapper.eq(ProviderEntity::getUserId, userId).or().eq(ProviderEntity::getIsOfficial, 1);
+                wrapper.eq(ProviderEntity::getUserId, userId).or().eq(ProviderEntity::getIsOfficial, true);
         }
         List<ProviderAggregate> providerAggregates = buildProviderAggregatesWithActiveModels(this.list(wrapper));
         return providerAggregates.stream().filter(ProviderAggregate::getStatus)

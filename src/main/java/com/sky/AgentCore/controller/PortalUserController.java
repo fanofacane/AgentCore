@@ -91,7 +91,7 @@ public class PortalUserController {
     public Result<List<ModelDTO>> getEmbeddingModels() {
         String userId = UserContext.getCurrentUserId();
         // 筛选嵌入模型类型
-        //List<ModelDTO> models = llmAppService.getActiveModelsByType(ProviderType.ALL, userId, ModelType.EMBEDDING);
-        return Result.success(List.of());
+        List<ModelDTO> models = llmAppService.getActiveModelsByType(ProviderType.ALL, userId, ModelType.EMBEDDING);
+        return Result.success(models);
     }
 }

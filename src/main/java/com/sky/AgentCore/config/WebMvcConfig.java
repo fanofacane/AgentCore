@@ -21,6 +21,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
         registry.addInterceptor(userAuthInterceptor).addPathPatterns("/**") // 拦截所有请求
                 .excludePathPatterns( // 不拦截以下路径
                         "/login", // 登录接口
+                        "/email-login",// 邮箱登录接口
+                        "/send-login-email-code",// 发送邮箱登录验证码接口
                         "/health", // 健康检查接口
                         "/register", // 注册接口
                         "/auth/config", // 认证配置接口

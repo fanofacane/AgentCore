@@ -1,6 +1,8 @@
 package com.sky.AgentCore.service.login.Impl;
 
 import com.alibaba.fastjson.JSON;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.sky.AgentCore.Exceptions.BusinessException;
 import com.sky.AgentCore.config.SsoConfigProvider;
 import com.sky.AgentCore.dto.sso.SsoUserInfo;
@@ -8,6 +10,7 @@ import com.sky.AgentCore.enums.SsoProvider;
 import com.sky.AgentCore.service.login.SsoService;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -24,9 +27,14 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class GitHubSsoService implements SsoService {
+    private static final Cache<String, Boolean> USED_CODE_CACHE = CacheBuilder.newBuilder()
+            .expireAfterWrite(5, TimeUnit.SECONDS)
+            .maximumSize(1000)
+            .build();
 
     private static final Logger logger = LoggerFactory.getLogger(GitHubSsoService.class);
 
@@ -46,13 +54,17 @@ public class GitHubSsoService implements SsoService {
 
     @Override
     public SsoUserInfo getUserInfo(String authCode) {
+        // 校验 code 是否已使用
+        if (USED_CODE_CACHE.getIfPresent(authCode) != null) throw new BusinessException("授权码已使用");
+
         try {
             // 1. 获取访问令牌
             String accessToken = getAccessToken(authCode);
             if (!StringUtils.hasText(accessToken)) {
                 throw new BusinessException("获取GitHub访问令牌失败");
             }
-
+            // 标记 code 已使用
+            USED_CODE_CACHE.put(authCode, true);
             // 2. 获取用户信息
             Map<String, Object> userInfo = getGitHubUserInfo(accessToken);
             if (userInfo == null || userInfo.get("id") == null) {
@@ -87,7 +99,11 @@ public class GitHubSsoService implements SsoService {
 
     private String getAccessToken(String code) {
         SsoConfigProvider.GitHubSsoConfig config = getEffectiveConfig();
-        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+        RequestConfig requestConfig = RequestConfig.custom()
+                .setConnectTimeout(10000) // 连接超时（毫秒）
+                .setSocketTimeout(10000)  // 读取超时
+                .build();
+        try (CloseableHttpClient httpClient = HttpClients.custom().setDefaultRequestConfig(requestConfig).build()) {
             HttpPost httpPost = new HttpPost(config.getTokenUrl());
 
             // 设置请求头

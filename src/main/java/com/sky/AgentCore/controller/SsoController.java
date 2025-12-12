@@ -20,7 +20,7 @@ public class SsoController {
     @GetMapping("/{provider}/login")
     public Result<Map<String, String>> getSsoLoginUrl(@PathVariable String provider,
                                                       @RequestParam(required = false) String redirectUrl) {
-
+        System.out.println("开始获取SSO登录URL");
         String loginUrl = ssoAppService.getSsoLoginUrl(provider, redirectUrl);
         return Result.success(Map.of("loginUrl", loginUrl));
     }
@@ -31,8 +31,8 @@ public class SsoController {
      * @return 登录token */
     @GetMapping("/{provider}/callback")
     public Result<Map<String, Object>> handleSsoCallback(@PathVariable String provider, @RequestParam String code) {
+        System.out.println("开始处理SSO回调");
         String token = ssoAppService.handleSsoCallback(provider, code);
-        System.out.println("登录成功，token: " + token);
         return Result.success("登录成功", Map.of("token", token));
     }
 }
