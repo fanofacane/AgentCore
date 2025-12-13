@@ -16,8 +16,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 /** 用户设置配置转换器 处理JSON存储的用户设置配置信息 */
-@MappedTypes(UserSettingsConfig.class)
 @Component
+@MappedTypes(UserSettingsConfig.class)
 @MappedJdbcTypes({JdbcType.OTHER})
 public class UserSettingsConfigConverter extends BaseTypeHandler<UserSettingsConfig> {
 

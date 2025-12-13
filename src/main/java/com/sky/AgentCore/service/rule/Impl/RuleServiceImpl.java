@@ -11,6 +11,8 @@ public class RuleServiceImpl extends ServiceImpl<RuleMapper, RuleEntity> impleme
     @Override
     public RuleEntity getRuleById(String ruleId) {
         if (ruleId == null || ruleId.trim().isEmpty()) return null;
-        return getRuleById(ruleId);
+        System.out.println("规则ID"+ ruleId);
+        System.out.println("规则"+ getById(ruleId));
+        return getById(ruleId);
     }
 }

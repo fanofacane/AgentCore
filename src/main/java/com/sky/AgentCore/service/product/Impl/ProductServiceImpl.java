@@ -15,12 +15,9 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, ProductEntity
      * @return 商品实体，如果不存在则返回null */
     @Override
     public ProductEntity findProductByBusinessKey(String type, String serviceId) {
-        if (type == null || type.trim().isEmpty()) {
-            return null;
-        }
-        if (serviceId == null || serviceId.trim().isEmpty()) {
-            return null;
-        }
+        if (type == null || type.trim().isEmpty()) return null;
+
+        if (serviceId == null || serviceId.trim().isEmpty()) return null;
 
         BillingType billingType;
         try {

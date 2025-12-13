@@ -42,22 +42,18 @@ public class BillingServiceImpl implements BillingService {
             // 查找商品
             ProductEntity product = productService.findProductByBusinessKey(context.getType(),
                     context.getServiceId());
-
-            if (product == null || !product.isActive()) {
-                return true; // 无需计费
-            }
+            System.out.println("商品"+ product);
+            if (product == null || !product.isActive()) return true; // 无需计费
 
             // 获取规则和策略
             RuleEntity rule = ruleService.getRuleById(product.getRuleId());
-            if (rule == null) {
-                return false;
-            }
-
+            if (rule == null) return false;
+            System.out.println("规则"+ rule);
             RuleStrategy strategy = billingStrategyFactory.getStrategy(rule.getHandlerKey());
 
             // 计算费用
             BigDecimal cost = strategy.process(context.getUsageData(), product.getPricingConfig());
-
+            System.out.println("费用"+ cost);
             // 实现最低计费0.01元逻辑
             if (cost.compareTo(BigDecimal.ZERO) > 0 && cost.compareTo(new BigDecimal("0.01")) < 0) {
                 cost = new BigDecimal("0.01");
@@ -83,22 +79,15 @@ public class BillingServiceImpl implements BillingService {
     @Transactional
     public void charge(RuleContext context) {
         // 1. 验证上下文
-        if (!context.isValid()) {
-            throw new BusinessException("无效的计费上下文");
-        }
+        if (!context.isValid()) throw new BusinessException("无效的计费上下文");
 
         // 2. 查找商品
-        ProductEntity product = productService.findProductByBusinessKey(context.getType(),
-                context.getServiceId());
+        ProductEntity product = productService.findProductByBusinessKey(context.getType(), context.getServiceId());
+        System.out.println("商品"+ product);
+        // 没有配置计费规则，直接放行
+        if (product == null) return;
 
-        if (product == null) {
-            // 没有配置计费规则，直接放行
-            return;
-        }
-
-        if (!product.isActive()) {
-            throw new BusinessException("商品已被禁用，无法计费");
-        }
+        if (!product.isActive()) throw new BusinessException("商品已被禁用，无法计费");
 
         // 3. 检查幂等性
         if (context.getRequestId() != null && usageRecordService.existsByRequestId(context.getRequestId())) {
@@ -108,15 +97,13 @@ public class BillingServiceImpl implements BillingService {
 
         // 4. 获取规则和策略
         RuleEntity rule = ruleService.getRuleById(product.getRuleId());
-        if (rule == null) {
-            throw new BusinessException("关联的计费规则不存在");
-        }
-
+        if (rule == null) throw new BusinessException("关联的计费规则不存在");
+        System.out.println("规则"+ rule);
         RuleStrategy strategy = billingStrategyFactory.getStrategy(rule.getHandlerKey());
 
         // 5. 计算费用
         BigDecimal cost = strategy.process(context.getUsageData(), product.getPricingConfig());
-
+        System.out.println("费用"+ cost);
         if (cost.compareTo(BigDecimal.ZERO) < 0) {
             throw new BusinessException("计算出的费用不能为负数");
         }
@@ -134,7 +121,7 @@ public class BillingServiceImpl implements BillingService {
 
         // 6. 检查余额并扣费
         accountAppService.deduct(context.getUserId(), cost);
-
+        System.out.println("扣费成功");
         // 7. 记录用量
         recordUsage(context, product, cost);
     }

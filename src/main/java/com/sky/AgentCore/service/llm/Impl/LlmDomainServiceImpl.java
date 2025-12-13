@@ -150,13 +150,11 @@ public class LlmDomainServiceImpl extends ServiceImpl<ModelsMapper,ModelEntity> 
      * @param userId 用户ID
      * @return 激活的模型列表 */
     public List<ModelEntity> getActiveModelList(String providerId, String userId) {
-        return lambdaQuery().eq(ModelEntity::getProviderId, providerId)
-                .eq(ModelEntity::getUserId, userId).list();
+        return lambdaQuery().eq(ModelEntity::getProviderId, providerId).list();
     }
     private ProviderEntity getProviderByUserIdAndProviderId(String providerId, String userId) {
 
-        Wrapper<ProviderEntity> wrapper = Wrappers.<ProviderEntity>lambdaQuery().eq(ProviderEntity::getId, providerId)
-                .eq(ProviderEntity::getUserId, userId);
+        Wrapper<ProviderEntity> wrapper = Wrappers.<ProviderEntity>lambdaQuery().eq(ProviderEntity::getId, providerId);
         ProviderEntity provider = providersMapper.selectOne(wrapper);
 
         if (provider == null) throw new BusinessException("服务商不存在");

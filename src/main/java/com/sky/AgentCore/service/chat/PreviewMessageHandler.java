@@ -6,7 +6,11 @@ import com.sky.AgentCore.dto.chat.ChatContext;
 import com.sky.AgentCore.dto.message.MessageEntity;
 import com.sky.AgentCore.enums.MessageType;
 import com.sky.AgentCore.service.agent.Agent;
+import com.sky.AgentCore.service.agent.SessionService;
+import com.sky.AgentCore.service.billing.BillingService;
+import com.sky.AgentCore.service.llm.LLMDomainService;
 import com.sky.AgentCore.service.service.AbstractMessageHandler;
+import com.sky.AgentCore.service.user.UserSettingsDomainService;
 import com.sky.AgentCore.transport.MessageTransport;
 import dev.langchain4j.service.TokenStream;
 import org.springframework.stereotype.Component;
@@ -16,8 +20,12 @@ import java.util.concurrent.atomic.AtomicReference;
 /** 预览消息处理器 专门用于Agent预览功能，不会保存消息到数据库 */
 @Component(value = "previewMessageHandler")
 public class PreviewMessageHandler extends AbstractMessageHandler {
-    public PreviewMessageHandler(LLMServiceFactory llmServiceFactory, MessageService messageDomainService) {
-        super(llmServiceFactory, messageDomainService);
+    public PreviewMessageHandler(LLMServiceFactory llmServiceFactory, MessageService messageDomainService,
+                                 UserSettingsDomainService userSettingsDomainService,
+                                 BillingService billingService, LLMDomainService llmDomainService,
+                                 SessionService sessionService) {
+        super(llmServiceFactory, messageDomainService, userSettingsDomainService,
+                billingService, llmDomainService, sessionService);
     }
 
     /** 预览专用的聊天处理逻辑 与正常流程的区别是不保存消息到数据库 */
@@ -50,8 +58,8 @@ public class PreviewMessageHandler extends AbstractMessageHandler {
             transport.sendEndMessage(connection, AgentChatResponse.buildEndMessage(MessageType.TEXT));
 
             // 执行模型调用计费
-/*            performBillingWithErrorHandling(chatContext, chatResponse.tokenUsage().inputTokenCount(),
-                    chatResponse.tokenUsage().outputTokenCount(), transport, connection);*/
+            performBillingWithErrorHandling(chatContext, chatResponse.tokenUsage().inputTokenCount(),
+                    chatResponse.tokenUsage().outputTokenCount(), transport, connection);
         });
 
         // 工具执行处理

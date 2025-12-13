@@ -4,6 +4,7 @@ import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.conditions.update.LambdaUpdateChainWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -42,16 +43,20 @@ public class UserSettingsDomainServiceImpl extends ServiceImpl<UserSettingMapper
     @Override
     public UserSettingsDTO updateUserSettings(UserSettingsUpdateRequest request, String userId) {
         System.out.println("更新配置"+request);
-        // 2. 执行条件更新（MP链式更新，无需手动创建实体）
-        boolean updateSuccess = lambdaUpdate()
-                .eq(UserSettingsEntity::getUserId, userId) // 仅更新当前用户的配置
-                .set(UserSettingsEntity::getSettingConfig, JSONUtil.toJsonStr(request.getSettingConfig())) // 仅更新配置字段
-                .update();
-
-        // 3. 更新结果校验，失败抛业务异常
-        if (!updateSuccess) {
-            throw new BusinessException("用户配置更新失败，配置不存在或无操作权限");
+        boolean success = false;
+        boolean exists = lambdaQuery().eq(UserSettingsEntity::getUserId, userId).exists();
+        if (!exists){
+            UserSettingsEntity entity = UserSettingsAssembler.toEntity(request, userId);
+            entity.setSettingConfig(request.getSettingConfig());
+            success = save(entity);
+        }else {
+            success = lambdaUpdate().eq(UserSettingsEntity::getUserId, userId)
+                    .set(UserSettingsEntity::getSettingConfig,
+                            JSONUtil.toJsonStr(request.getSettingConfig())).update();
         }
+        // 3. 更新结果校验，失败抛业务异常
+        if (!success) throw new BusinessException("用户配置更新失败，配置不存在或无操作权限");
+
         return new UserSettingsDTO(userId,request.getSettingConfig());
     }
     /** 获取用户降级链配置
