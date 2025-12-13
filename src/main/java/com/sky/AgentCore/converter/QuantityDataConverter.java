@@ -10,6 +10,7 @@ import org.apache.ibatis.type.MappedJdbcTypes;
 import org.apache.ibatis.type.MappedTypes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
@@ -18,6 +19,7 @@ import java.sql.SQLException;
 import java.util.Map;
 
 /** 用量数据JSON字段转换器 专门处理用量记录中用量数据的序列化和反序列化 */
+@Component
 @MappedJdbcTypes(JdbcType.OTHER)
 @MappedTypes({Map.class})
 public class QuantityDataConverter extends BaseTypeHandler<Map<String, Object>> {
@@ -29,9 +31,14 @@ public class QuantityDataConverter extends BaseTypeHandler<Map<String, Object>> 
     public void setNonNullParameter(PreparedStatement ps, int i, Map<String, Object> parameter, JdbcType jdbcType)
             throws SQLException {
         try {
-            String json = objectMapper.writeValueAsString(parameter);
+/*            String json = objectMapper.writeValueAsString(parameter);
             // 对于PostgreSQL的JSONB类型，需要使用setObject而不是setString
-            ps.setObject(i, json, java.sql.Types.OTHER);
+            ps.setObject(i, json, java.sql.Types.OTHER);*/
+
+            // 序列化时确保UTF-8编码，避免binary字符集
+            String json = objectMapper.writeValueAsString(parameter);
+            // MySQL JSON字段直接用setString传参（核心修复点）
+            ps.setString(i, json);
         } catch (JsonProcessingException e) {
             logger.error("用量数据JSON序列化失败", e);
             throw new SQLException("用量数据JSON序列化失败", e);

@@ -10,6 +10,7 @@ import org.apache.ibatis.type.MappedJdbcTypes;
 import org.apache.ibatis.type.MappedTypes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
@@ -18,6 +19,7 @@ import java.sql.SQLException;
 import java.util.Map;
 
 /** 价格配置JSON字段转换器 专门处理商品价格配置的序列化和反序列化 */
+@Component
 @MappedJdbcTypes(JdbcType.OTHER)
 @MappedTypes({Map.class})
 public class PricingConfigConverter extends BaseTypeHandler<Map<String, Object>> {
@@ -28,10 +30,15 @@ public class PricingConfigConverter extends BaseTypeHandler<Map<String, Object>>
     @Override
     public void setNonNullParameter(PreparedStatement ps, int i, Map<String, Object> parameter, JdbcType jdbcType)
             throws SQLException {
+        // 空Map处理：写入空JSON对象而非空字符串
+        if (parameter == null || parameter.isEmpty()) {
+            ps.setString(i, "{}");
+            return;
+        }
         try {
             String json = objectMapper.writeValueAsString(parameter);
-            // 对于PostgreSQL的JSONB类型，需要使用setObject而不是setString
-            ps.setObject(i, json, java.sql.Types.OTHER);
+            // MySQL 核心调整：直接用setString，无需Types.OTHER
+            ps.setString(i, json);
         } catch (JsonProcessingException e) {
             logger.error("价格配置JSON序列化失败", e);
             throw new SQLException("价格配置JSON序列化失败", e);

@@ -11,11 +11,11 @@ public final class UsageDataKeys {
 
     // ========== 模型调用相关 ==========
 
-    /** 输入Token数量 */
-    public static final String INPUT_TOKENS = "input";
+        /** 输入Token数量 */
+        public static final String INPUT_TOKENS = "input";
 
-    /** 输出Token数量 */
-    public static final String OUTPUT_TOKENS = "output";
+        /** 输出Token数量 */
+        public static final String OUTPUT_TOKENS = "output";
 
     // ========== 按次计费相关 ==========
 

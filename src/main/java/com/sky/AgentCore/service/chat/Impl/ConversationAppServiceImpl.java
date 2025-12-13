@@ -87,7 +87,7 @@ public class ConversationAppServiceImpl implements ConversationAppService {
         // 2. 获取传输方式
         MessageTransport<SseEmitter> transport = transportFactory
                 .getTransport(MessageTransportFactory.TRANSPORT_TYPE_SSE);
-
+        System.out.println("进入预览模式");
         // 3. 使用预览专用的消息处理器
         return previewMessageHandler.chat(environment, transport);
     }
