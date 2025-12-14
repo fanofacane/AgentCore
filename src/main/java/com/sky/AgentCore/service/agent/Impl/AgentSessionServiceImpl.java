@@ -71,6 +71,12 @@ public class AgentSessionServiceImpl implements AgentSessionService {
             // 如果会话列表为空，则新创建一个并且返回
             SessionEntity session = sessionService.createSession(agentId, userId);
             sessions.add(session);
+            AgentEntity agent = agentAppService.getAgentWithPermissionCheck(agentId, userId);
+            MessageEntity messageEntity = new MessageEntity();
+            messageEntity.setRole(Role.SYSTEM);
+            messageEntity.setContent(agent.getWelcomeMessage());
+            messageEntity.setSessionId(session.getId());
+            messageService.save(messageEntity);
         }
 
         AgentEntity agent = agentAppService.getById(agentId);
