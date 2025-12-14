@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -128,6 +129,12 @@ public class LlmDomainServiceImpl extends ServiceImpl<ModelsMapper,ModelEntity> 
         // 发布模型状态变更事件
         //eventPublisher.publishEvent(new ModelStatusChangedEvent(modelId, userId, updatedModel, newStatus, ""));
 
+    }
+
+    @Override
+    public List<ModelEntity> getModelsByIds(Set<String> modelIds) {
+        if (modelIds == null || modelIds.isEmpty()) return new ArrayList<>();
+        return lambdaQuery().in(ModelEntity::getId, modelIds).list();
     }
 
     private void insertModel(ModelEntity model) {

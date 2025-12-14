@@ -7,6 +7,7 @@ import com.sky.AgentCore.enums.Operator;
 import com.sky.AgentCore.enums.ProviderType;
 
 import java.util.List;
+import java.util.Set;
 
 
 public interface LLMDomainService extends IService<ModelEntity> {
@@ -27,4 +28,6 @@ public interface LLMDomainService extends IService<ModelEntity> {
     void deleteModel(String modelId, String userId, Operator  operator);
 
     void updateModelStatus(String modelId, String userId);
+
+    List<ModelEntity> getModelsByIds(Set<String> modelIds);
 }
