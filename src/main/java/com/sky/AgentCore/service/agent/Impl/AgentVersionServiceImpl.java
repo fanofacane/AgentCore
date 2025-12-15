@@ -36,6 +36,7 @@ public class AgentVersionServiceImpl extends ServiceImpl<AgentVersionMapper, Age
         return lambdaQuery().eq(AgentVersionEntity::getAgentId, agentId)
                 .orderByDesc(AgentVersionEntity::getPublishedAt)
                 .orderByDesc(AgentVersionEntity::getId)
+                .last("limit 1")
                 .one();
     }
 
