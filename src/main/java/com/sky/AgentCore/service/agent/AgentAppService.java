@@ -3,6 +3,7 @@ package com.sky.AgentCore.service.agent;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.sky.AgentCore.dto.agent.*;
 
+import java.util.Collection;
 import java.util.List;
 
 public interface AgentAppService extends IService<AgentEntity> {
@@ -31,4 +32,6 @@ public interface AgentAppService extends IService<AgentEntity> {
     AgentVersionDTO getAgentVersion(String agentId, String versionNumber);
 
     List<AgentVersionDTO> getAgentVersions(String agentId, String userId);
+
+    List<AgentEntity> getAgentsByIds(List<String> agentIds);
 }

@@ -269,6 +269,11 @@ public class AgentAppServiceImpl extends ServiceImpl<AgentMapper, AgentEntity> i
         return AgentVersionAssembler.toDTOs(agentVersionEntities);
     }
 
+    @Override
+    public List<AgentEntity> getAgentsByIds(List<String> agentIds) {
+        return lambdaQuery().in(AgentEntity::getId,agentIds).list();
+    }
+
     /** 发布Agent版本 */
     public AgentVersionEntity publishAgentVersion(String agentId, AgentVersionEntity versionEntity) {
         AgentEntity agent = getById(agentId);
