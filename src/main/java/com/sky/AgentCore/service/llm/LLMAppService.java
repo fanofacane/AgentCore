@@ -29,4 +29,5 @@ public interface LLMAppService extends IService<ProviderEntity> {
 
     List<ProviderProtocol> getUserProviderProtocols();
 
+    void deleteProvider(String providerId, String userId);
 }

@@ -19,4 +19,6 @@ public interface MessageService extends IService<MessageEntity> {
     void saveMessage(List<MessageEntity> messageEntities);
 
     boolean isFirstConversation(String sessionId);
+
+    void deleteMessages(List<String> sessionIds);
 }

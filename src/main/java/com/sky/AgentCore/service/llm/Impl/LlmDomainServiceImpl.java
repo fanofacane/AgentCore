@@ -29,6 +29,8 @@ public class LlmDomainServiceImpl extends ServiceImpl<ModelsMapper,ModelEntity> 
     private ProvidersMapper providersMapper;
     @Autowired
     private UserSettingsDomainService userSettingsDomainService;
+    @Autowired
+    private ModelsMapper modelsMapper;
     /** 获取模型
      * @param modelId 模型id */
     public ModelEntity selectModelById(String modelId) {
@@ -135,6 +137,40 @@ public class LlmDomainServiceImpl extends ServiceImpl<ModelsMapper,ModelEntity> 
     public List<ModelEntity> getModelsByIds(Set<String> modelIds) {
         if (modelIds == null || modelIds.isEmpty()) return new ArrayList<>();
         return lambdaQuery().in(ModelEntity::getId, modelIds).list();
+    }
+
+    @Override
+    public boolean canUserUseModel(String modelId, String userId) {
+        return lambdaQuery().eq(ModelEntity::getModelId, modelId).eq(ModelEntity::getStatus, true)
+                .and(q -> q.eq(ModelEntity::getUserId, userId).or().eq(ModelEntity::getIsOfficial, true))
+                .exists();
+    }
+
+    @Override
+    public void deleteProvider(String providerId, String userId, Operator operator) {
+        // 删除服务商前先获取要删除的模型列表，用于发布批量删除事件
+        Wrapper<ModelEntity> modelQueryWrapper = Wrappers.<ModelEntity>lambdaQuery().eq(ModelEntity::getProviderId,
+                providerId);
+        List<ModelEntity> modelsToDelete = modelsMapper.selectList(modelQueryWrapper);
+
+        Wrapper<ProviderEntity> wrapper = Wrappers.<ProviderEntity>lambdaQuery().eq(ProviderEntity::getId, providerId)
+                .eq(operator.needCheckUserId(), ProviderEntity::getUserId, userId);
+        int affected = providersMapper.delete(wrapper);
+        if (affected == 0) throw new BusinessException("数据更新失败");
+
+        // 删除模型
+        Wrapper<ModelEntity> modelWrapper = Wrappers.<ModelEntity>lambdaQuery().eq(ModelEntity::getProviderId,
+                providerId);
+        int delete = modelsMapper.delete(modelWrapper);
+
+        // todo 如果有模型被删除，发布批量删除事件
+/*        if (delete > 0) {
+            List<ModelsBatchDeletedEvent.ModelDeleteItem> deleteItems = modelsToDelete.stream()
+                    .map(model -> new ModelsBatchDeletedEvent.ModelDeleteItem(model.getId(), model.getUserId()))
+                    .collect(Collectors.toList());
+
+            eventPublisher.publishEvent(new ModelsBatchDeletedEvent(deleteItems, userId));
+        }*/
     }
 
     private void insertModel(ModelEntity model) {

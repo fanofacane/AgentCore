@@ -56,6 +56,13 @@ public class AccountEntity extends BaseEntity {
         this.credit = BigDecimal.ZERO;
         this.totalConsumed = BigDecimal.ZERO;
     }
+
+    public AccountEntity(String userId) {
+        this.userId = userId;
+        this.balance = BigDecimal.ONE;
+        this.credit = BigDecimal.ZERO;
+        this.totalConsumed = BigDecimal.ZERO;
+    }
     /** 获取可用余额（余额 + 信用额度） */
     public BigDecimal getAvailableBalance() {
         return balance.add(credit);

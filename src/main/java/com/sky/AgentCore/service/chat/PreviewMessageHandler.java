@@ -51,7 +51,7 @@ public class PreviewMessageHandler extends AbstractMessageHandler {
             }
             transport.sendMessage(connection, AgentChatResponse.build(reply, MessageType.TEXT));
         });
-
+        System.out.println("预览专用聊天响应,不存入数据库");
         // 完整响应处理
         tokenStream.onCompleteResponse(chatResponse -> {
             // 发送结束消息

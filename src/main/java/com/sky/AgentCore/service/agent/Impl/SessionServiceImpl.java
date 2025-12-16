@@ -63,5 +63,17 @@ public class SessionServiceImpl extends ServiceImpl<SessionMapper, SessionEntity
         return session;
     }
 
+    @Override
+    public List<SessionEntity> getSessionsByAgentId(String agentId, String userId) {
+        return lambdaQuery().eq(SessionEntity::getAgentId, agentId)
+                .eq(SessionEntity::getUserId, userId).orderByDesc(SessionEntity::getCreatedAt).list();
+    }
+
+    @Override
+    public void deleteSessions(List<String> sessionIds) {
+        boolean remove = lambdaUpdate().in(SessionEntity::getId, sessionIds).remove();
+        if (!remove) throw new RuntimeException("删除会话失败");
+    }
+
 
 }

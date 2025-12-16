@@ -125,6 +125,34 @@ public class ConversationAppServiceImpl implements ConversationAppService {
 
         return emitter;
     }
+
+    /** 对话处理（支持指定模型）- 用于外部API
+     *
+     * @param chatRequest 聊天请求
+     * @param userId 用户ID
+     * @param modelId 指定的模型ID（可选，为null时使用Agent绑定的模型）
+     * @return SSE发射器 */
+    @Override
+    public SseEmitter chatWithModel(ChatRequest chatRequest, String userId, String modelId) {
+        // 1. 准备对话环境（支持指定模型）
+        ChatContext environment = prepareEnvironmentWithModel(chatRequest, userId, modelId);
+
+        // 2. 获取传输方式 (当前仅支持SSE，将来支持WebSocket)
+        MessageTransport<SseEmitter> transport = transportFactory
+                .getTransport(MessageTransportFactory.TRANSPORT_TYPE_SSE);
+
+        // 3. 获取适合的消息处理器 (根据agent类型)
+        // todo 暂时使用预览模式消息处理器
+//        AbstractMessageHandler handler = messageHandlerFactory.getHandler(environment.getAgent());
+        // 4. 处理对话
+        SseEmitter emitter = previewMessageHandler.chat(environment, transport);
+
+        // 5. 注册会话到会话管理器（支持中断功能）
+        chatSessionManager.registerSession(chatRequest.getSessionId(), emitter);
+
+        return emitter;
+    }
+
     /** 根据请求类型准备环境
      * @param chatRequest 聊天请求
      * @param userId 用户ID
