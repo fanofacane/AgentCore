@@ -62,6 +62,14 @@ public class PortalLLMController {
         String userId = UserContext.getCurrentUserId();
         return Result.success(llmAppService.createProvider(providerCreateRequest, userId));
     }
+    /** 删除服务提供商
+     * @param providerId 服务提供商ID */
+    @DeleteMapping("/providers/{providerId}")
+    public Result<Void> deleteProvider(@PathVariable String providerId) {
+        String userId = UserContext.getCurrentUserId();
+        llmAppService.deleteProvider(providerId, userId);
+        return Result.success();
+    }
 
     /** 获取服务商列表，支持按类型过滤
      * @param type 服务商类型：all-所有，official-官方，user-用户的（默认）

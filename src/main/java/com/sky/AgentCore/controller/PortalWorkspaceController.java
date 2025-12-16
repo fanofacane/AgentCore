@@ -42,7 +42,6 @@ public class PortalWorkspaceController {
     @DeleteMapping("/agents/{id}")
     public Result<Void> deleteAgent(@PathVariable String id) {
         String userId = UserContext.getCurrentUserId();
-        //todo
         agentWorkspaceAppService.deleteAgent(id, userId);
         return Result.success();
     }

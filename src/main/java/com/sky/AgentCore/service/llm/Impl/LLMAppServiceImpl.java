@@ -9,6 +9,7 @@ import com.sky.AgentCore.converter.ModelAssembler;
 import com.sky.AgentCore.converter.ProviderAssembler;
 import com.sky.AgentCore.dto.model.*;
 import com.sky.AgentCore.enums.ModelType;
+import com.sky.AgentCore.enums.Operator;
 import com.sky.AgentCore.enums.ProviderProtocol;
 import com.sky.AgentCore.enums.ProviderType;
 import com.sky.AgentCore.mapper.ModelsMapper;
@@ -154,6 +155,10 @@ public class LLMAppServiceImpl extends ServiceImpl<ProvidersMapper, ProviderEnti
         return Arrays.asList(ProviderProtocol.values());
     }
 
+    @Override
+    public void deleteProvider(String providerId, String userId) {
+        llmDomainService.deleteProvider(providerId, userId, Operator.USER);
+    }
 
 
     /** 验证服务商协议是否支持

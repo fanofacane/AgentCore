@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.sky.AgentCore.dto.message.MessageEntity;
 import com.sky.AgentCore.dto.session.SessionEntity;
 
+import java.util.Collection;
 import java.util.List;
 
 public interface SessionService extends IService<SessionEntity> {
@@ -16,4 +17,8 @@ public interface SessionService extends IService<SessionEntity> {
     void deleteSession(String sessionId, String userId);
 
     SessionEntity getSession(String sessionId, String userId);
+
+    List<SessionEntity> getSessionsByAgentId(String agentId, String userId);
+
+    void deleteSessions(List<String> sessionIds);
 }

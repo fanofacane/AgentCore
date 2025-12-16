@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -140,6 +141,33 @@ public class ApiKeyServiceImpl extends ServiceImpl<ApiKeyMapper, ApiKeyEntity> i
 
         logger.info("用户 {} 重置了API密钥: {}", userId, apiKeyId);
         return dto;
+    }
+
+    /** 验证API Key
+     * @param apiKey API密钥
+     * @return API密钥实体，如果无效则抛出异常 */
+    @Override
+    public ApiKeyEntity validateApiKey(String apiKey) {
+        ApiKeyEntity apiKeyEntity = lambdaQuery().eq(ApiKeyEntity::getApiKey, apiKey).one();
+
+        if (apiKeyEntity == null) {
+            throw new BusinessException("无效的API Key");
+        }
+
+        if (!apiKeyEntity.isAvailable()) {
+            throw new BusinessException("API Key已禁用或过期");
+        }
+
+        return apiKeyEntity;
+    }
+
+    /** 更新API Key使用记录
+     * @param apiKey API密钥 */
+    @Override
+    public void updateUsage(String apiKey) {
+        boolean update = lambdaUpdate().eq(ApiKeyEntity::getApiKey, apiKey).setSql("usage_count = usage_count + 1")
+                .set(ApiKeyEntity::getLastUsedAt, LocalDateTime.now()).update();
+        if (!update) throw new BusinessException("更新API密钥使用记录失败");
     }
 
     /** 重置API密钥

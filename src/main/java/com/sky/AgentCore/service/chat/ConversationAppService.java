@@ -15,4 +15,6 @@ public interface ConversationAppService {
     List<MessageDTO> getConversationMessages(String sessionId, String userId);
 
     SseEmitter chat(ChatRequest chatRequest, String currentUserId);
+
+    SseEmitter chatWithModel(ChatRequest chatRequest, String userId, String model);
 }

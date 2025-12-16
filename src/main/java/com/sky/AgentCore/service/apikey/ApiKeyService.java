@@ -19,4 +19,8 @@ public interface ApiKeyService extends IService<ApiKeyEntity> {
     void deleteApiKey(String apiKeyId, String userId);
 
     ApiKeyDTO resetApiKey(String apiKeyId, String userId);
+
+    ApiKeyEntity validateApiKey(String apiKey);
+
+    void updateUsage(String apiKey);
 }

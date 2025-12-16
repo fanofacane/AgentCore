@@ -3,11 +3,13 @@ package com.sky.AgentCore.service.login.Impl;
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.sky.AgentCore.Exceptions.BusinessException;
+import com.sky.AgentCore.dto.account.AccountEntity;
 import com.sky.AgentCore.dto.login.EmailLoginRequest;
 import com.sky.AgentCore.dto.login.LoginRequest;
 import com.sky.AgentCore.dto.login.RegisterRequest;
 import com.sky.AgentCore.dto.user.UserEntity;
 import com.sky.AgentCore.enums.AuthFeatureKey;
+import com.sky.AgentCore.mapper.AccountMapper;
 import com.sky.AgentCore.mapper.UserMapper;
 import com.sky.AgentCore.service.auth.AuthSettingAppService;
 import com.sky.AgentCore.service.login.LoginAppService;
@@ -19,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 import static com.sky.AgentCore.utils.VerificationCode.BUSINESS_TYPE_EMAIL_LOGIN;
@@ -32,6 +35,8 @@ public class LoginAppServiceImpl extends ServiceImpl<UserMapper,UserEntity> impl
     private VerificationCode verificationCode;
     @Autowired
     private EmailService emailService;
+    @Autowired
+    private AccountMapper accountMapper;
     @Override
     public String login(LoginRequest loginRequest) {
         // 检查普通登录是否启用
@@ -59,6 +64,7 @@ public class LoginAppServiceImpl extends ServiceImpl<UserMapper,UserEntity> impl
         fillRegister(registerRequest);
 
     }
+
     /** 发送注册邮箱验证码 */
     @Override
     public void sendEmailVerificationCode(String email, String captchaUuid, String captchaCode, String ip, String businessType) {
@@ -133,6 +139,8 @@ public class LoginAppServiceImpl extends ServiceImpl<UserMapper,UserEntity> impl
         userEntity.setNickname(generateNickname());
         userEntity.setLoginPlatform("normal");
         save(userEntity);
+        //注册账户免费获取￥1额度
+        accountMapper.insert(new AccountEntity(userEntity.getId()));
     }
     public void checkAccountExists(String email,String phone) {
         if (lambdaQuery().eq(UserEntity::getEmail, email).or().eq(UserEntity::getPhone, phone).count() > 0) {

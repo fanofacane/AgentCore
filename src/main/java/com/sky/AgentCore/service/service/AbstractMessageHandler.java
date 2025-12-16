@@ -81,7 +81,7 @@ public abstract class AbstractMessageHandler {
         T connection = transport.createConnection(CONNECTION_TIMEOUT);
 
         // 2. 检查用户余额是否足够
-        //checkBalanceBeforeChat(chatContext.getUserId(), transport, connection);
+//        checkBalanceBeforeChat(chatContext.getUserId(), transport, connection);
 
         // 3. 创建消息实体
         MessageEntity llmMessageEntity = createLlmMessage(chatContext);
@@ -177,7 +177,6 @@ public abstract class AbstractMessageHandler {
   /*          long latency = System.currentTimeMillis() - startTime;
             highAvailabilityDomainService.reportCallResult(chatContext.getInstanceId(), chatContext.getModel().getId(),
                     true, latency, null);*/
-            System.out.println("开始计费");
             // 执行模型调用计费
             performBillingWithErrorHandling(chatContext, chatResponse.tokenUsage().inputTokenCount(),
                     chatResponse.tokenUsage().outputTokenCount(), transport, connection);

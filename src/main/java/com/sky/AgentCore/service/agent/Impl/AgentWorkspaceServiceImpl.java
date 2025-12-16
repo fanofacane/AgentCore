@@ -14,18 +14,24 @@ import com.sky.AgentCore.dto.agent.AgentWorkspaceEntity;
 import com.sky.AgentCore.dto.model.ModelEntity;
 import com.sky.AgentCore.dto.model.ProviderEntity;
 import com.sky.AgentCore.dto.model.UpdateModelConfigRequest;
+import com.sky.AgentCore.dto.session.SessionEntity;
 import com.sky.AgentCore.enums.PublishStatus;
 import com.sky.AgentCore.mapper.AgentMapper;
 import com.sky.AgentCore.mapper.AgentVersionMapper;
 import com.sky.AgentCore.mapper.AgentWorkspaceMapper;
 import com.sky.AgentCore.service.agent.AgentWorkspaceService;
+import com.sky.AgentCore.service.agent.SessionService;
+import com.sky.AgentCore.service.chat.ConversationAppService;
+import com.sky.AgentCore.service.chat.MessageService;
 import com.sky.AgentCore.service.llm.LLMAppService;
 import org.checkerframework.checker.units.qual.A;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class AgentWorkspaceServiceImpl extends ServiceImpl<AgentWorkspaceMapper, AgentWorkspaceEntity> implements AgentWorkspaceService {
@@ -35,6 +41,10 @@ public class AgentWorkspaceServiceImpl extends ServiceImpl<AgentWorkspaceMapper,
     private LLMAppService llmService;
     @Autowired
     private AgentVersionMapper agentVersionMapper;
+    @Autowired
+    private SessionService sessionService;
+    @Autowired
+    private MessageService messageService;
     @Override
     public List<AgentDTO> getAgents(String userId) {
         List<AgentWorkspaceEntity> list = lambdaQuery()
@@ -69,8 +79,26 @@ public class AgentWorkspaceServiceImpl extends ServiceImpl<AgentWorkspaceMapper,
         if (!success) throw new RuntimeException("更新模型配置失败");
     }
 
+    /** 删除工作区中的助理
+     * @param agentId 助理id
+     * @param userId 用户id */
     @Override
-    public void deleteAgent(String id, String userId) {
+    @Transactional
+    public void deleteAgent(String agentId, String userId) {
+
+        // agent如果是自己的则不允许删除
+        AgentEntity agent = agentMapper.selectById(agentId);
+        if (agent.getUserId().equals(userId)) throw new BusinessException("该助理属于自己，不允许删除");
+        boolean deleteAgent = lambdaUpdate().eq(AgentWorkspaceEntity::getAgentId, agentId)
+                .eq(AgentWorkspaceEntity::getUserId, userId).remove();
+        if (!deleteAgent) throw new BusinessException("删除助理失败");
+
+        List<String> sessionIds = sessionService.getSessionsByAgentId(agentId, userId).stream()
+                .map(SessionEntity::getId).collect(Collectors.toList());
+        if (sessionIds.isEmpty()) return;
+
+        sessionService.deleteSessions(sessionIds);
+        messageService.deleteMessages(sessionIds);
 
     }
 
@@ -80,9 +108,8 @@ public class AgentWorkspaceServiceImpl extends ServiceImpl<AgentWorkspaceMapper,
         AgentWorkspaceEntity agentWorkspaceEntity = lambdaQuery()
                 .eq(AgentWorkspaceEntity::getAgentId, agentId)
                 .eq(AgentWorkspaceEntity::getUserId, userId).one();
-        if (agentWorkspaceEntity == null) {
-            throw new BusinessException("助理不存在");
-        }
+        if (agentWorkspaceEntity == null) throw new BusinessException("助理不存在");
+
         return agentWorkspaceEntity;
     }
 

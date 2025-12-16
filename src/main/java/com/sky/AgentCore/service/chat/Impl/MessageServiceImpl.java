@@ -58,4 +58,10 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, MessageEntity
     public boolean isFirstConversation(String sessionId) {
         return lambdaQuery().eq(MessageEntity::getSessionId, sessionId).count() <= 3;
     }
+
+    @Override
+    public void deleteMessages(List<String> sessionIds) {
+        boolean remove = lambdaUpdate().in(MessageEntity::getSessionId, sessionIds).remove();
+        if (!remove) throw new RuntimeException("删除消息失败");
+    }
 }

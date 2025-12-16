@@ -3,6 +3,8 @@ package com.sky.AgentCore.config;
 
 import com.sky.AgentCore.dto.model.ProviderConfig;
 import com.sky.AgentCore.enums.ProviderProtocol;
+import dev.langchain4j.model.anthropic.AnthropicChatModel;
+import dev.langchain4j.model.anthropic.AnthropicStreamingChatModel;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.openai.OpenAiChatModel;
@@ -26,10 +28,10 @@ public class LLMProviderFactory {
             openAiChatModelBuilder.timeout(Duration.ofHours(1));
             model = new OpenAiChatModel(openAiChatModelBuilder);
         }
-/*        else if (protocol == ProviderProtocol.ANTHROPIC) {
+        else if (protocol == ProviderProtocol.ANTHROPIC) {
             model = AnthropicChatModel.builder().apiKey(providerConfig.getApiKey()).baseUrl(providerConfig.getBaseUrl())
                     .modelName(providerConfig.getModel()).version("2023-06-01").timeout(Duration.ofHours(1)).build();
-        }*/
+        }
         return model;
     }
 
@@ -40,11 +42,11 @@ public class LLMProviderFactory {
                     .baseUrl(providerConfig.getBaseUrl()).customHeaders(providerConfig.getCustomHeaders())
                     .modelName(providerConfig.getModel()).timeout(Duration.ofHours(1)).build();
         }
-/*        else if (protocol == ProviderProtocol.ANTHROPIC) {
+        else if (protocol == ProviderProtocol.ANTHROPIC) {
             model = AnthropicStreamingChatModel.builder().apiKey(providerConfig.getApiKey())
                     .baseUrl(providerConfig.getBaseUrl()).version("2023-06-01").modelName(providerConfig.getModel())
                     .timeout(Duration.ofHours(1)).build();
-        }*/
+        }
 
         return model;
     }
