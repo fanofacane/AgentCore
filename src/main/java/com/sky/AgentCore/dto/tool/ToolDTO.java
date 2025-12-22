@@ -23,7 +23,7 @@ public class ToolDTO {
     private UploadType uploadType;
     private String uploadUrl;
     private List<ToolDefinition> toolList;
-    private ToolStatus status; // todo xhy 后续可能删除
+    private ToolStatus status; // todo 后续可能删除
     private Boolean isOffice;
     private Integer installCount; // 安装数量
     private String currentVersion; // 当前版本号

@@ -15,6 +15,7 @@ import com.sky.AgentCore.service.llm.LLMDomainService;
 import com.sky.AgentCore.service.user.UserSettingsDomainService;
 import jakarta.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -31,13 +32,15 @@ public class LlmDomainServiceImpl extends ServiceImpl<ModelsMapper,ModelEntity> 
     private UserSettingsDomainService userSettingsDomainService;
     @Autowired
     private ModelsMapper modelsMapper;
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
+
     /** 获取模型
      * @param modelId 模型id */
     public ModelEntity selectModelById(String modelId) {
         ModelEntity modelEntity = lambdaQuery().eq(ModelEntity::getId, modelId).one();
-        if (modelEntity == null) {
-            throw new BusinessException("模型不存在");
-        }
+        if (modelEntity == null) throw new BusinessException("模型不存在");
+
         return modelEntity;
     }
 
@@ -114,8 +117,8 @@ public class LlmDomainServiceImpl extends ServiceImpl<ModelsMapper,ModelEntity> 
     public void deleteModel(String modelId, String userId, Operator operator) {
         lambdaUpdate().eq(ModelEntity::getId, modelId)
                 .eq(operator.needCheckUserId(), ModelEntity::getUserId, userId).remove();
-        // todo 发布模型删除事件
-        //  eventPublisher.publishEvent(new ModelDeletedEvent(modelId, userId));
+        //  发布模型删除事件
+        eventPublisher.publishEvent(new ModelDeletedEvent(modelId, userId));
     }
 
     @Override
@@ -125,11 +128,10 @@ public class LlmDomainServiceImpl extends ServiceImpl<ModelsMapper,ModelEntity> 
         lambdaUpdate().eq(ModelEntity::getId, modelId)
                 .eq(ModelEntity::getUserId, userId).setSql("status = NOT status")
                 .update();
-        // todo 发布模型更新事件
-        //  获取更新后的模型信息
-        //ModelEntity updatedModel = getById(modelId);
-        // 发布模型状态变更事件
-        //eventPublisher.publishEvent(new ModelStatusChangedEvent(modelId, userId, updatedModel, newStatus, ""));
+
+        ModelEntity updatedModel = getById(modelId);
+        // 发布模型更新事件
+        eventPublisher.publishEvent(new ModelStatusChangedEvent(modelId, userId, updatedModel, newStatus, ""));
 
     }
 
@@ -163,20 +165,24 @@ public class LlmDomainServiceImpl extends ServiceImpl<ModelsMapper,ModelEntity> 
                 providerId);
         int delete = modelsMapper.delete(modelWrapper);
 
-        // todo 如果有模型被删除，发布批量删除事件
-/*        if (delete > 0) {
+        if (delete > 0) {
             List<ModelsBatchDeletedEvent.ModelDeleteItem> deleteItems = modelsToDelete.stream()
                     .map(model -> new ModelsBatchDeletedEvent.ModelDeleteItem(model.getId(), model.getUserId()))
                     .collect(Collectors.toList());
-
+            //发布删除模型事件
             eventPublisher.publishEvent(new ModelsBatchDeletedEvent(deleteItems, userId));
-        }*/
+        }
+    }
+
+    @Override
+    public List<ModelEntity> getAllActiveModels() {
+        return lambdaQuery().eq(ModelEntity::getStatus, true).list();
     }
 
     private void insertModel(ModelEntity model) {
         save(model);
-        // todo 发布模型创建事件
-        // eventPublisher.publishEvent(new ModelCreatedEvent(model.getId(), model.getUserId(), model));
+        // 发布模型创建事件
+        eventPublisher.publishEvent(new ModelCreatedEvent(model.getId(), model.getUserId(), model));
     }
 
     // 检查服务商是否存在
@@ -184,9 +190,8 @@ public class LlmDomainServiceImpl extends ServiceImpl<ModelsMapper,ModelEntity> 
         Wrapper<ProviderEntity> wrapper = Wrappers.<ProviderEntity>lambdaQuery().eq(ProviderEntity::getId, providerId)
                 .eq(ProviderEntity::getUserId, userId);
         ProviderEntity provider = providersMapper.selectOne(wrapper);
-        if (provider == null) {
-            throw new BusinessException("服务商不存在");
-        }
+
+        if (provider == null) throw new BusinessException("服务商不存在");
     }
     /** 获取激活的模型列表
      * @param providerId 服务商ID
@@ -208,9 +213,7 @@ public class LlmDomainServiceImpl extends ServiceImpl<ModelsMapper,ModelEntity> 
      * @param providers 服务商列表
      * @return 服务商聚合根列表 */
     private List<ProviderAggregate> buildProviderAggregatesWithAllModels(List<ProviderEntity> providers) {
-        if (providers.isEmpty()) {
-            return new ArrayList<>();
-        }
+        if (providers.isEmpty()) return new ArrayList<>();
 
         // 获取所有服务商ID
         List<String> providerIds = providers.stream().map(ProviderEntity::getId).collect(Collectors.toList());

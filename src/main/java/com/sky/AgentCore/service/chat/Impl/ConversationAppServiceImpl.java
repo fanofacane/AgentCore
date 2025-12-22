@@ -114,7 +114,7 @@ public class ConversationAppServiceImpl implements ConversationAppService {
                 .getTransport(MessageTransportFactory.TRANSPORT_TYPE_SSE);
 
         // 3. todo 根据请求类型获取适合的消息处理器 暂时不支持链路追踪
-        // AbstractMessageHandler handler = messageHandlerFactory.getHandler(chatRequest);
+        //AbstractMessageHandler handler = messageHandlerFactory.getHandler(chatRequest);
         AbstractMessageHandler handler = previewMessageHandler;
         // 4. 处理对话
         SseEmitter emitter = handler.chat(environment, transport);
