@@ -30,6 +30,13 @@ public class PortalAgentSessionController {
         String userId = UserContext.getCurrentUserId();
         return conversationAppService.previewAgent(previewRequest, userId);
     }
+    /** 发送消息
+     * @param chatRequest 消息对象
+     * @return */
+    @PostMapping("/chat")
+    public SseEmitter chat(@RequestBody @Validated ChatRequest chatRequest) {
+        return conversationAppService.chat(chatRequest, UserContext.getCurrentUserId());
+    }
     /** 创建会话 */
     @PostMapping("/{agentId}")
     public Result<SessionDTO> createSession(@PathVariable String agentId) {
@@ -61,12 +68,5 @@ public class PortalAgentSessionController {
         String userId = UserContext.getCurrentUserId();
         agentSessionAppService.deleteSession(id, userId);
         return Result.success();
-    }
-    /** 发送消息
-     * @param chatRequest 消息对象
-     * @return */
-    @PostMapping("/chat")
-    public SseEmitter chat(@RequestBody @Validated ChatRequest chatRequest) {
-        return conversationAppService.chat(chatRequest, UserContext.getCurrentUserId());
     }
 }

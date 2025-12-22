@@ -1,4 +1,4 @@
-package com.sky.AgentCore.dto;
+package com.sky.AgentCore.dto.model;
 
 import com.sky.AgentCore.enums.TokenOverflowStrategyEnum;
 import lombok.Data;

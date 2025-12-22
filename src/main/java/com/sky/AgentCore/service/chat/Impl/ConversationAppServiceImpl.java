@@ -4,20 +4,17 @@ import cn.hutool.core.bean.BeanUtil;
 import com.sky.AgentCore.Exceptions.BusinessException;
 import com.sky.AgentCore.config.MessageHandlerFactory;
 import com.sky.AgentCore.converter.MessageAssembler;
-import com.sky.AgentCore.dto.*;
 import com.sky.AgentCore.dto.agent.AgentEntity;
 import com.sky.AgentCore.dto.agent.AgentPreviewRequest;
 import com.sky.AgentCore.dto.agent.AgentVersionEntity;
 import com.sky.AgentCore.dto.agent.AgentWorkspaceEntity;
 import com.sky.AgentCore.dto.chat.*;
+import com.sky.AgentCore.dto.gateway.HighAvailabilityResult;
 import com.sky.AgentCore.dto.message.MessageDTO;
 import com.sky.AgentCore.dto.message.MessageEntity;
 import com.sky.AgentCore.dto.message.TokenMessage;
 import com.sky.AgentCore.dto.message.TokenProcessResult;
-import com.sky.AgentCore.dto.model.HighAvailabilityResult;
-import com.sky.AgentCore.dto.model.ModelEntity;
-import com.sky.AgentCore.dto.model.ProviderConfig;
-import com.sky.AgentCore.dto.model.ProviderEntity;
+import com.sky.AgentCore.dto.model.*;
 import com.sky.AgentCore.dto.session.SessionEntity;
 import com.sky.AgentCore.dto.tool.UserToolEntity;
 import com.sky.AgentCore.enums.MessageType;
@@ -32,7 +29,7 @@ import com.sky.AgentCore.service.chat.MessageService;
 import com.sky.AgentCore.service.llm.LLMDomainService;
 import com.sky.AgentCore.service.chat.PreviewMessageHandler;
 import com.sky.AgentCore.service.service.AbstractMessageHandler;
-import com.sky.AgentCore.service.service.HighAvailabilityService;
+import com.sky.AgentCore.service.gateway.HighAvailabilityService;
 import com.sky.AgentCore.service.service.TokenOverflowConfig;
 import com.sky.AgentCore.service.service.TokenService;
 import com.sky.AgentCore.service.tool.UserToolService;
@@ -77,6 +74,8 @@ public class ConversationAppServiceImpl implements ConversationAppService {
     private TokenService tokenService;
     @Autowired
     private MessageHandlerFactory messageHandlerFactory;
+    @Autowired
+    private HighAvailabilityService highAvailabilityService;
     @Autowired
     private ChatSessionManager chatSessionManager;
     @Override
@@ -153,6 +152,29 @@ public class ConversationAppServiceImpl implements ConversationAppService {
         return emitter;
     }
 
+    /** 同步对话处理（支持指定模型）- 用于外部API
+     *
+     * @param chatRequest 聊天请求
+     * @param userId 用户ID
+     * @param modelId 指定的模型ID（可选，为null时使用Agent绑定的模型）
+     * @return 同步聊天响应 */
+    @Override
+    public ChatResponse chatSyncWithModel(ChatRequest chatRequest, String userId, String modelId) {
+        // 1. 准备对话环境（设置为非流式）
+        ChatContext environment = prepareEnvironmentWithModel(chatRequest, userId, modelId);
+        environment.setStreaming(false); // 设置为同步模式
+
+        // 2. 获取同步传输方式
+        MessageTransport<ChatResponse> transport = transportFactory
+                .getTransport(MessageTransportFactory.TRANSPORT_TYPE_SYNC);
+
+        // 3. // todo 获取适合的消息处理器
+        //AbstractMessageHandler handler = messageHandlerFactory.getHandler(environment.getAgent());
+
+        // 4. 处理对话
+        return previewMessageHandler.chat(environment, transport);
+    }
+
     /** 根据请求类型准备环境
      * @param chatRequest 聊天请求
      * @param userId 用户ID
@@ -193,23 +215,20 @@ public class ConversationAppServiceImpl implements ConversationAppService {
         // 3. 获取模型配置
         AgentWorkspaceEntity workspace = agentWorkspaceService.getWorkspace(agentId, userId);
         LLMModelConfig llmModelConfig = workspace.getLlmModelConfig();
-        ModelEntity model = getModelForChat(llmModelConfig, modelId, userId);
+        ModelEntity originalModel = getModelForChat(llmModelConfig, modelId, userId);
 
         // 4. 获取高可用服务商信息
         List<String> fallbackChain = userSettingsDomainService.getUserFallbackChain(userId);
-        /*HighAvailabilityResult result = highAvailabilityService.selectBestProvider(model, userId, sessionId,
-                fallbackChain);*/
-        ProviderEntity originalProvider = llmDomainService.getProvider(model.getProviderId());
-/*        ProviderEntity provider = result.getProvider();
-        ModelEntity selectedModel = result.getModel();
+        HighAvailabilityResult result = highAvailabilityService.selectBestProvider(originalModel, userId, sessionId,
+                fallbackChain);
+
+        ProviderEntity originalProvider = llmDomainService.getProvider(originalModel.getProviderId());
+        ProviderEntity provider = result.getProvider();
+        ModelEntity model = result.getModel();
         String instanceId = result.getInstanceId();
-        provider.isActive();*/
-        // todo 暂时不支持高可用
-        ModelEntity selectedModel = model;
-        ProviderEntity provider = originalProvider;
-        String instanceId = "1";
+        provider.isActive();
         // 5. 创建并配置环境对象
-        ChatContext chatContext = createChatContext(chatRequest, userId, agent, model, selectedModel, originalProvider,
+        ChatContext chatContext = createChatContext(chatRequest, userId, agent, originalModel, model, originalProvider,
                 provider, llmModelConfig, mcpServerNames, instanceId);
         setupContextAndHistory(chatContext, chatRequest);
 
@@ -293,8 +312,8 @@ public class ConversationAppServiceImpl implements ConversationAppService {
                     .sorted(Comparator.comparing(TokenMessage::getCreatedAt)).map(TokenMessage::getId)
                     .collect(Collectors.toList());
             if (strategyType == TokenOverflowStrategyEnum.SUMMARIZE
-                    && retainedMessages.get(0).getRole().equals(Role.SUMMARY.name())) {
-                newSummaryMessage = retainedMessages.get(0);
+                    && retainedMessages.getFirst().getRole().equals(Role.SUMMARY.name())) {
+                newSummaryMessage = retainedMessages.getFirst();
                 contextEntity.setSummary(newSummaryMessage.getContent());
             }
 
@@ -307,7 +326,7 @@ public class ConversationAppServiceImpl implements ConversationAppService {
                 .filter(message -> retainedMessageIdSet.contains(message.getId()) && !message.isSummaryMessage())
                 .collect(Collectors.toList());
         if (newSummaryMessage != null) {
-            newHistoryMessages.add(0, this.summaryMessageToEntity(newSummaryMessage, environment.getSessionId()));
+            newHistoryMessages.addFirst(summaryMessageToEntity(newSummaryMessage, environment.getSessionId()));
         }
         return newHistoryMessages;
     }
@@ -542,7 +561,7 @@ public class ConversationAppServiceImpl implements ConversationAppService {
     }
     /** 创建ChatContext对象 */
     private ChatContext createChatContext(ChatRequest chatRequest, String userId, AgentEntity agent,
-                                          ModelEntity originalModel, ModelEntity selectedModel, ProviderEntity originalProvider,
+                                          ModelEntity originalModel, ModelEntity model, ProviderEntity originalProvider,
                                           ProviderEntity provider, LLMModelConfig llmModelConfig, List<String> mcpServerNames, String instanceId) {
         ChatContext chatContext = new ChatContext();
         chatContext.setSessionId(chatRequest.getSessionId());
@@ -550,7 +569,7 @@ public class ConversationAppServiceImpl implements ConversationAppService {
         chatContext.setUserMessage(chatRequest.getMessage());
         chatContext.setAgent(agent);
         chatContext.setOriginalModel(originalModel);
-        chatContext.setModel(selectedModel);
+        chatContext.setModel(model);
         chatContext.setOriginalProvider(originalProvider);
         chatContext.setProvider(provider);
         chatContext.setLlmModelConfig(llmModelConfig);

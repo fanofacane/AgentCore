@@ -1,6 +1,8 @@
 package com.sky.AgentCore.dto.chat;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.sky.AgentCore.converter.ListConverter;
 import lombok.Data;
 
 import java.util.ArrayList;
@@ -18,6 +20,7 @@ public class ContextEntity {
     private String sessionId;
 
     /** 活跃消息ID列表 */
+    @TableField(value = "active_messages", typeHandler = ListConverter.class)
     private List<String> activeMessages = new ArrayList<>();
 
     /** 历史消息摘要 */

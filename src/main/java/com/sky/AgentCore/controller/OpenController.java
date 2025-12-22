@@ -61,15 +61,11 @@ public class OpenController {
         if (request.getStream() != null && request.getStream()) {
             // 流式响应 - 直接返回SseEmitter，Spring Boot会自动处理响应头
             return conversationAppService.chatWithModel(chatRequest, userId, request.getModel());
-        }else{
-            return Result.success("暂不支持非流式");
-        }
-        //todo 暂不支持同步响应
-/*        else {
+        } else {
             // 同步响应
             ChatResponse response = conversationAppService.chatSyncWithModel(chatRequest, userId, request.getModel());
             return Result.success(response);
-        }*/
+        }
     }
     /** 获取可用模型列表
      * @return 模型列表 */

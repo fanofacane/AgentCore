@@ -1,6 +1,6 @@
 package com.sky.AgentCore.controller;
 
-import com.sky.AgentCore.dto.LLMModelConfig;
+import com.sky.AgentCore.dto.model.LLMModelConfig;
 import com.sky.AgentCore.dto.agent.AgentDTO;
 import com.sky.AgentCore.dto.common.Result;
 import com.sky.AgentCore.dto.model.UpdateModelConfigRequest;

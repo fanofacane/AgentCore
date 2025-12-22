@@ -1,8 +1,8 @@
 package com.sky.AgentCore.dto.chat;
 
-import com.sky.AgentCore.dto.*;
 import com.sky.AgentCore.dto.agent.AgentEntity;
 import com.sky.AgentCore.dto.message.MessageEntity;
+import com.sky.AgentCore.dto.model.LLMModelConfig;
 import com.sky.AgentCore.dto.model.ModelEntity;
 import com.sky.AgentCore.dto.model.ProviderEntity;
 import lombok.Data;

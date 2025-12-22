@@ -1,7 +1,7 @@
 package com.sky.AgentCore.converter;
 
 
-import com.sky.AgentCore.dto.LLMModelConfig;
+import com.sky.AgentCore.dto.model.LLMModelConfig;
 import org.apache.ibatis.type.MappedTypes;
 
 /** LLMModelConfig JSON转换器 */

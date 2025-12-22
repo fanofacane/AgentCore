@@ -1,4 +1,4 @@
-package com.sky.AgentCore.dto;
+package com.sky.AgentCore.dto.model;
 
 import lombok.Data;
 

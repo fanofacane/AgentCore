@@ -1,6 +1,6 @@
 package com.sky.AgentCore.dto.agent;
 
-import com.sky.AgentCore.dto.LLMModelConfig;
+import com.sky.AgentCore.dto.model.LLMModelConfig;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 

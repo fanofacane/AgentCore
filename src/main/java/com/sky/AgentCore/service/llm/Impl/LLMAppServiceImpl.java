@@ -50,12 +50,13 @@ public class LLMAppServiceImpl extends ServiceImpl<ProvidersMapper, ProviderEnti
                 break;
             case ALL :
             default :
-                wrapper.eq(ProviderEntity::getUserId, userId).or().eq(ProviderEntity::getIsOfficial, true);
+               wrapper.eq(ProviderEntity::getUserId, userId).or().eq(ProviderEntity::getIsOfficial, true);
         }
         List<ProviderAggregate> providerAggregates = buildProviderAggregatesWithActiveModels(this.list(wrapper));
         return providerAggregates.stream().filter(ProviderAggregate::getStatus)
                 .flatMap(provider -> provider.getModels().stream()
                         .filter(model -> modelType == null || model.getType() == modelType)
+                        .filter(ModelEntity::getStatus)
                         .map(model -> ModelAssembler.toDTO(model, provider.getName())))
                 .collect(Collectors.toList());
     }

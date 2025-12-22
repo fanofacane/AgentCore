@@ -83,6 +83,10 @@ public class Result<T> {
     public static <T> Result<T> error(Integer code, String message) {
         return new Result<>(code, message);
     }
+    // 快捷失败方法（默认错误码）
+    public static <T> Result<T> error(String msg) {
+        return error(500, msg);
+    }
 
     /**
      * 服务器内部错误

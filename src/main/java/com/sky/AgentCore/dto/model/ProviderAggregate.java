@@ -89,9 +89,7 @@ public class ProviderAggregate {
         entity.setIsOfficial(isOfficial);
     }
 
-    public Boolean getStatus() {
-        return entity.getStatus();
-    }
+    public Boolean getStatus() { return entity.getStatus();}
 
     public void setStatus(Boolean status) {
         entity.setStatus(status);
