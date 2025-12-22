@@ -9,9 +9,9 @@ import java.util.List;
 
 /** 高可用领域服务接口 定义高可用网关相关的领域操作
  *
- * @author xhy
+ * @author fanofacnae
  * @since 1.0.0 */
-public interface HighAvailabilityService {
+    public interface HighAvailabilityService {
 
     /** 同步模型到高可用网关
      *

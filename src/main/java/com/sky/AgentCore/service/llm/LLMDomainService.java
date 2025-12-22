@@ -34,4 +34,6 @@ public interface LLMDomainService extends IService<ModelEntity> {
     boolean canUserUseModel(String modelId, String userId);
 
     void deleteProvider(String providerId, String userId, Operator operator);
+
+    List<ModelEntity> getAllActiveModels();
 }

@@ -3,10 +3,7 @@ package com.sky.AgentCore.service.gateway.Impl;
 import com.sky.AgentCore.Exceptions.BusinessException;
 import com.sky.AgentCore.constant.AffinityType;
 import com.sky.AgentCore.dto.config.HighAvailabilityProperties;
-import com.sky.AgentCore.dto.gateway.ApiInstanceDTO;
-import com.sky.AgentCore.dto.gateway.HighAvailabilityResult;
-import com.sky.AgentCore.dto.gateway.ReportResultRequest;
-import com.sky.AgentCore.dto.gateway.SelectInstanceRequest;
+import com.sky.AgentCore.dto.gateway.*;
 import com.sky.AgentCore.dto.model.*;
 import com.sky.AgentCore.service.llm.LLMDomainService;
 import com.sky.AgentCore.service.gateway.HighAvailabilityGateway;
@@ -17,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -31,27 +29,70 @@ public class HighAvailabilityServiceImpl implements HighAvailabilityService {
 
     @Override
     public void syncModelToGateway(ModelEntity model) {
+        if (!properties.isEnabled()) {
+            logger.debug("高可用功能未启用，跳过模型同步: {}", model.getId());
+            return;
+        }
 
+        try {
+            ApiInstanceCreateRequest request = new ApiInstanceCreateRequest(model.getUserId(), model.getModelId(),
+                    "MODEL", model.getId());
+
+            gateway.createApiInstance(request);
+
+            logger.info("成功同步模型到高可用网关: modelId={}", model.getId());
+
+        } catch (Exception e) {
+            logger.error("同步模型到高可用网关失败: modelId={}", model.getId(), e);
+            throw new BusinessException("同步模型到高可用网关失败", e);
+        }
     }
 
     @Override
     public void removeModelFromGateway(String modelId, String userId) {
+        if (!properties.isEnabled()) {
+            logger.debug("高可用功能未启用，跳过模型删除: {}", modelId);
+            return;
+        }
 
+        try {
+            gateway.deleteApiInstance("MODEL", modelId);
+
+            logger.info("成功从高可用网关删除模型: modelId={}", modelId);
+
+        } catch (Exception e) {
+            logger.error("从高可用网关删除模型失败: modelId={}", modelId, e);
+        }
     }
 
     @Override
     public void updateModelInGateway(ModelEntity model) {
+        if (!properties.isEnabled()) {
+            logger.debug("高可用功能未启用，跳过模型更新: {}", model.getId());
+            return;
+        }
 
+        try {
+            ApiInstanceUpdateRequest request = new ApiInstanceUpdateRequest(model.getUserId(),
+                    model.getModelId(), null, null);
+
+            gateway.updateApiInstance("MODEL", model.getId(), request);
+
+            logger.info("成功更新高可用网关中的模型: modelId={}", model.getId());
+
+        } catch (Exception e) {
+            logger.error("更新高可用网关中的模型失败: modelId={}", model.getId(), e);
+        }
     }
 
     @Override
     public HighAvailabilityResult selectBestProvider(ModelEntity model, String userId) {
-        return null;
+        return selectBestProvider(model, userId, null);
     }
 
     @Override
     public HighAvailabilityResult selectBestProvider(ModelEntity model, String userId, String sessionId) {
-        return null;
+        return selectBestProvider(model, userId, sessionId, null);
     }
 
     @Override
@@ -137,12 +178,54 @@ public class HighAvailabilityServiceImpl implements HighAvailabilityService {
 
     @Override
     public void initializeProject() {
+        if (!properties.isEnabled()) {
+            logger.info("高可用功能未启用，跳过项目初始化");
+            return;
+        }
 
+        try {
+            // 创建项目
+            ProjectCreateRequest projectRequest = new ProjectCreateRequest("AgentCore", "AgentCore高可用项目",
+                    properties.getApiKey());
+
+            gateway.createProject(projectRequest);
+
+            logger.info("高可用项目初始化成功");
+
+        } catch (Exception e) {
+            logger.error("高可用项目初始化失败", e);
+        }
     }
 
     @Override
     public void syncAllModelsToGateway() {
+        if (!properties.isEnabled()) return;
 
+        try {
+            // 获取所有激活的模型
+            List<ModelEntity> allActiveModels = llmDomainService.getAllActiveModels();
+
+            if (allActiveModels.isEmpty()) {
+                logger.info("没有激活的模型需要同步");
+                return;
+            }
+
+            // 构建批量创建请求列表
+            List<ApiInstanceCreateRequest> instanceRequests = new ArrayList<>();
+            for (ModelEntity model : allActiveModels) {
+                ApiInstanceCreateRequest request = new ApiInstanceCreateRequest(model.getUserId(), model.getModelId(),
+                        "MODEL", model.getId());
+                instanceRequests.add(request);
+            }
+
+            // 批量同步到高可用网关
+            gateway.batchCreateApiInstances(instanceRequests);
+
+            logger.info("成功批量同步{}个模型到高可用网关", allActiveModels.size());
+
+        } catch (Exception e) {
+            logger.error("批量同步模型到高可用网关失败", e);
+        }
     }
 
     @Override

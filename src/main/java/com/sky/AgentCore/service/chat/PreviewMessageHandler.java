@@ -5,9 +5,11 @@ import com.sky.AgentCore.dto.agent.AgentChatResponse;
 import com.sky.AgentCore.dto.chat.ChatContext;
 import com.sky.AgentCore.dto.message.MessageEntity;
 import com.sky.AgentCore.enums.MessageType;
+import com.sky.AgentCore.service.account.AccountAppService;
 import com.sky.AgentCore.service.agent.Agent;
 import com.sky.AgentCore.service.agent.SessionService;
 import com.sky.AgentCore.service.billing.BillingService;
+import com.sky.AgentCore.service.gateway.HighAvailabilityService;
 import com.sky.AgentCore.service.llm.LLMDomainService;
 import com.sky.AgentCore.service.service.AbstractMessageHandler;
 import com.sky.AgentCore.service.user.UserSettingsDomainService;
@@ -23,10 +25,11 @@ public class PreviewMessageHandler extends AbstractMessageHandler {
     public PreviewMessageHandler(LLMServiceFactory llmServiceFactory, MessageService messageDomainService,
                                  UserSettingsDomainService userSettingsDomainService,
                                  BillingService billingService, LLMDomainService llmDomainService,
-                                 SessionService sessionService) {
+                                 SessionService sessionService, AccountAppService accountService,
+                                 HighAvailabilityService highAvailabilityService) {
         super(llmServiceFactory, messageDomainService, userSettingsDomainService,
-                billingService, llmDomainService, sessionService);
-    }
+                billingService, llmDomainService, sessionService,accountService,
+                highAvailabilityService);}
 
     /** 预览专用的聊天处理逻辑 与正常流程的区别是不保存消息到数据库 */
     @Override
@@ -64,7 +67,7 @@ public class PreviewMessageHandler extends AbstractMessageHandler {
 
         // 工具执行处理
         tokenStream.onToolExecuted(toolExecution -> {
-            if (messageBuilder.get().length() > 0) {
+            if (!messageBuilder.get().isEmpty()) {
                 transport.sendMessage(connection, AgentChatResponse.buildEndMessage(MessageType.TEXT));
                 llmEntity.setContent(messageBuilder.toString());
 

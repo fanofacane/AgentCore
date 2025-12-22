@@ -208,9 +208,9 @@ public abstract class AbstractMessageHandler {
             transport.sendEndMessage(connection, response);
 
             // 9. todo 上报调用成功结果
-/*            long latency = System.currentTimeMillis() - startTime;
-            highAvailabilityDomainService.reportCallResult(chatContext.getInstanceId(), chatContext.getModel().getId(),
-                    true, latency, null);*/
+            long latency = System.currentTimeMillis() - startTime;
+            highAvailabilityService.reportCallResult(chatContext.getInstanceId(), chatContext.getModel().getId(),
+                    true, latency, null);
 
             // 10. 执行模型调用计费
             performBillingWithErrorHandling(chatContext, chatResponse.tokenUsage().inputTokenCount(),
@@ -224,9 +224,9 @@ public abstract class AbstractMessageHandler {
             AgentChatResponse errorResponse = AgentChatResponse.buildEndMessage(e.getMessage(), MessageType.TEXT);
             transport.sendMessage(connection, errorResponse);
             // todo 上报调用失败结果
-/*            long latency = System.currentTimeMillis() - startTime;
-            highAvailabilityDomainService.reportCallResult(chatContext.getInstanceId(), chatContext.getModel().getId(),
-                    false, latency, e.getMessage());*/
+            long latency = System.currentTimeMillis() - startTime;
+            highAvailabilityService.reportCallResult(chatContext.getInstanceId(), chatContext.getModel().getId(),
+                    false, latency, e.getMessage());
 
             // 调用错误处理钩子
             onChatError(chatContext, ExecutionPhase.MODEL_CALL, e);
