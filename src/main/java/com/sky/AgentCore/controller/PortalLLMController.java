@@ -38,7 +38,6 @@ public class PortalLLMController {
         return Result.success(llmAppService.getActiveModelsByType(providerType, userId, type));
     }
     /** 获取用户默认的模型详情
-     *
      * @return */
     @GetMapping("/models/default")
     public Result<ModelDTO> getDefaultModel() {

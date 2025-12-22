@@ -49,10 +49,6 @@ public class TokenOverflowStrategyFactory {
      * @param config 策略配置
      * @return 策略实例 */
     public static TokenOverflowStrategy createStrategy(TokenOverflowConfig config) {
-        if (config == null) {
-            return new NoTokenOverflowStrategy();
-        }
-
         return createStrategy(config.getStrategyType(), config);
     }
 }

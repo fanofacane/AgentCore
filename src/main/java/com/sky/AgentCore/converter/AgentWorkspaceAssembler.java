@@ -1,6 +1,6 @@
 package com.sky.AgentCore.converter;
 
-import com.sky.AgentCore.dto.LLMModelConfig;
+import com.sky.AgentCore.dto.model.LLMModelConfig;
 import com.sky.AgentCore.dto.model.UpdateModelConfigRequest;
 import org.springframework.beans.BeanUtils;
 

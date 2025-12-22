@@ -77,7 +77,8 @@ public class AccountAppServiceImpl extends ServiceImpl<AccountMapper,AccountEnti
             lock.unlock();
         }
     }
-    private AccountEntity getOrCreateAccount(String userId){
+    @Override
+    public AccountEntity getOrCreateAccount(String userId){
         if (userId==null || userId.trim().isEmpty()) throw new BusinessException("用户ID不可为空");
         AccountEntity account = lambdaQuery().eq(AccountEntity::getUserId, userId).one();
         if (account==null){

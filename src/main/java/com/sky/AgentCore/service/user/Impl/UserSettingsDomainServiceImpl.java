@@ -1,17 +1,10 @@
 package com.sky.AgentCore.service.user.Impl;
 
 import cn.hutool.json.JSONUtil;
-import com.alibaba.fastjson.JSON;
-import com.baomidou.mybatisplus.core.conditions.Wrapper;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.baomidou.mybatisplus.extension.conditions.update.LambdaUpdateChainWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.sky.AgentCore.Exceptions.BusinessException;
 import com.sky.AgentCore.converter.UserSettingsAssembler;
-import com.sky.AgentCore.dto.FallbackConfig;
-import com.sky.AgentCore.dto.user.UserSettingsConfig;
+import com.sky.AgentCore.dto.model.FallbackConfig;
 import com.sky.AgentCore.dto.user.UserSettingsDTO;
 import com.sky.AgentCore.dto.user.UserSettingsEntity;
 import com.sky.AgentCore.dto.user.UserSettingsUpdateRequest;

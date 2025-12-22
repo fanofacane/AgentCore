@@ -1,7 +1,7 @@
 package com.sky.AgentCore.service.agent;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.sky.AgentCore.dto.LLMModelConfig;
+import com.sky.AgentCore.dto.model.LLMModelConfig;
 import com.sky.AgentCore.dto.agent.AgentDTO;
 import com.sky.AgentCore.dto.agent.AgentWorkspaceEntity;
 import com.sky.AgentCore.dto.model.UpdateModelConfigRequest;

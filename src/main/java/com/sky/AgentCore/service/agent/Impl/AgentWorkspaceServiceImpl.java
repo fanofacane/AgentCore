@@ -1,12 +1,10 @@
 package com.sky.AgentCore.service.agent.Impl;
 
-import com.baomidou.mybatisplus.core.conditions.Wrapper;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.sky.AgentCore.Exceptions.BusinessException;
 import com.sky.AgentCore.converter.AgentAssembler;
 import com.sky.AgentCore.converter.AgentWorkspaceAssembler;
-import com.sky.AgentCore.dto.LLMModelConfig;
+import com.sky.AgentCore.dto.model.LLMModelConfig;
 import com.sky.AgentCore.dto.agent.AgentDTO;
 import com.sky.AgentCore.dto.agent.AgentEntity;
 import com.sky.AgentCore.dto.agent.AgentVersionEntity;
@@ -21,10 +19,8 @@ import com.sky.AgentCore.mapper.AgentVersionMapper;
 import com.sky.AgentCore.mapper.AgentWorkspaceMapper;
 import com.sky.AgentCore.service.agent.AgentWorkspaceService;
 import com.sky.AgentCore.service.agent.SessionService;
-import com.sky.AgentCore.service.chat.ConversationAppService;
 import com.sky.AgentCore.service.chat.MessageService;
 import com.sky.AgentCore.service.llm.LLMAppService;
-import org.checkerframework.checker.units.qual.A;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

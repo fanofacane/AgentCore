@@ -1,6 +1,6 @@
 package com.sky.AgentCore.dto.user;
 
-import com.sky.AgentCore.dto.FallbackConfig;
+import com.sky.AgentCore.dto.model.FallbackConfig;
 import lombok.Data;
 
 import java.io.Serializable;

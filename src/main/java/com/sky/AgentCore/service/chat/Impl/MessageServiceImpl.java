@@ -16,6 +16,9 @@ import java.util.List;
 public class MessageServiceImpl extends ServiceImpl<MessageMapper, MessageEntity> implements MessageService {
     @Autowired
     private ContextMapper contextMapper;
+    @Autowired
+    private MessageMapper messageMapper;
+
     @Override
     /** 保存消息并且更新消息到上下文 */
     public void saveMessageAndUpdateContext(List<MessageEntity> messageEntities, ContextEntity contextEntity) {
@@ -32,7 +35,7 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, MessageEntity
 
     @Override
     public void updateMessage(MessageEntity message) {
-        //messageRepository.updateById(message);
+        messageMapper.updateById(message);
     }
     /** 获取会话中的消息列表
      *

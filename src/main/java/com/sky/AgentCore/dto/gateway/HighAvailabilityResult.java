@@ -1,6 +1,8 @@
-package com.sky.AgentCore.dto.model;
+package com.sky.AgentCore.dto.gateway;
 
 
+import com.sky.AgentCore.dto.model.ModelEntity;
+import com.sky.AgentCore.dto.model.ProviderEntity;
 import lombok.Data;
 
 /** 高可用选择结果

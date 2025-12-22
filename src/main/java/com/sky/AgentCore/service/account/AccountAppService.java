@@ -12,4 +12,6 @@ public interface AccountAppService extends IService<AccountEntity> {
     boolean checkSufficientBalance(String userId, BigDecimal cost);
 
     void deduct(String userId, BigDecimal cost);
+
+    AccountEntity getOrCreateAccount(String userId);
 }

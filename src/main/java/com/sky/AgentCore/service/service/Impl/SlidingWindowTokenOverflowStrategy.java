@@ -95,9 +95,7 @@ public class SlidingWindowTokenOverflowStrategy implements TokenOverflowStrategy
      * @return 是否需要处理 */
     @Override
     public boolean needsProcessing(List<TokenMessage> messages) {
-        if (messages == null || messages.isEmpty()) {
-            return false;
-        }
+        if (messages == null || messages.isEmpty()) return false;
 
         int totalTokens = calculateTotalTokens(messages);
         int maxTokens = config.getMaxTokens();

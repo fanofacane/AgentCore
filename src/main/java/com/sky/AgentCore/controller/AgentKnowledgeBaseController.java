@@ -1,6 +1,6 @@
 package com.sky.AgentCore.controller;
 
-import com.sky.AgentCore.dto.RagQaDatasetDTO;
+import com.sky.AgentCore.dto.rag.RagQaDatasetDTO;
 import com.sky.AgentCore.dto.common.Result;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

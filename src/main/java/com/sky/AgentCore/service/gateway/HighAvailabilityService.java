@@ -1,7 +1,7 @@
-package com.sky.AgentCore.service.service;
+package com.sky.AgentCore.service.gateway;
 
 
-import com.sky.AgentCore.dto.model.HighAvailabilityResult;
+import com.sky.AgentCore.dto.gateway.HighAvailabilityResult;
 import com.sky.AgentCore.dto.model.ModelEntity;
 import com.sky.AgentCore.dto.model.ModelsBatchDeletedEvent;
 
