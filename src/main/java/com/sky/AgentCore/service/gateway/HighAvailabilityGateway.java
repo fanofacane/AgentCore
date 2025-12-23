@@ -57,4 +57,5 @@ public interface HighAvailabilityGateway {
      * @param businessId 业务ID */
     void deactivateApiInstance(String type, String businessId);
 
+    void batchDeleteApiInstances(List<ApiInstanceBatchDeleteRequest.ApiInstanceDeleteItem> instances);
 }

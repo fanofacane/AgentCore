@@ -1,5 +1,6 @@
 package com.sky.AgentCore.config;
 
+import com.sky.AgentCore.dto.model.LLMModelConfig;
 import com.sky.AgentCore.dto.model.ModelEntity;
 import com.sky.AgentCore.dto.model.ProviderConfig;
 import com.sky.AgentCore.dto.model.ProviderEntity;
@@ -16,12 +17,12 @@ public class LLMServiceFactory {
      * @param provider 服务商实体
      * @param model 模型实体
      * @return 流式聊天语言模型 */
-    public StreamingChatModel getStreamingClient(ProviderEntity provider, ModelEntity model) {
+    public StreamingChatModel getStreamingClient(ProviderEntity provider, ModelEntity model, LLMModelConfig llmModelConfig) {
         ProviderConfig providerConfig = new ProviderConfig(
                 provider.getConfig().getApiKey(), provider.getConfig().getBaseUrl(),
                 model.getModelEndpoint(), provider.getProtocol());
 
-        return LLMProviderService.getStream(provider.getProtocol(), providerConfig);
+        return LLMProviderService.getStream(provider.getProtocol(), providerConfig,llmModelConfig);
     }
 
     /** 获取标准LLM客户端

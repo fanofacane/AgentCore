@@ -35,14 +35,22 @@ public class PreviewMessageHandler extends AbstractMessageHandler {
     @Override
     protected <T> void processChat(Agent agent, T connection, MessageTransport<T> transport, ChatContext chatContext,
                                    MessageEntity userEntity, MessageEntity llmEntity) {
-
+        //预览专用聊天响应,不存入数据库
         AtomicReference<StringBuilder> messageBuilder = new AtomicReference<>(new StringBuilder());
 
         TokenStream tokenStream = agent.chat(chatContext.getUserMessage());
 
-        tokenStream.onError(throwable -> {
-            transport.sendMessage(connection,
+        // 记录调用开始时间
+        long startTime = System.currentTimeMillis();
+
+        tokenStream.onError(throwable -> {transport.sendMessage(connection,
                     AgentChatResponse.buildEndMessage(throwable.getMessage(), MessageType.TEXT));
+
+            // 上报调用失败结果
+            long latency = System.currentTimeMillis() - startTime;
+
+            highAvailabilityService.reportCallResult(chatContext.getInstanceId(), chatContext.getModel().getId(),
+                    false, latency, throwable.getMessage());
         });
 
         // 部分响应处理
@@ -52,13 +60,19 @@ public class PreviewMessageHandler extends AbstractMessageHandler {
             if (messageBuilder.get().toString().trim().isEmpty()) {
                 return;
             }
+            // 直接发送消息，transport内部处理连接异常
             transport.sendMessage(connection, AgentChatResponse.build(reply, MessageType.TEXT));
         });
-        System.out.println("预览专用聊天响应,不存入数据库");
         // 完整响应处理
         tokenStream.onCompleteResponse(chatResponse -> {
+
             // 发送结束消息
             transport.sendEndMessage(connection, AgentChatResponse.buildEndMessage(MessageType.TEXT));
+
+            // 上报调用成功结果
+            long latency = System.currentTimeMillis() - startTime;
+            highAvailabilityService.reportCallResult(chatContext.getInstanceId(), chatContext.getModel().getId(),
+                    true, latency, null);
 
             // 执行模型调用计费
             performBillingWithErrorHandling(chatContext, chatResponse.tokenUsage().inputTokenCount(),

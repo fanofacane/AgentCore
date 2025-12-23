@@ -1,6 +1,7 @@
 package com.sky.AgentCore.service.llm.Impl;
 
 import com.sky.AgentCore.config.LLMProviderFactory;
+import com.sky.AgentCore.dto.model.LLMModelConfig;
 import com.sky.AgentCore.dto.model.ProviderConfig;
 import com.sky.AgentCore.enums.ProviderProtocol;
 import dev.langchain4j.model.chat.ChatModel;
@@ -12,7 +13,7 @@ public class LLMProviderService {
         return LLMProviderFactory.getLLMProvider(protocol, providerConfig);
     }
 
-    public static StreamingChatModel getStream(ProviderProtocol protocol, ProviderConfig providerConfig) {
-        return LLMProviderFactory.getLLMProviderByStream(protocol, providerConfig);
+    public static StreamingChatModel getStream(ProviderProtocol protocol, ProviderConfig providerConfig, LLMModelConfig llmModelConfig) {
+        return LLMProviderFactory.getLLMProviderByStream(protocol, providerConfig,llmModelConfig);
     }
 }

@@ -169,8 +169,8 @@ public class HighAvailabilityServiceImpl implements HighAvailabilityService {
             request.setCallTimestamp(System.currentTimeMillis());
 
             gateway.reportResult(request);
+            logger.info("成功上报调用结果: instanceId={}, modelId={}, success={}, latency={}ms", instanceId, modelId, success, latencyMs);
 
-            logger.debug("成功上报调用结果: instanceId={}, modelId={}, success={}, latency={}ms", instanceId, modelId, success, latencyMs);
         } catch (Exception e) {
             logger.error("上报调用结果失败: instanceId={}, modelId={}", instanceId, modelId, e);
         }
@@ -230,11 +230,56 @@ public class HighAvailabilityServiceImpl implements HighAvailabilityService {
 
     @Override
     public void changeModelStatusInGateway(ModelEntity model, boolean enabled, String reason) {
+        if (!properties.isEnabled()) {
+            logger.debug("高可用功能未启用，跳过模型状态变更: {}", model.getId());
+            return;
+        }
 
+        try {
+            if (enabled) {
+                // 启用模型
+                gateway.activateApiInstance("MODEL", model.getId());
+                logger.info("成功启用高可用网关中的模型: modelId={}, reason={}", model.getId(), reason);
+            } else {
+                // 禁用模型
+                gateway.deactivateApiInstance("MODEL", model.getId());
+                logger.info("成功禁用高可用网关中的模型: modelId={}, reason={}", model.getId(), reason);
+            }
+
+        } catch (Exception e) {
+            logger.error("变更高可用网关中的模型状态失败: modelId={}, enabled={}", model.getId(), enabled, e);
+        }
     }
 
     @Override
     public void batchRemoveModelsFromGateway(List<ModelsBatchDeletedEvent.ModelDeleteItem> deleteItems, String userId) {
+        if (!properties.isEnabled()) {
+            logger.debug("高可用功能未启用，跳过批量模型删除: 用户={}, 数量={}", userId, deleteItems.size());
+            return;
+        }
 
+        if (deleteItems == null || deleteItems.isEmpty()) {
+            logger.debug("没有要删除的模型");
+            return;
+        }
+
+        try {
+            // 构建批量删除请求列表
+            List<ApiInstanceBatchDeleteRequest.ApiInstanceDeleteItem> instances = new ArrayList<>();
+            for (ModelsBatchDeletedEvent.ModelDeleteItem deleteItem : deleteItems) {
+                ApiInstanceBatchDeleteRequest.ApiInstanceDeleteItem item = new ApiInstanceBatchDeleteRequest.ApiInstanceDeleteItem(
+                        "MODEL", deleteItem.getModelId());
+                instances.add(item);
+            }
+
+            // 批量删除到高可用网关
+            gateway.batchDeleteApiInstances(instances);
+
+            logger.info("成功批量删除{}个模型从高可用网关，用户ID: {}", deleteItems.size(), userId);
+
+        } catch (Exception e) {
+            logger.error("批量删除模型从高可用网关失败，用户ID: {}, 数量: {}", userId, deleteItems.size(), e);
+            // 批量删除失败不抛异常，避免影响主流程
+        }
     }
 }

@@ -53,4 +53,9 @@ public class HighAvailabilityGatewayImpl implements HighAvailabilityGateway {
     public void deactivateApiInstance(String type, String businessId) {
         gatewayClient.deactivateApiInstance(type, businessId);
     }
+
+    @Override
+    public void batchDeleteApiInstances(List<ApiInstanceBatchDeleteRequest.ApiInstanceDeleteItem> instances) {
+        gatewayClient.batchDeleteApiInstances(instances);
+    }
 }
