@@ -33,6 +33,11 @@ import com.sky.AgentCore.service.user.UserSettingsDomainService;
 import com.sky.AgentCore.transport.MessageTransport;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.*;
+import dev.langchain4j.mcp.McpToolProvider;
+import dev.langchain4j.mcp.client.DefaultMcpClient;
+import dev.langchain4j.mcp.client.McpClient;
+import dev.langchain4j.mcp.client.transport.McpTransport;
+import dev.langchain4j.mcp.client.transport.http.HttpMcpTransport;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
@@ -47,6 +52,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -157,7 +163,7 @@ public abstract class AbstractMessageHandler {
 
         // 获取流式LLM客户端
         StreamingChatModel streamingClient = llmServiceFactory.getStreamingClient(chatContext.getProvider(),
-                chatContext.getModel());
+                chatContext.getModel(),chatContext.getLlmModelConfig());
 
         // 创建流式Agent
         Agent agent = buildStreamingAgent(streamingClient, memory, toolProvider, chatContext.getAgent());
@@ -501,11 +507,18 @@ public abstract class AbstractMessageHandler {
 
 //       todo Map<ToolSpecification, ToolExecutor> ragTools = ragToolManager.createRagTools(agent);
         Map<ToolSpecification, ToolExecutor> ragTools = null;
+        String url="http://115.190.126.170:7000/tongyi-wanxiang";
+        McpTransport transport = new HttpMcpTransport.Builder().sseUrl(url).logRequests(true).logResponses(true)
+                .timeout(Duration.ofHours(1)).build();
+
+        McpClient mcpClient = new DefaultMcpClient.Builder().transport(transport).build();
+        McpToolProvider toolProvider1 = McpToolProvider.builder().mcpClients(mcpClient).build();
+
         AiServices<Agent> agentService = AiServices.builder(Agent.class).streamingChatModel(model).chatMemory(memory);
 
         if (ragTools != null) agentService.tools(ragTools);
 
-        if (toolProvider != null) agentService.toolProvider(toolProvider);
+        if (toolProvider1 != null) agentService.toolProvider(toolProvider1);
 
         return agentService.build();
     }

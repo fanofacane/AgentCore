@@ -86,7 +86,6 @@ public class ConversationAppServiceImpl implements ConversationAppService {
         // 2. 获取传输方式
         MessageTransport<SseEmitter> transport = transportFactory
                 .getTransport(MessageTransportFactory.TRANSPORT_TYPE_SSE);
-        System.out.println("进入预览模式");
         // 3. 使用预览专用的消息处理器
         return previewMessageHandler.chat(environment, transport);
     }
@@ -441,22 +440,26 @@ public class ConversationAppServiceImpl implements ConversationAppService {
         // 1. 创建虚拟Agent和获取模型
         AgentEntity virtualAgent = createVirtualAgent(previewRequest, userId);
         String modelId = getPreviewModelId(previewRequest, userId);
-        ModelEntity model = getModelForChat(null, modelId, userId);
+        ModelEntity originModel = getModelForChat(null, modelId, userId);
 
-        // 2. 获取服务商信息（预览不使用高可用）
-        ProviderEntity provider = llmDomainService.getProvider(model.getProviderId());
-        provider.isActive();
-        provider.isAvailable(provider.getUserId());
         // 3. 获取工具配置
         List<String> mcpServerNames = List.of();
         //List<String> mcpServerNames = getMcpServerNames(previewRequest.getToolIds(), userId);
 
         // 4. 创建预览配置
         LLMModelConfig llmModelConfig = createDefaultLLMModelConfig(modelId);
+        // 4. 获取高可用服务商信息
+        List<String> fallbackChain = userSettingsDomainService.getUserFallbackChain(userId);
+        HighAvailabilityResult result = highAvailabilityService.selectBestProvider(originModel, userId, null, fallbackChain);
+        ProviderEntity originalProvider = llmDomainService.getProvider(originModel.getProviderId());
 
+        ProviderEntity provider = result.getProvider();
+        ModelEntity model = result.getModel();
+        String instanceId = result.getInstanceId();
+        provider.isActive();
         // 5. 创建并配置环境对象
         ChatContext chatContext = createPreviewChatContext(previewRequest, userId, virtualAgent, model
-                , provider, llmModelConfig, mcpServerNames);
+                , provider, llmModelConfig, mcpServerNames,instanceId);
         setupPreviewContextAndHistory(chatContext, previewRequest);
 
         return chatContext;
@@ -510,10 +513,12 @@ public class ConversationAppServiceImpl implements ConversationAppService {
     }
     /** 创建预览ChatContext对象 */
     private ChatContext createPreviewChatContext(AgentPreviewRequest previewRequest, String userId, AgentEntity agent,
-                                                 ModelEntity model, ProviderEntity provider, LLMModelConfig llmModelConfig, List<String> mcpServerNames) {
+                                                 ModelEntity model, ProviderEntity provider, LLMModelConfig llmModelConfig,
+                                                 List<String> mcpServerNames,String instanceId) {
         ChatContext chatContext = new ChatContext();
         chatContext.setSessionId("preview-session");
         chatContext.setUserId(userId);
+        chatContext.setInstanceId(instanceId);
         chatContext.setUserMessage(previewRequest.getUserMessage());
         chatContext.setAgent(agent);
         chatContext.setModel(model);
