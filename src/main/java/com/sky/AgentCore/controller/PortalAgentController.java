@@ -37,7 +37,9 @@ public class PortalAgentController {
     @GetMapping("/published")
     public Result<List<AgentVersionDTO>> getPublishedAgents(SearchAgentsRequest searchAgentsRequest) {
         String userId = UserContext.getCurrentUserId();
-        return Result.success(agentAppService.getPublishedAgentsByName(searchAgentsRequest, userId));
+        List<AgentVersionDTO> agents = agentAppService.getPublishedAgentsByName(searchAgentsRequest, userId);
+        System.out.println("获取商家agent"+agents.size()+agents);
+        return Result.success(agents);
     }
     /** 发布Agent版本 */
     @PostMapping("/{agentId}/publish")
@@ -69,9 +71,11 @@ public class PortalAgentController {
 
     /** 获取Agent详情 */
     @GetMapping("/{agentId}")
-    public Result<AgentDTO> getAgent(@PathVariable String agentId) {
+    public Result<AgentVO> getAgent(@PathVariable String agentId) {
         String userId = UserContext.getCurrentUserId();
-        return Result.success(agentAppService.getAgent(agentId, userId));
+        AgentVO agent = agentAppService.getAgent(agentId, userId);
+        System.out.println(agent.getName()+agent.getLlmModelConfig()+agent.getWelcomeMessage());
+        return Result.success(agent);
     }
 
     /** 更新Agent信息（基本信息和配置合并更新） */

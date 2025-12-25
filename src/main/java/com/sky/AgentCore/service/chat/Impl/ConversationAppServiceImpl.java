@@ -440,14 +440,12 @@ public class ConversationAppServiceImpl implements ConversationAppService {
         // 1. 创建虚拟Agent和获取模型
         AgentEntity virtualAgent = createVirtualAgent(previewRequest, userId);
         String modelId = getPreviewModelId(previewRequest, userId);
-        ModelEntity originModel = getModelForChat(null, modelId, userId);
-
+        ModelEntity originModel = llmDomainService.selectModelById(modelId);
         // 3. 获取工具配置
         List<String> mcpServerNames = List.of();
         //List<String> mcpServerNames = getMcpServerNames(previewRequest.getToolIds(), userId);
 
-        // 4. 创建预览配置
-        LLMModelConfig llmModelConfig = createDefaultLLMModelConfig(modelId);
+
         // 4. 获取高可用服务商信息
         List<String> fallbackChain = userSettingsDomainService.getUserFallbackChain(userId);
         HighAvailabilityResult result = highAvailabilityService.selectBestProvider(originModel, userId, null, fallbackChain);
@@ -459,7 +457,7 @@ public class ConversationAppServiceImpl implements ConversationAppService {
         provider.isActive();
         // 5. 创建并配置环境对象
         ChatContext chatContext = createPreviewChatContext(previewRequest, userId, virtualAgent, model
-                , provider, llmModelConfig, mcpServerNames,instanceId);
+                , provider, previewRequest.getLlmModelConfig(), mcpServerNames,instanceId);
         setupPreviewContextAndHistory(chatContext, previewRequest);
 
         return chatContext;

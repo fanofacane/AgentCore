@@ -1,26 +1,23 @@
 package com.sky.AgentCore.transport;
 
 import com.sky.AgentCore.dto.agent.AgentChatResponse;
+import com.sky.AgentCore.utils.SseEmitterUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
 
-/** SSE消息传输实现 */
 @Component
 public class SseMessageTransport implements MessageTransport<SseEmitter> {
 
-    /** 系统超时消息 */
     private static final String TIMEOUT_MESSAGE = "\n\n[系统提示：响应超时，请重试]";
 
-    /** 系统错误消息前缀 */
     private static final String ERROR_MESSAGE_PREFIX = "\n\n[系统错误：";
 
     @Override
     public SseEmitter createConnection(long timeout) {
         SseEmitter emitter = new SseEmitter(timeout);
 
-        // 添加超时回调
         emitter.onTimeout(() -> {
             try {
                 AgentChatResponse response = new AgentChatResponse();
@@ -33,8 +30,7 @@ public class SseMessageTransport implements MessageTransport<SseEmitter> {
             }
         });
 
-        // 添加错误回调
-        emitter.onError((ex) -> {
+        emitter.onError(ex -> {
             try {
                 AgentChatResponse response = new AgentChatResponse();
                 response.setContent(ERROR_MESSAGE_PREFIX + ex.getMessage() + "]");
@@ -51,23 +47,21 @@ public class SseMessageTransport implements MessageTransport<SseEmitter> {
 
     @Override
     public void sendMessage(SseEmitter connection, AgentChatResponse streamChatResponse) {
-        try {
-
-            connection.send(streamChatResponse);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        if (connection == null) {
+            return;
         }
+        SseEmitterUtils.safeSend(connection, streamChatResponse);
     }
 
     @Override
     public void sendEndMessage(SseEmitter connection, AgentChatResponse streamChatResponse) {
+        if (connection == null) {
+            return;
+        }
         try {
-
-            connection.send(streamChatResponse);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+            SseEmitterUtils.safeSend(connection, streamChatResponse);
         } finally {
-            connection.complete();
+            SseEmitterUtils.safeComplete(connection);
         }
     }
 

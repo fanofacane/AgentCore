@@ -1,6 +1,7 @@
 package com.sky.AgentCore.dto.agent;
 
 import com.sky.AgentCore.dto.message.MessageDTO;
+import com.sky.AgentCore.dto.model.LLMModelConfig;
 import lombok.Data;
 
 import java.util.ArrayList;
@@ -28,6 +29,8 @@ public class AgentPreviewRequest {
 
     /** 使用的模型ID，如果为空则使用用户默认模型 */
     private String modelId;
+
+    private LLMModelConfig llmModelConfig;
 
     /** 文件列表 */
     private List<String> fileUrls = new ArrayList<>();

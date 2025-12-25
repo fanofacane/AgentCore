@@ -18,7 +18,7 @@ public class UpdateAgentRequest {
     // 配置信息字段
     private String systemPrompt;
     private String welcomeMessage;
-    private LLMModelConfig modelConfig;
+    private LLMModelConfig llmModelConfig;
     private List<String> toolIds;
     private List<String> knowledgeBaseIds;
     private Map<String, Map<String, Map<String, String>>> toolPresetParams;

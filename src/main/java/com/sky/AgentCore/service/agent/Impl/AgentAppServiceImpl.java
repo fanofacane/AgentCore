@@ -74,11 +74,12 @@ public class AgentAppServiceImpl extends ServiceImpl<AgentMapper, AgentEntity> i
         }
 
         // 3. 执行Agent创建逻辑
+        System.out.println("llm配置属性"+request.getLlmModelConfig());
         AgentEntity agent = AgentAssembler.toEntity(request, userId);
         agent.setUserId(userId);
         save(agent);
         AgentWorkspaceEntity agentWorkspaceEntity = new AgentWorkspaceEntity(agent.getId(), userId,
-                new LLMModelConfig());
+                request.getLlmModelConfig());
         agentWorkspaceService.save(agentWorkspaceEntity);
 
         // 4. 创建成功后执行计费扣费
@@ -104,10 +105,11 @@ public class AgentAppServiceImpl extends ServiceImpl<AgentMapper, AgentEntity> i
     }
 
     @Override
-    public AgentDTO getAgent(String agentId, String userId) {
+    public AgentVO getAgent(String agentId, String userId) {
         AgentEntity agent = lambdaQuery().eq(AgentEntity::getId, agentId).eq(AgentEntity::getUserId, userId).one();
         if (agent == null)  throw new BusinessException("Agent不存在");
-        return AgentAssembler.toDTO(agent);
+        AgentWorkspaceEntity workspace = agentWorkspaceService.getWorkspace(agentId, userId);
+        return AgentAssembler.toVO(agent,workspace.getLlmModelConfig());
     }
 
     @Override
@@ -117,9 +119,11 @@ public class AgentAppServiceImpl extends ServiceImpl<AgentMapper, AgentEntity> i
 
         // 调用领域服务更新Agent
         boolean success = lambdaUpdate().eq(AgentEntity::getId, updateEntity.getId()).eq(AgentEntity::getUserId, userId).update(updateEntity);
-        if (!success) {
-            throw new BusinessException("Agent更新失败，数据不存在或无操作权限");
-        }
+        if (!success) throw new BusinessException("Agent更新失败，数据不存在或无操作权限");
+        AgentWorkspaceEntity  agentWorkspaceEntity=new AgentWorkspaceEntity();
+        agentWorkspaceEntity.setLlmModelConfig(request.getLlmModelConfig());
+        agentWorkspaceService.lambdaUpdate().eq(AgentWorkspaceEntity::getAgentId,updateEntity.getId())
+                .eq(AgentWorkspaceEntity::getUserId,userId).update(agentWorkspaceEntity);
         return AgentAssembler.toDTO(updateEntity);
     }
 

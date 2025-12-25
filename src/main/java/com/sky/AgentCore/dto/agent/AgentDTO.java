@@ -1,5 +1,6 @@
 package com.sky.AgentCore.dto.agent;
 
+import com.sky.AgentCore.dto.model.LLMModelConfig;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -37,6 +38,8 @@ public class AgentDTO {
 
     /** 当前发布的版本ID */
     private String publishedVersion;
+
+    private LLMModelConfig llmModelConfig;
 
     /** Agent状态：true-启用，false-禁用 */
     private Boolean enabled = Boolean.TRUE;

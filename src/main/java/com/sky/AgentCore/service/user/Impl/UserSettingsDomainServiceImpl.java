@@ -23,6 +23,7 @@ public class UserSettingsDomainServiceImpl extends ServiceImpl<UserSettingMapper
     @Override
     public String getUserDefaultModelId(String userId) {
         UserSettingsDTO userSettings = getUserSettings(userId);
+
         return userSettings.getSettingConfig().getDefaultModel();
     }
     /** 获取用户设置
@@ -30,6 +31,7 @@ public class UserSettingsDomainServiceImpl extends ServiceImpl<UserSettingMapper
      * @return 用户设置实体 */
     public UserSettingsDTO getUserSettings(String userId) {
         UserSettingsEntity entity = lambdaQuery().eq(UserSettingsEntity::getUserId, userId).one();
+        if (entity==null) throw new BusinessException("未配置默认模型,请前往通用设置配置模型");
         return UserSettingsAssembler.toDTO(entity);
     }
 
