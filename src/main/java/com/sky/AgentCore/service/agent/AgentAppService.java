@@ -11,7 +11,7 @@ public interface AgentAppService extends IService<AgentEntity> {
 
     List<AgentDTO> getUserAgents(String userId, SearchAgentsRequest searchAgentsRequest);
 
-    AgentDTO getAgent(String agentId, String userId);
+    AgentVO getAgent(String agentId, String userId);
 
     AgentDTO updateAgent(UpdateAgentRequest request, String userId);
 

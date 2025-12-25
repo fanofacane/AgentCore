@@ -1,5 +1,6 @@
 package com.sky.AgentCore.dto.agent;
 
+import com.sky.AgentCore.dto.model.LLMModelConfig;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
@@ -16,6 +17,7 @@ public class CreateAgentRequest {
     private String systemPrompt;
     private String welcomeMessage;
     private List<String> toolIds;
+    private LLMModelConfig llmModelConfig;
     private List<String> knowledgeBaseIds;
     private Map<String, Map<String, Map<String, String>>> toolPresetParams;
     private Boolean multiModal;

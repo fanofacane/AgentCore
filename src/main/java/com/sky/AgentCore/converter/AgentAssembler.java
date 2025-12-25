@@ -3,6 +3,7 @@ package com.sky.AgentCore.converter;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.sky.AgentCore.dto.agent.*;
+import com.sky.AgentCore.dto.model.LLMModelConfig;
 import org.springframework.beans.BeanUtils;
 
 import java.time.LocalDateTime;
@@ -61,6 +62,17 @@ public class AgentAssembler {
         AgentDTO dto = new AgentDTO();
         BeanUtils.copyProperties(entity, dto);
         return dto;
+    }
+
+    /** 将AgentEntity转换为AgentDTO */
+    public static AgentVO toVO(AgentEntity entity, LLMModelConfig llmModelConfig) {
+        if (entity == null) {
+            return null;
+        }
+        AgentVO vo = new AgentVO();
+        BeanUtils.copyProperties(entity, vo);
+        vo.setLlmModelConfig(llmModelConfig);
+        return vo;
     }
 
     public static List<AgentDTO> toDTOs(List<AgentEntity> agents) {
