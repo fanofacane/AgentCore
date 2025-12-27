@@ -191,7 +191,7 @@ public class LLMAppServiceImpl extends ServiceImpl<ProvidersMapper, ProviderEnti
         List<String> providerIds = providers.stream().map(ProviderEntity::getId).collect(Collectors.toList());
         // 查询激活的模型
         List<ModelEntity> activeModels = modelsMapper.selectList(Wrappers.<ModelEntity>lambdaQuery()
-                .in(ModelEntity::getProviderId, providerIds).eq(ModelEntity::getStatus, 1));
+                .in(ModelEntity::getProviderId, providerIds).eq(ModelEntity::getStatus, true));
         // 转为map，映射关系
         Map<String, List<ModelEntity>> modelMap = activeModels.stream()
                 .collect(Collectors.groupingBy(ModelEntity::getProviderId));

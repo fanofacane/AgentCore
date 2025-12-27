@@ -34,10 +34,8 @@ public class SystemPrompt {
 
     /** 构建用于生成的提示词 */
     private String buildGenerationPrompt(String agentName, String agentDescription, List<ToolEntity> tools) {
-        // 1. 获取我们的"元提示词"模板
-        String metaPromptTemplate = SystemPromptTemplates.SYSTEM_PROMPT_GENERATION_TEMPLATE;
 
-        // 2. 高效地构建助手和工具的概览信息
+        //  高效地构建助手和工具的概览信息
         StringBuilder overview = new StringBuilder();
         overview.append("名称: ").append(agentName).append("\n");
         overview.append("描述: ").append(agentDescription).append("\n\n");

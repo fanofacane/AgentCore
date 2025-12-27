@@ -32,9 +32,7 @@ public class SystemPromptGeneratorAppServiceImpl implements SystemPromptGenerato
     public String generateSystemPrompt(SystemPromptGenerateRequest request, String userId) {
         // 1. 应用层协调各个领域服务获取数据
         String defaultModelId = userSettingsDomainService.getUserDefaultModelId(userId);
-        if (defaultModelId == null) {
-            throw new BusinessException("未设置默认模型");
-        }
+        if (defaultModelId == null) throw new BusinessException("未设置默认模型");
 
         // 2. 获取模型和提供商信息
         ModelEntity model = llmDomainService.selectModelById(defaultModelId);

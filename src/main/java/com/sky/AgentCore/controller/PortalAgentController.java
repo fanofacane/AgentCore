@@ -38,7 +38,7 @@ public class PortalAgentController {
     public Result<List<AgentVersionDTO>> getPublishedAgents(SearchAgentsRequest searchAgentsRequest) {
         String userId = UserContext.getCurrentUserId();
         List<AgentVersionDTO> agents = agentAppService.getPublishedAgentsByName(searchAgentsRequest, userId);
-        System.out.println("获取商家agent"+agents.size()+agents);
+
         return Result.success(agents);
     }
     /** 发布Agent版本 */
@@ -74,7 +74,6 @@ public class PortalAgentController {
     public Result<AgentVO> getAgent(@PathVariable String agentId) {
         String userId = UserContext.getCurrentUserId();
         AgentVO agent = agentAppService.getAgent(agentId, userId);
-        System.out.println(agent.getName()+agent.getLlmModelConfig()+agent.getWelcomeMessage());
         return Result.success(agent);
     }
 

@@ -5,6 +5,7 @@ import com.sky.AgentCore.utils.JsonUtils;
 import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.MappedJdbcTypes;
+import org.postgresql.util.PGobject;
 
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
@@ -27,8 +28,10 @@ public abstract class JsonToStringConverter<T> extends BaseTypeHandler<T> {
 
     @Override
     public void setNonNullParameter(PreparedStatement ps, int i, T parameter, JdbcType jdbcType) throws SQLException {
-        String jsonStr = JsonUtils.toJsonString(parameter);
-        ps.setString(i, jsonStr);
+        PGobject jsonObject = new PGobject();
+        jsonObject.setType("jsonb");
+        jsonObject.setValue(JsonUtils.toJsonString(parameter));
+        ps.setObject(i, jsonObject);
     }
 
     @Override

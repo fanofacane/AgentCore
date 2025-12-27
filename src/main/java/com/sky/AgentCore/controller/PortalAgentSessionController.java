@@ -35,8 +35,6 @@ public class PortalAgentSessionController {
     @PostMapping("/preview")
     public SseEmitter preview(@RequestBody AgentPreviewRequest previewRequest) {
         String userId = UserContext.getCurrentUserId();
-        System.out.println("预览模型id"+previewRequest.getModelId());
-        System.out.println("模型配置"+previewRequest.getLlmModelConfig());
         return conversationAppService.previewAgent(previewRequest, userId);
     }
     /** 发送消息

@@ -8,6 +8,7 @@ import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.MappedJdbcTypes;
 import org.apache.ibatis.type.MappedTypes;
+import org.postgresql.util.PGobject;
 import org.springframework.stereotype.Component;
 
 import java.sql.CallableStatement;
@@ -24,8 +25,10 @@ public class UserSettingsConfigConverter extends BaseTypeHandler<UserSettingsCon
     @Override
     public void setNonNullParameter(PreparedStatement ps, int i, UserSettingsConfig parameter, JdbcType jdbcType)
             throws SQLException {
-        String jsonStr = JSON.toJSONString(parameter);
-        ps.setString(i, jsonStr);
+        PGobject jsonObject = new PGobject();
+        jsonObject.setType("jsonb");
+        jsonObject.setValue(JsonUtils.toJsonString(parameter));
+        ps.setObject(i, jsonObject);
     }
 
     @Override
@@ -47,16 +50,10 @@ public class UserSettingsConfigConverter extends BaseTypeHandler<UserSettingsCon
     }
 
     private UserSettingsConfig parseJson(String json) throws SQLException {
-        if (json == null || json.isEmpty() || "null".equals(json)) {
+        if (json == null || json.isEmpty()) {
             return new UserSettingsConfig();
         }
-        try {
-            UserSettingsConfig config = JsonUtils.parseObject(json, UserSettingsConfig.class);
-            return config != null ? config : new UserSettingsConfig();
-        } catch (Exception e) {
-            // 如果解析失败，返回默认实例
-            return new UserSettingsConfig();
-        }
+        UserSettingsConfig config = JsonUtils.parseObject(json, UserSettingsConfig.class);
+        return config != null ? config : new UserSettingsConfig();
     }
-
 }

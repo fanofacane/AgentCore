@@ -23,6 +23,8 @@ public class SsoAppServiceImpl implements SsoAppService {
     @Override
     public String getSsoLoginUrl(String provider, String redirectUrl) {
         SsoService ssoService = ssoServiceFactory.getSsoService(provider);
+        String loginUrl = ssoService.getLoginUrl(redirectUrl);
+        System.out.println("回调地址为"+loginUrl);
         return ssoService.getLoginUrl(redirectUrl);
     }
 

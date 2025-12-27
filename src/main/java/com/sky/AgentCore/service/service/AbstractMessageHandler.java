@@ -507,18 +507,18 @@ public abstract class AbstractMessageHandler {
 
 //       todo Map<ToolSpecification, ToolExecutor> ragTools = ragToolManager.createRagTools(agent);
         Map<ToolSpecification, ToolExecutor> ragTools = null;
-        String url="http://115.190.126.170:7000/tongyi-wanxiang";
+/*        String url="http://115.190.126.170:7000/tongyi-wanxiang";
         McpTransport transport = new HttpMcpTransport.Builder().sseUrl(url).logRequests(true).logResponses(true)
                 .timeout(Duration.ofHours(1)).build();
 
         McpClient mcpClient = new DefaultMcpClient.Builder().transport(transport).build();
-        McpToolProvider toolProvider1 = McpToolProvider.builder().mcpClients(mcpClient).build();
+        McpToolProvider toolProvider1 = McpToolProvider.builder().mcpClients(mcpClient).build();*/
 
         AiServices<Agent> agentService = AiServices.builder(Agent.class).streamingChatModel(model).chatMemory(memory);
 
         if (ragTools != null) agentService.tools(ragTools);
 
-        if (toolProvider1 != null) agentService.toolProvider(toolProvider1);
+        if (toolProvider != null) agentService.toolProvider(toolProvider);
 
         return agentService.build();
     }
@@ -536,6 +536,7 @@ public abstract class AbstractMessageHandler {
         // todo 读取长期记忆，组装为要点，直接合入系统提示词尾部
         //String memorySection = buildMemorySection(chatContext);
         String memorySection = "";
+        System.out.println("提示"+chatContext.getAgent().getSystemPrompt());
         String fullSystemPrompt = chatContext.getAgent().getSystemPrompt() + "\n" + presetToolPrompt
                 + (memorySection.isEmpty() ? "" : ("\n" + memorySection));
 

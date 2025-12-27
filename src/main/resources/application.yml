@@ -13,10 +13,10 @@ spring:
   application:
     name: AgentCore
   datasource:
-    url: jdbc:mysql://localhost/agent
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    username: root
-    password: 1234
+    url: jdbc:postgresql://115.190.126.170:5432/agentCore?useUnicode=true&characterEncoding=UTF-8&useSSL=false&stringtype=unspecified&assumeMinServerVersion=9.6&prepareThreshold=0&DateStyle=ISO
+    driver-class-name: org.postgresql.Driver
+    username: agentCore
+    password: w71one_sxx
   mybatis-plus:
     configuration:
       log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
@@ -29,6 +29,25 @@ mail:
   verification:
     template: 您的验证码是:%s，有效期10分钟，请勿泄露给他人。
     subject: AgentX - 邮箱验证码
+
+dromara:
+  x-file-storage: #文件存储配置
+    default-platform: amazon-s3-1 #默认使用的存储平台
+    thumbnail-suffix: ".min.jpg" #缩略图后缀，例如【.min.jpg】【.png】
+    #对应平台的配置写在这里，注意缩进要对齐
+    amazon-s3: # 0.0.7 及以前的版本，配置名称是：aws-s3
+      - platform: amazon-s3-1 # 存储平台标识
+        enable-storage: true # 启用存储
+        access-key: ${S3_SECRET_ID}
+        secret-key: ${S3_SECRET_KEY}
+        region: ${S3_REGION} # 与 end-point 参数至少填一个
+        end-point: ${S3_ENDPOINT} # 与 region 参数至少填一个
+        bucket-name: ${S3_BUCKET_NAME}
+        domain: ${S3_DOMAIN} # 访问域名，注意“/”结尾，例如：https://abc.hn-bkt.clouddn.com/
+        base-path: s3/ # 基础路径
+
+
+
 # 高可用网关配置
 high-availability:
   enabled: ${HIGH_AVAILABILITY_ENABLED:true} # 是否启用高可用功能
