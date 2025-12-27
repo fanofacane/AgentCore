@@ -1,6 +1,5 @@
 package com.sky.AgentCore.config;
 
-
 import com.sky.AgentCore.dto.auth.AuthSettingEntity;
 import com.sky.AgentCore.enums.AuthFeatureKey;
 import com.sky.AgentCore.service.auth.AuthSettingAppService;
@@ -18,9 +17,11 @@ public class SsoConfigProvider {
         this.authSettingDomainService = authSettingDomainService;
     }
 
-    /** 获取GitHub SSO配置
+    /**
+     * 获取GitHub SSO配置
      *
-     * @return GitHub配置 */
+     * @return GitHub配置
+     */
     public GitHubSsoConfig getGitHubConfig() {
         AuthSettingEntity entity = authSettingDomainService.getByFeatureKey(AuthFeatureKey.GITHUB_LOGIN);
         if (entity == null || entity.getConfigData() == null) {

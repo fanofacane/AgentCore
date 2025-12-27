@@ -105,9 +105,9 @@ public class ConversationAppServiceImpl implements ConversationAppService {
      * @return SSE发射器 */
     @Override
     public SseEmitter chat(ChatRequest chatRequest, String userId) {
+
         // 1. 根据请求类型准备对话环境
         ChatContext environment = prepareEnvironmentByRequestType(chatRequest, userId);
-
         // 2. 获取传输方式 (当前仅支持SSE，将来支持WebSocket)
         MessageTransport<SseEmitter> transport = transportFactory
                 .getTransport(MessageTransportFactory.TRANSPORT_TYPE_SSE);
@@ -214,6 +214,7 @@ public class ConversationAppServiceImpl implements ConversationAppService {
         // 3. 获取模型配置
         AgentWorkspaceEntity workspace = agentWorkspaceService.getWorkspace(agentId, userId);
         LLMModelConfig llmModelConfig = workspace.getLlmModelConfig();
+
         ModelEntity originalModel = getModelForChat(llmModelConfig, modelId, userId);
 
         // 4. 获取高可用服务商信息
@@ -445,7 +446,6 @@ public class ConversationAppServiceImpl implements ConversationAppService {
         List<String> mcpServerNames = List.of();
         //List<String> mcpServerNames = getMcpServerNames(previewRequest.getToolIds(), userId);
 
-
         // 4. 获取高可用服务商信息
         List<String> fallbackChain = userSettingsDomainService.getUserFallbackChain(userId);
         HighAvailabilityResult result = highAvailabilityService.selectBestProvider(originModel, userId, null, fallbackChain);
@@ -456,8 +456,8 @@ public class ConversationAppServiceImpl implements ConversationAppService {
         String instanceId = result.getInstanceId();
         provider.isActive();
         // 5. 创建并配置环境对象
-        ChatContext chatContext = createPreviewChatContext(previewRequest, userId, virtualAgent, model
-                , provider, previewRequest.getLlmModelConfig(), mcpServerNames,instanceId);
+        ChatContext chatContext = createPreviewChatContext(previewRequest, userId, virtualAgent, model,
+                provider, previewRequest.getLlmModelConfig(), mcpServerNames,instanceId);
         setupPreviewContextAndHistory(chatContext, previewRequest);
 
         return chatContext;
@@ -478,9 +478,7 @@ public class ConversationAppServiceImpl implements ConversationAppService {
         String modelId = previewRequest.getModelId();
         if (modelId == null || modelId.trim().isEmpty()) {
             modelId = userSettingsDomainService.getUserDefaultModelId(userId);
-            if (modelId == null) {
-                throw new BusinessException("用户未设置默认模型，且预览请求中未指定模型");
-            }
+            if (modelId == null) throw new BusinessException("用户未设置默认模型，且预览请求中未指定模型");
         }
         return modelId;
     }
@@ -494,6 +492,7 @@ public class ConversationAppServiceImpl implements ConversationAppService {
         }
 
         if (finalModelId == null) finalModelId = userSettingsDomainService.getUserDefaultModelId(userId);
+        if (finalModelId == null) throw new BusinessException("模型不存在");
         ModelEntity model = llmDomainService.selectModelById(finalModelId);
         model.isActive();
         return model;

@@ -10,6 +10,7 @@ import com.sky.AgentCore.enums.SsoProvider;
 import com.sky.AgentCore.service.login.SsoService;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
+import org.apache.http.HttpHost;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -32,11 +33,13 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class GitHubSsoService implements SsoService {
     private static final Cache<String, Boolean> USED_CODE_CACHE = CacheBuilder.newBuilder()
-            .expireAfterWrite(5, TimeUnit.SECONDS)
+            .expireAfterWrite(10, TimeUnit.SECONDS)
             .maximumSize(1000)
             .build();
 
     private static final Logger logger = LoggerFactory.getLogger(GitHubSsoService.class);
+
+    private static final HttpHost CLASH_PROXY = new HttpHost("172.17.0.1", 7890, "http");
 
     private final SsoConfigProvider ssoConfigProvider;
 
@@ -63,8 +66,10 @@ public class GitHubSsoService implements SsoService {
             if (!StringUtils.hasText(accessToken)) {
                 throw new BusinessException("获取GitHub访问令牌失败");
             }
+
             // 标记 code 已使用
             USED_CODE_CACHE.put(authCode, true);
+
             // 2. 获取用户信息
             Map<String, Object> userInfo = getGitHubUserInfo(accessToken);
             if (userInfo == null || userInfo.get("id") == null) {
@@ -82,7 +87,7 @@ public class GitHubSsoService implements SsoService {
             String login = (String) userInfo.get("login");
             String avatarUrl = (String) userInfo.get("avatar_url");
             Long id = ((Number) userInfo.get("id")).longValue();
-
+            USED_CODE_CACHE.invalidate(authCode);
             return new SsoUserInfo(String.valueOf(id), name != null ? name : login, email, avatarUrl,
                     "GitHub用户: " + login, SsoProvider.GITHUB);
 
@@ -102,6 +107,7 @@ public class GitHubSsoService implements SsoService {
         RequestConfig requestConfig = RequestConfig.custom()
                 .setConnectTimeout(10000) // 连接超时（毫秒）
                 .setSocketTimeout(10000)  // 读取超时
+                .setProxy(CLASH_PROXY)
                 .build();
         try (CloseableHttpClient httpClient = HttpClients.custom().setDefaultRequestConfig(requestConfig).build()) {
             HttpPost httpPost = new HttpPost(config.getTokenUrl());
@@ -137,7 +143,10 @@ public class GitHubSsoService implements SsoService {
 
     private Map<String, Object> getGitHubUserInfo(String accessToken) {
         SsoConfigProvider.GitHubSsoConfig config = getEffectiveConfig();
-        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+        RequestConfig requestConfig = RequestConfig.custom()
+                .setProxy(CLASH_PROXY)
+                .build();
+        try (CloseableHttpClient httpClient = HttpClients.custom().setDefaultRequestConfig(requestConfig).build()) {
             HttpGet httpGet = new HttpGet(config.getUserInfoUrl());
 
             // 设置请求头
@@ -160,7 +169,10 @@ public class GitHubSsoService implements SsoService {
 
     private String getPrimaryEmail(String accessToken) {
         SsoConfigProvider.GitHubSsoConfig config = getEffectiveConfig();
-        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+        RequestConfig requestConfig = RequestConfig.custom()
+                .setProxy(CLASH_PROXY)
+                .build();
+        try (CloseableHttpClient httpClient = HttpClients.custom().setDefaultRequestConfig(requestConfig).build()) {
             HttpGet httpGet = new HttpGet(config.getUserEmailUrl());
 
             // 设置请求头

@@ -31,14 +31,9 @@ public class QuantityDataConverter extends BaseTypeHandler<Map<String, Object>> 
     public void setNonNullParameter(PreparedStatement ps, int i, Map<String, Object> parameter, JdbcType jdbcType)
             throws SQLException {
         try {
-/*            String json = objectMapper.writeValueAsString(parameter);
-            // 对于PostgreSQL的JSONB类型，需要使用setObject而不是setString
-            ps.setObject(i, json, java.sql.Types.OTHER);*/
-
-            // 序列化时确保UTF-8编码，避免binary字符集
             String json = objectMapper.writeValueAsString(parameter);
-            // MySQL JSON字段直接用setString传参（核心修复点）
-            ps.setString(i, json);
+            // 对于PostgreSQL的JSONB类型，需要使用setObject而不是setString
+            ps.setObject(i, json, java.sql.Types.OTHER);
         } catch (JsonProcessingException e) {
             logger.error("用量数据JSON序列化失败", e);
             throw new SQLException("用量数据JSON序列化失败", e);

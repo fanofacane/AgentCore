@@ -42,13 +42,13 @@ public class BillingServiceImpl implements BillingService {
             // 查找商品
             ProductEntity product = productService.findProductByBusinessKey(context.getType(),
                     context.getServiceId());
-            System.out.println("商品"+ product);
+
             if (product == null || !product.isActive()) return true; // 无需计费
 
             // 获取规则和策略
             RuleEntity rule = ruleService.getRuleById(product.getRuleId());
             if (rule == null) return false;
-            System.out.println("规则"+ rule);
+
             RuleStrategy strategy = billingStrategyFactory.getStrategy(rule.getHandlerKey());
 
             // 计算费用

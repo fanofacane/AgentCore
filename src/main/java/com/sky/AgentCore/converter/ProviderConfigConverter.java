@@ -36,8 +36,7 @@ public class ProviderConfigConverter extends BaseTypeHandler<ProviderConfig> {
 
     @Override
     public ProviderConfig getNullableResult(ResultSet rs, int columnIndex) throws SQLException {
-        String encryptedStr = rs.getString(columnIndex); // 读取列索引对应的加密字符串
-        return parseEncryptedJson(encryptedStr); // 复用解析逻辑
+        return null;
     }
 
     @Override
@@ -50,11 +49,10 @@ public class ProviderConfigConverter extends BaseTypeHandler<ProviderConfig> {
         if (encryptedStr == null || encryptedStr.isEmpty()) {
             return new ProviderConfig();
         }
-        try {
-            String jsonStr = ValidationUtils.EncryptUtils.decrypt(encryptedStr);
-            return JsonUtils.parseObject(jsonStr, ProviderConfig.class);
-        } catch (Exception e) { // 捕获解密/JSON解析异常
-            throw new SQLException("解析config失败：" + e.getMessage(), e); // 抛出异常，便于排查
-        }
+
+        String jsonStr = ValidationUtils.EncryptUtils.decrypt(encryptedStr);;
+
+        return JsonUtils.parseObject(jsonStr, ProviderConfig.class);
+
     }
 }

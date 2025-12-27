@@ -32,5 +32,4 @@ build/
 ### VS Code ###
 .vscode/
 
-# 忽略 node_modules 目录
-node_modules/
+.pom.xml

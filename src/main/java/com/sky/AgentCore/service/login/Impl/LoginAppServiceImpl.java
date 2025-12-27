@@ -157,7 +157,7 @@ public class LoginAppServiceImpl extends ServiceImpl<UserMapper,UserEntity> impl
         userSettingsEntity.setUserId(userEntity.getId());
         ModelEntity model = llmDomainService.lambdaQuery().eq(ModelEntity::getIsOfficial, true)
                 .eq(ModelEntity::getStatus, true)
-                .eq(ModelEntity::getName, "GPT-5 Nano").list().getFirst();
+                .eq(ModelEntity::getName, "gpt-5").list().getFirst();
         userSettingsEntity.setDefaultModelId(model.getId());
         userSettingMapper.insert(userSettingsEntity);
     }

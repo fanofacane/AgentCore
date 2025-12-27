@@ -2,7 +2,7 @@ package com.sky.AgentCore.enums;
 
 public enum ProviderProtocol {
 
-    OPENAI, ANTHROPIC,Google,Qwen,byteDance;
+    OPENAI, ANTHROPIC,Google,Qwen,ByteDance;
 
     public static ProviderProtocol fromCode(String code) {
         for (ProviderProtocol protocol : values()) {

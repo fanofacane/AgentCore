@@ -8,6 +8,7 @@ import dev.langchain4j.model.anthropic.AnthropicChatModel;
 import dev.langchain4j.model.anthropic.AnthropicStreamingChatModel;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
+import dev.langchain4j.model.googleai.GoogleAiGeminiStreamingChatModel;
 import dev.langchain4j.model.openai.OpenAiChatModel;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
 
@@ -40,17 +41,22 @@ public class LLMProviderFactory {
         if (protocol == ProviderProtocol.OPENAI) {
             model = new OpenAiStreamingChatModel.OpenAiStreamingChatModelBuilder().apiKey(providerConfig.getApiKey())
                     .baseUrl(providerConfig.getBaseUrl()).customHeaders(providerConfig.getCustomHeaders())
-                    .temperature(llmModelConfig.getTemperature()).topP(llmModelConfig.getTopP())
+                    .temperature(llmModelConfig.getTemperature())
                     .maxTokens(llmModelConfig.getMaxTokens())
-                    .modelName(providerConfig.getModel()).timeout(Duration.ofHours(1))
+                    .modelName(providerConfig.getModel()).timeout(Duration.ofMinutes(1))
                     .build();
-        }
-        else if (protocol == ProviderProtocol.ANTHROPIC) {
+        } else if (protocol == ProviderProtocol.ANTHROPIC) {
             model = AnthropicStreamingChatModel.builder().apiKey(providerConfig.getApiKey())
                     .baseUrl(providerConfig.getBaseUrl()).version("2023-06-01").modelName(providerConfig.getModel())
                     .temperature(llmModelConfig.getTemperature()).topP(llmModelConfig.getTopP())
                     .maxTokens(llmModelConfig.getMaxTokens())
-                    .timeout(Duration.ofHours(1))
+                    .timeout(Duration.ofMinutes(1))
+                    .build();
+        }else if (protocol == ProviderProtocol.Google){
+            model = GoogleAiGeminiStreamingChatModel.builder().apiKey(providerConfig.getApiKey())
+                    .baseUrl(providerConfig.getBaseUrl()).modelName(providerConfig.getModel())
+                    .temperature(llmModelConfig.getTemperature()).topP(llmModelConfig.getTopP())
+                    .timeout(Duration.ofMinutes(1))
                     .build();
         }
 

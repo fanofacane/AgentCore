@@ -74,7 +74,6 @@ public class AgentAppServiceImpl extends ServiceImpl<AgentMapper, AgentEntity> i
         }
 
         // 3. 执行Agent创建逻辑
-        System.out.println("llm配置属性"+request.getLlmModelConfig());
         AgentEntity agent = AgentAssembler.toEntity(request, userId);
         agent.setUserId(userId);
         save(agent);
@@ -152,8 +151,9 @@ public class AgentAppServiceImpl extends ServiceImpl<AgentMapper, AgentEntity> i
         // 再删除Agent本身
         boolean success = remove(new LambdaQueryWrapper<AgentEntity>().eq(AgentEntity::getId, agentId).eq(AgentEntity::getUserId, userId));
         if (!success) throw new BusinessException("Agent删除失败");
-        // 最后删除agent版本  TODO
-
+        // 最后删除agent版本、工作区
+        agentVersionService.lambdaUpdate().eq(AgentVersionEntity::getAgentId, agentId).remove();
+        agentWorkspaceService.lambdaUpdate().eq(AgentWorkspaceEntity::getAgentId, agentId).remove();
     }
 
     @Override
