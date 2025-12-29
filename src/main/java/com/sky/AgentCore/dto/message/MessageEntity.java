@@ -7,8 +7,8 @@ import com.sky.AgentCore.converter.ListConverter;
 import com.sky.AgentCore.converter.MessageTypeConverter;
 import com.sky.AgentCore.converter.RoleConverter;
 import com.sky.AgentCore.dto.common.BaseEntity;
-import com.sky.AgentCore.enums.MessageType;
-import com.sky.AgentCore.enums.Role;
+import com.sky.AgentCore.dto.enums.MessageType;
+import com.sky.AgentCore.dto.enums.Role;
 import lombok.Data;
 
 import java.time.LocalDateTime;

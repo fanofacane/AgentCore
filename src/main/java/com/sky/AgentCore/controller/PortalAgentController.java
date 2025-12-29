@@ -1,6 +1,6 @@
 package com.sky.AgentCore.controller;
 
-import com.sky.AgentCore.converter.AgentVersionAssembler;
+import com.sky.AgentCore.converter.assembler.AgentVersionAssembler;
 import com.sky.AgentCore.dto.agent.*;
 import com.sky.AgentCore.dto.common.Result;
 import com.sky.AgentCore.service.agent.AgentAppService;

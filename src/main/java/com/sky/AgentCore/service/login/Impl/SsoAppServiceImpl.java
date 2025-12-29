@@ -1,9 +1,9 @@
 package com.sky.AgentCore.service.login.Impl;
 
-import com.sky.AgentCore.config.SsoServiceFactory;
+import com.sky.AgentCore.config.Factory.SsoServiceFactory;
 import com.sky.AgentCore.dto.sso.SsoUserInfo;
 import com.sky.AgentCore.dto.user.UserEntity;
-import com.sky.AgentCore.enums.SsoProvider;
+import com.sky.AgentCore.dto.enums.SsoProvider;
 import com.sky.AgentCore.service.login.SsoAppService;
 import com.sky.AgentCore.service.login.SsoService;
 import com.sky.AgentCore.service.user.UserAppService;

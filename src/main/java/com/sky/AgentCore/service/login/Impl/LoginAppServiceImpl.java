@@ -2,24 +2,21 @@ package com.sky.AgentCore.service.login.Impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.sky.AgentCore.Exceptions.BusinessException;
+import com.sky.AgentCore.config.Exceptions.BusinessException;
 import com.sky.AgentCore.dto.account.AccountEntity;
 import com.sky.AgentCore.dto.login.EmailLoginRequest;
 import com.sky.AgentCore.dto.login.LoginRequest;
 import com.sky.AgentCore.dto.login.RegisterRequest;
 import com.sky.AgentCore.dto.model.ModelEntity;
 import com.sky.AgentCore.dto.user.UserEntity;
-import com.sky.AgentCore.dto.user.UserSettingsConfig;
 import com.sky.AgentCore.dto.user.UserSettingsEntity;
-import com.sky.AgentCore.enums.AuthFeatureKey;
+import com.sky.AgentCore.dto.enums.AuthFeatureKey;
 import com.sky.AgentCore.mapper.AccountMapper;
 import com.sky.AgentCore.mapper.UserMapper;
 import com.sky.AgentCore.mapper.UserSettingMapper;
-import com.sky.AgentCore.service.auth.AuthSettingAppService;
-import com.sky.AgentCore.service.llm.LLMAppService;
+import com.sky.AgentCore.service.user.AuthSettingAppService;
 import com.sky.AgentCore.service.llm.LLMDomainService;
 import com.sky.AgentCore.service.login.LoginAppService;
-import com.sky.AgentCore.service.user.UserSettingsDomainService;
 import com.sky.AgentCore.utils.EmailService;
 import com.sky.AgentCore.utils.JwtUtils;
 import com.sky.AgentCore.utils.PasswordUtils;
@@ -28,7 +25,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import java.math.BigDecimal;
 import java.util.UUID;
 
 import static com.sky.AgentCore.utils.VerificationCode.BUSINESS_TYPE_EMAIL_LOGIN;

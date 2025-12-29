@@ -3,8 +3,8 @@ package com.sky.AgentCore.dto.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.sky.AgentCore.enums.ModelType;
-import com.sky.AgentCore.enums.ProviderProtocol;
+import com.sky.AgentCore.dto.enums.ModelType;
+import com.sky.AgentCore.dto.enums.ProviderProtocol;
 
 import java.io.Serial;
 import java.io.Serializable;

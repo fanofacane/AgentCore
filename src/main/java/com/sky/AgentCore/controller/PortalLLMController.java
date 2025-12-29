@@ -1,12 +1,11 @@
 package com.sky.AgentCore.controller;
 
-import com.sky.AgentCore.converter.ProviderAssembler;
 import com.sky.AgentCore.dto.common.Result;
 import com.sky.AgentCore.dto.model.*;
-import com.sky.AgentCore.enums.ModelType;
-import com.sky.AgentCore.enums.Operator;
-import com.sky.AgentCore.enums.ProviderProtocol;
-import com.sky.AgentCore.enums.ProviderType;
+import com.sky.AgentCore.dto.enums.ModelType;
+import com.sky.AgentCore.dto.enums.Operator;
+import com.sky.AgentCore.dto.enums.ProviderProtocol;
+import com.sky.AgentCore.dto.enums.ProviderType;
 import com.sky.AgentCore.service.llm.LLMAppService;
 import com.sky.AgentCore.service.llm.LLMDomainService;
 import com.sky.AgentCore.utils.UserContext;

@@ -4,11 +4,11 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.sky.AgentCore.Exceptions.BusinessException;
+import com.sky.AgentCore.config.Exceptions.BusinessException;
 import com.sky.AgentCore.converter.BillingTypeConverter;
 import com.sky.AgentCore.converter.PricingConfigConverter;
 import com.sky.AgentCore.dto.common.BaseEntity;
-import com.sky.AgentCore.enums.BillingType;
+import com.sky.AgentCore.dto.enums.BillingType;
 import lombok.Data;
 
 import java.util.Map;

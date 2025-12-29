@@ -1,7 +1,7 @@
 package com.sky.AgentCore.utils;
 
 
-import com.sky.AgentCore.Exceptions.BusinessException;
+import com.sky.AgentCore.config.Exceptions.BusinessException;
 import jakarta.mail.*;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;

@@ -1,6 +1,6 @@
 package com.sky.AgentCore.config;
 
-import com.sky.AgentCore.Interceptor.ExternalApiKeyInterceptor;
+import com.sky.AgentCore.config.Interceptor.ExternalApiKeyInterceptor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;

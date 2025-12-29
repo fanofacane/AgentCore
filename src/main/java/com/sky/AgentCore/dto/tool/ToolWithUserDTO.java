@@ -1,9 +1,9 @@
 package com.sky.AgentCore.dto.tool;
 
 
-import com.sky.AgentCore.enums.ToolStatus;
-import com.sky.AgentCore.enums.ToolType;
-import com.sky.AgentCore.enums.UploadType;
+import com.sky.AgentCore.dto.enums.ToolStatus;
+import com.sky.AgentCore.dto.enums.ToolType;
+import com.sky.AgentCore.dto.enums.UploadType;
 import lombok.Data;
 
 import java.time.LocalDateTime;

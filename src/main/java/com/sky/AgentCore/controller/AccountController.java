@@ -2,7 +2,7 @@ package com.sky.AgentCore.controller;
 
 import com.sky.AgentCore.dto.account.AccountDTO;
 import com.sky.AgentCore.dto.common.Result;
-import com.sky.AgentCore.service.account.AccountAppService;
+import com.sky.AgentCore.service.user.AccountAppService;
 import com.sky.AgentCore.utils.UserContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;

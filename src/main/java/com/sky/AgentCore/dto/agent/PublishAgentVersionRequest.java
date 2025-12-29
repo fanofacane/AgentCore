@@ -1,7 +1,7 @@
 package com.sky.AgentCore.dto.agent;
 
 
-import com.sky.AgentCore.Exceptions.ParamValidationException;
+import com.sky.AgentCore.config.Exceptions.ParamValidationException;
 import jakarta.validation.constraints.NotBlank;
 
 import java.util.regex.Pattern;

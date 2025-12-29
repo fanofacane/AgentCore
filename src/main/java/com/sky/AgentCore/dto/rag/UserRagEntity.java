@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.sky.AgentCore.converter.InstallTypeConverter;
 import com.sky.AgentCore.dto.common.BaseEntity;
-import com.sky.AgentCore.enums.InstallType;
+import com.sky.AgentCore.dto.enums.InstallType;
 import lombok.Data;
 
 import java.io.Serial;

@@ -1,8 +1,8 @@
 package com.sky.AgentCore.config;
 
 import com.sky.AgentCore.dto.auth.AuthSettingEntity;
-import com.sky.AgentCore.enums.AuthFeatureKey;
-import com.sky.AgentCore.service.auth.AuthSettingAppService;
+import com.sky.AgentCore.dto.enums.AuthFeatureKey;
+import com.sky.AgentCore.service.user.AuthSettingAppService;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;

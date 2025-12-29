@@ -1,6 +1,6 @@
 package com.sky.AgentCore.service.agent.Impl;
 
-import com.sky.AgentCore.Exceptions.BusinessException;
+import com.sky.AgentCore.config.Exceptions.BusinessException;
 import com.sky.AgentCore.dto.PromptTemplates.SystemPromptTemplates;
 import com.sky.AgentCore.dto.tool.ToolEntity;
 import dev.langchain4j.data.message.SystemMessage;

@@ -2,7 +2,7 @@ package com.sky.AgentCore.controller;
 
 import com.sky.AgentCore.dto.auth.AuthConfigDTO;
 import com.sky.AgentCore.dto.common.Result;
-import com.sky.AgentCore.service.auth.AuthSettingAppService;
+import com.sky.AgentCore.service.user.AuthSettingAppService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

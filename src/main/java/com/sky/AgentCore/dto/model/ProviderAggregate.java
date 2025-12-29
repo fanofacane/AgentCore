@@ -1,7 +1,7 @@
 package com.sky.AgentCore.dto.model;
 
 
-import com.sky.AgentCore.enums.ProviderProtocol;
+import com.sky.AgentCore.dto.enums.ProviderProtocol;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;

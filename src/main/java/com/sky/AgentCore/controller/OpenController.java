@@ -1,6 +1,6 @@
 package com.sky.AgentCore.controller;
 
-import com.sky.AgentCore.Exceptions.BusinessException;
+import com.sky.AgentCore.config.Exceptions.BusinessException;
 import com.sky.AgentCore.dto.chat.ChatRequest;
 import com.sky.AgentCore.dto.chat.ChatResponse;
 import com.sky.AgentCore.dto.chat.ExternalChatRequest;
@@ -8,11 +8,9 @@ import com.sky.AgentCore.dto.common.Result;
 import com.sky.AgentCore.dto.model.ModelDTO;
 import com.sky.AgentCore.dto.session.ExternalCreateSessionRequest;
 import com.sky.AgentCore.dto.session.SessionDTO;
-import com.sky.AgentCore.dto.session.SessionEntity;
-import com.sky.AgentCore.enums.ModelType;
-import com.sky.AgentCore.enums.ProviderType;
+import com.sky.AgentCore.dto.enums.ModelType;
+import com.sky.AgentCore.dto.enums.ProviderType;
 import com.sky.AgentCore.service.agent.AgentSessionService;
-import com.sky.AgentCore.service.agent.SessionService;
 import com.sky.AgentCore.service.chat.ConversationAppService;
 import com.sky.AgentCore.service.llm.LLMAppService;
 import com.sky.AgentCore.service.llm.LLMDomainService;

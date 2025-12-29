@@ -1,8 +1,8 @@
 package com.sky.AgentCore.utils;
 
 
-import com.sky.AgentCore.Exceptions.BusinessException;
-import com.sky.AgentCore.Exceptions.ParamValidationException;
+import com.sky.AgentCore.config.Exceptions.BusinessException;
+import com.sky.AgentCore.config.Exceptions.ParamValidationException;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;

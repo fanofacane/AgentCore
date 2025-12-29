@@ -1,6 +1,6 @@
 package com.sky.AgentCore.dto.model;
 
-import com.sky.AgentCore.enums.TokenOverflowStrategyEnum;
+import com.sky.AgentCore.dto.enums.TokenOverflowStrategyEnum;
 import lombok.Data;
 /** Agent模型配置类，用于表示大语言模型的相关配置参数 */
 @Data

@@ -5,8 +5,8 @@ import com.sky.AgentCore.dto.model.ModelDTO;
 import com.sky.AgentCore.dto.model.ProviderCreateRequest;
 import com.sky.AgentCore.dto.model.ProviderDTO;
 import com.sky.AgentCore.dto.model.ProviderEntity;
-import com.sky.AgentCore.enums.ModelType;
-import com.sky.AgentCore.enums.ProviderProtocol;
+import com.sky.AgentCore.dto.enums.ModelType;
+import com.sky.AgentCore.dto.enums.ProviderProtocol;
 
 import java.util.List;
 

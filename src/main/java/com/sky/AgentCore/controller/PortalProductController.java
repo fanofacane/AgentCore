@@ -2,8 +2,7 @@ package com.sky.AgentCore.controller;
 
 import com.sky.AgentCore.dto.common.Result;
 import com.sky.AgentCore.dto.product.ProductDTO;
-import com.sky.AgentCore.service.product.ProductService;
-import com.sky.AgentCore.utils.UserContext;
+import com.sky.AgentCore.service.rule.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 

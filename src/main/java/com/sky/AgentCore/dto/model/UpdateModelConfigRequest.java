@@ -1,6 +1,6 @@
 package com.sky.AgentCore.dto.model;
 
-import com.sky.AgentCore.enums.TokenOverflowStrategyEnum;
+import com.sky.AgentCore.dto.enums.TokenOverflowStrategyEnum;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;

@@ -1,9 +1,9 @@
 package com.sky.AgentCore.service.llm.Impl;
 
-import com.sky.AgentCore.config.LLMProviderFactory;
+import com.sky.AgentCore.config.Factory.LLMProviderFactory;
 import com.sky.AgentCore.dto.model.LLMModelConfig;
 import com.sky.AgentCore.dto.model.ProviderConfig;
-import com.sky.AgentCore.enums.ProviderProtocol;
+import com.sky.AgentCore.dto.enums.ProviderProtocol;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
 

@@ -1,14 +1,10 @@
 package com.sky.AgentCore.service.agent.Impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.sky.AgentCore.dto.message.MessageEntity;
 import com.sky.AgentCore.dto.session.SessionEntity;
-import com.sky.AgentCore.enums.Role;
 import com.sky.AgentCore.mapper.MessageMapper;
 import com.sky.AgentCore.mapper.SessionMapper;
 import com.sky.AgentCore.service.agent.SessionService;
-import com.sky.AgentCore.service.chat.MessageService;
-import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

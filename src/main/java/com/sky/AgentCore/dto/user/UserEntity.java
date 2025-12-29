@@ -3,7 +3,7 @@ package com.sky.AgentCore.dto.user;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
-import com.sky.AgentCore.Exceptions.BusinessException;
+import com.sky.AgentCore.config.Exceptions.BusinessException;
 import com.sky.AgentCore.dto.common.BaseEntity;
 import lombok.Data;
 

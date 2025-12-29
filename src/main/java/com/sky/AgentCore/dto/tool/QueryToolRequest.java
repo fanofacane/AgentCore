@@ -1,6 +1,6 @@
 package com.sky.AgentCore.dto.tool;
 
-import com.sky.AgentCore.enums.ToolStatus;
+import com.sky.AgentCore.dto.enums.ToolStatus;
 import lombok.Data;
 
 /** 工具查询请求 */

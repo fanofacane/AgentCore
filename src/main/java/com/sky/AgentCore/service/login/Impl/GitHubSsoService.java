@@ -3,10 +3,10 @@ package com.sky.AgentCore.service.login.Impl;
 import com.alibaba.fastjson.JSON;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.sky.AgentCore.Exceptions.BusinessException;
+import com.sky.AgentCore.config.Exceptions.BusinessException;
 import com.sky.AgentCore.config.SsoConfigProvider;
 import com.sky.AgentCore.dto.sso.SsoUserInfo;
-import com.sky.AgentCore.enums.SsoProvider;
+import com.sky.AgentCore.dto.enums.SsoProvider;
 import com.sky.AgentCore.service.login.SsoService;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
@@ -105,8 +105,8 @@ public class GitHubSsoService implements SsoService {
     private String getAccessToken(String code) {
         SsoConfigProvider.GitHubSsoConfig config = getEffectiveConfig();
         RequestConfig requestConfig = RequestConfig.custom()
-                .setConnectTimeout(10000) // 连接超时（毫秒）
-                .setSocketTimeout(10000)  // 读取超时
+                .setConnectTimeout(6000) // 连接超时（毫秒）
+                .setSocketTimeout(6000)  // 读取超时
                 .setProxy(CLASH_PROXY)
                 .build();
         try (CloseableHttpClient httpClient = HttpClients.custom().setDefaultRequestConfig(requestConfig).build()) {

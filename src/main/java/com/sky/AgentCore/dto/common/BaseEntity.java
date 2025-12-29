@@ -3,8 +3,7 @@ package com.sky.AgentCore.dto.common;
 
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableLogic;
-import com.sky.AgentCore.enums.Operator;
+import com.sky.AgentCore.dto.enums.Operator;
 import lombok.Data;
 
 import java.time.LocalDateTime;

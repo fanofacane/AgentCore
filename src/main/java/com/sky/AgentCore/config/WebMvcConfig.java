@@ -1,7 +1,7 @@
 package com.sky.AgentCore.config;
 
 
-import com.sky.AgentCore.Interceptor.UserAuthInterceptor;
+import com.sky.AgentCore.config.Interceptor.UserAuthInterceptor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;

@@ -1,11 +1,10 @@
 package com.sky.AgentCore.dto.model;
 
 import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
-import com.sky.AgentCore.Exceptions.BusinessException;
+import com.sky.AgentCore.config.Exceptions.BusinessException;
 import com.sky.AgentCore.dto.common.BaseEntity;
-import com.sky.AgentCore.enums.ProviderProtocol;
+import com.sky.AgentCore.dto.enums.ProviderProtocol;
 
 import java.util.Objects;
 

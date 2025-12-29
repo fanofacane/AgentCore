@@ -1,22 +1,18 @@
 package com.sky.AgentCore.service.agent.Impl;
 
-import com.sky.AgentCore.Exceptions.BusinessException;
-import com.sky.AgentCore.converter.SessionAssembler;
+import com.sky.AgentCore.config.Exceptions.BusinessException;
+import com.sky.AgentCore.converter.assembler.SessionAssembler;
 import com.sky.AgentCore.dto.agent.AgentEntity;
 import com.sky.AgentCore.dto.agent.AgentVersionEntity;
 import com.sky.AgentCore.dto.agent.AgentWorkspaceEntity;
-import com.sky.AgentCore.dto.common.Result;
 import com.sky.AgentCore.dto.message.MessageEntity;
 import com.sky.AgentCore.dto.session.SessionDTO;
 import com.sky.AgentCore.dto.session.SessionEntity;
-import com.sky.AgentCore.enums.Role;
+import com.sky.AgentCore.dto.enums.Role;
 import com.sky.AgentCore.service.agent.*;
 import com.sky.AgentCore.service.chat.MessageService;
-import com.sky.AgentCore.utils.UserContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
 

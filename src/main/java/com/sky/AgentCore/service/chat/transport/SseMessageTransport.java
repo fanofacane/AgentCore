@@ -1,0 +1,114 @@
+package com.sky.AgentCore.service.chat.transport;
+
+import com.sky.AgentCore.dto.agent.AgentChatResponse;
+import com.sky.AgentCore.service.chat.MessageTransport;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+
+import java.io.IOException;
+
+@Component
+public class SseMessageTransport implements MessageTransport<SseEmitter> {
+    private static final Logger logger = LoggerFactory.getLogger(SseMessageTransport.class);
+    private static final String TIMEOUT_MESSAGE = "\n\n[系统提示：响应超时，请重试]";
+
+    private static final String ERROR_MESSAGE_PREFIX = "\n\n[系统错误：";
+
+    @Override
+    public SseEmitter createConnection(long timeout) {
+        SseEmitter emitter = new SseEmitter(timeout);
+
+        emitter.onTimeout(() -> {
+            try {
+                AgentChatResponse response = new AgentChatResponse();
+                response.setContent(TIMEOUT_MESSAGE);
+                response.setDone(true);
+                emitter.send(response);
+                emitter.complete();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+
+        emitter.onError(ex -> {
+            try {
+                AgentChatResponse response = new AgentChatResponse();
+                response.setContent(ERROR_MESSAGE_PREFIX + ex.getMessage() + "]");
+                response.setDone(true);
+                emitter.send(response);
+                emitter.complete();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+
+        return emitter;
+    }
+
+    @Override
+    public void sendMessage(SseEmitter connection, AgentChatResponse streamChatResponse) {
+        if (connection == null) return;
+        safeSendMessage(connection, streamChatResponse);
+    }
+
+    @Override
+    public void sendEndMessage(SseEmitter connection, AgentChatResponse streamChatResponse) {
+        try {
+            safeSendMessage(connection, streamChatResponse);
+        } finally {
+            safeCompleteEmitter(connection);
+
+        }
+    }
+
+    @Override
+    public void completeConnection(SseEmitter connection) {
+        safeCompleteEmitter(connection);
+    }
+
+    @Override
+    public void handleError(SseEmitter connection, Throwable error) {
+        try {
+            AgentChatResponse response = new AgentChatResponse();
+            response.setContent(error.getMessage());
+            response.setDone(true);
+            safeSendMessage(connection, response);
+        } finally {
+            safeCompleteEmitter(connection);
+        }
+    }
+
+    /** 安全发送消息，直接处理网络异常
+     * @param emitter SSE发送器
+     * @param response 响应消息 */
+    private void safeSendMessage(SseEmitter emitter, AgentChatResponse response) {
+        try {
+            emitter.send(response);
+        } catch (IllegalStateException e) {
+            // 连接已关闭，这是正常情况
+            logger.debug("SSE连接已关闭，跳过消息发送: {}", e.getMessage());
+        } catch (IOException e) {
+            // 网络问题，这也是正常情况
+            logger.debug("SSE网络异常，跳过消息发送: {}", e.getMessage());
+        } catch (Exception e) {
+            // 其他异常，记录但不抛出
+            logger.debug("SSE消息发送异常: {}", e.getMessage());
+        }
+    }
+
+    /** 安全完成SSE连接
+     * @param emitter SSE发送器 */
+    private void safeCompleteEmitter(SseEmitter emitter) {
+        try {
+            emitter.complete();
+        } catch (IllegalStateException e) {
+            // 连接已关闭，正常情况
+            logger.debug("SSE连接已完成或已关闭: {}", e.getMessage());
+        } catch (Exception e) {
+            // 其他异常，记录但不抛出
+            logger.debug("完成SSE连接时异常: {}", e.getMessage());
+        }
+    }
+}

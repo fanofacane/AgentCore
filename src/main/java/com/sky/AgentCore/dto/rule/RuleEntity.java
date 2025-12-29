@@ -4,10 +4,10 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.sky.AgentCore.Exceptions.BusinessException;
+import com.sky.AgentCore.config.Exceptions.BusinessException;
 import com.sky.AgentCore.converter.RuleHandlerKeyConverter;
 import com.sky.AgentCore.dto.common.BaseEntity;
-import com.sky.AgentCore.enums.RuleHandlerKey;
+import com.sky.AgentCore.dto.enums.RuleHandlerKey;
 import lombok.Data;
 
 /** 规则实体 定义计费规则类型，独立于任何业务 */

@@ -2,6 +2,7 @@ package com.sky.AgentCore.service.gateway.Impl;
 
 import com.sky.AgentCore.dto.gateway.*;
 import com.sky.AgentCore.service.gateway.HighAvailabilityGateway;
+import com.sky.AgentCore.service.gateway.client.HighAvailabilityGatewayClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

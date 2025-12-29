@@ -1,7 +1,7 @@
 package com.sky.AgentCore.service.memory;
 
 
-import com.sky.AgentCore.Exceptions.BusinessException;
+import com.sky.AgentCore.config.Exceptions.BusinessException;
 import com.sky.AgentCore.dto.model.ModelConfig;
 import com.sky.AgentCore.dto.model.ModelEntity;
 import com.sky.AgentCore.dto.model.ProviderEntity;

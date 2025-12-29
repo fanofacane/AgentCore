@@ -2,7 +2,7 @@ package com.sky.AgentCore.service.user.Impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.sky.AgentCore.Exceptions.BusinessException;
+import com.sky.AgentCore.config.Exceptions.BusinessException;
 import com.sky.AgentCore.dto.user.ChangePasswordRequest;
 import com.sky.AgentCore.dto.user.UserDTO;
 import com.sky.AgentCore.dto.user.UserEntity;
