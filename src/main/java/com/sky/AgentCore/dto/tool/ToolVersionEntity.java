@@ -9,7 +9,7 @@ import com.sky.AgentCore.converter.ListStringConverter;
 import com.sky.AgentCore.converter.ToolDefinitionListConverter;
 import com.sky.AgentCore.converter.UploadTypeConverter;
 import com.sky.AgentCore.dto.common.BaseEntity;
-import com.sky.AgentCore.dto.enums.UploadType;
+import com.sky.AgentCore.enums.UploadType;
 import lombok.Data;
 
 import java.util.List;

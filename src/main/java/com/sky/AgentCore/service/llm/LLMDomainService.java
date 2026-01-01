@@ -2,8 +2,8 @@ package com.sky.AgentCore.service.llm;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.sky.AgentCore.dto.model.*;
-import com.sky.AgentCore.dto.enums.Operator;
-import com.sky.AgentCore.dto.enums.ProviderType;
+import com.sky.AgentCore.enums.Operator;
+import com.sky.AgentCore.enums.ProviderType;
 
 import java.util.List;
 import java.util.Set;

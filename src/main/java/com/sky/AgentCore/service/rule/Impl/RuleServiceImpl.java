@@ -1,7 +1,7 @@
 package com.sky.AgentCore.service.rule.Impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.sky.AgentCore.dto.rule.RuleEntity;
+import com.sky.AgentCore.dto.product.RuleEntity;
 import com.sky.AgentCore.mapper.RuleMapper;
 import com.sky.AgentCore.service.rule.RuleService;
 import org.springframework.stereotype.Service;
@@ -11,8 +11,6 @@ public class RuleServiceImpl extends ServiceImpl<RuleMapper, RuleEntity> impleme
     @Override
     public RuleEntity getRuleById(String ruleId) {
         if (ruleId == null || ruleId.trim().isEmpty()) return null;
-        System.out.println("规则ID"+ ruleId);
-        System.out.println("规则"+ getById(ruleId));
         return getById(ruleId);
     }
 }

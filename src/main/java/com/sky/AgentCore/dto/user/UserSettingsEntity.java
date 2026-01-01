@@ -12,20 +12,15 @@ import org.springframework.stereotype.Component;
 
 /** 用户设置领域模型 */
 @Data
-@Component
 @TableName("user_settings")
 public class UserSettingsEntity extends BaseEntity {
     @TableId(type = IdType.ASSIGN_UUID)
     private String id;
 
-    /**
-     * 用户ID
-     */
+    /** 用户ID */
     private String userId;
 
-    /**
-     * 设置配置
-     */
+    /** 设置配置 */
     @TableField(typeHandler = UserSettingsConfigConverter.class, jdbcType = JdbcType.OTHER)
     private UserSettingsConfig settingConfig;
 

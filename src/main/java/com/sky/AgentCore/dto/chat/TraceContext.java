@@ -51,6 +51,24 @@ public class TraceContext {
         return new TraceContext(userId, sessionId, agentId, true);
     }
 
+    /** 创建禁用追踪的上下文 */
+    public static TraceContext createDisabled() {
+        return new TraceContext(null, null, null, false);
+    }
+
+    /** 生成下一个序列号 */
+    public int nextSequence() {
+        return sequenceGenerator.incrementAndGet();
+    }
+
+    /** 获取当前序列号 */
+    public int getCurrentSequence() {
+        return sequenceGenerator.get();
+    }
+
+    public String getTraceId() {
+        return sessionId; // 使用sessionId作为traceId
+    }
     @Override
     public String toString() {
         return "TraceContext{" + "sessionId='" + sessionId + '\'' + ", userId=" + userId + ", agentId=" + agentId

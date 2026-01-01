@@ -5,7 +5,7 @@ import com.sky.AgentCore.config.Factory.BillingStrategyFactory;
 import com.sky.AgentCore.dto.billing.RuleContext;
 import com.sky.AgentCore.dto.billing.UsageRecordEntity;
 import com.sky.AgentCore.dto.product.ProductEntity;
-import com.sky.AgentCore.dto.rule.RuleEntity;
+import com.sky.AgentCore.dto.product.RuleEntity;
 import com.sky.AgentCore.service.user.AccountAppService;
 import com.sky.AgentCore.service.billing.BillingService;
 import com.sky.AgentCore.service.rule.ProductService;
@@ -83,7 +83,6 @@ public class BillingServiceImpl implements BillingService {
 
         // 2. 查找商品
         ProductEntity product = productService.findProductByBusinessKey(context.getType(), context.getServiceId());
-        System.out.println("商品"+ product);
         // 没有配置计费规则，直接放行
         if (product == null) return;
 
@@ -98,12 +97,12 @@ public class BillingServiceImpl implements BillingService {
         // 4. 获取规则和策略
         RuleEntity rule = ruleService.getRuleById(product.getRuleId());
         if (rule == null) throw new BusinessException("关联的计费规则不存在");
-        System.out.println("规则"+ rule);
+
         RuleStrategy strategy = billingStrategyFactory.getStrategy(rule.getHandlerKey());
 
         // 5. 计算费用
         BigDecimal cost = strategy.process(context.getUsageData(), product.getPricingConfig());
-        System.out.println("费用"+ cost);
+
         if (cost.compareTo(BigDecimal.ZERO) < 0) {
             throw new BusinessException("计算出的费用不能为负数");
         }

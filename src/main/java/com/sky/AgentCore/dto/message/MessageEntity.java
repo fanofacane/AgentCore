@@ -1,14 +1,16 @@
 package com.sky.AgentCore.dto.message;
 
 
+import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.sky.AgentCore.converter.ListConverter;
 import com.sky.AgentCore.converter.MessageTypeConverter;
 import com.sky.AgentCore.converter.RoleConverter;
 import com.sky.AgentCore.dto.common.BaseEntity;
-import com.sky.AgentCore.dto.enums.MessageType;
-import com.sky.AgentCore.dto.enums.Role;
+import com.sky.AgentCore.enums.MessageType;
+import com.sky.AgentCore.enums.Role;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -21,6 +23,7 @@ import java.util.List;
 public class MessageEntity extends BaseEntity {
 
     /** 消息唯一ID */
+    @TableId(value = "id", type = IdType.ASSIGN_UUID)
     private String id;
 
     /** 所属会话ID */

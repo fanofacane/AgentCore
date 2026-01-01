@@ -3,17 +3,17 @@ package com.sky.AgentCore.service.user.Impl;
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.sky.AgentCore.config.Exceptions.BusinessException;
-import com.sky.AgentCore.dto.user.ChangePasswordRequest;
+import com.sky.AgentCore.dto.login.ChangePasswordRequest;
 import com.sky.AgentCore.dto.user.UserDTO;
 import com.sky.AgentCore.dto.user.UserEntity;
 import com.sky.AgentCore.dto.user.UserUpdateRequest;
 import com.sky.AgentCore.mapper.UserMapper;
-import com.sky.AgentCore.service.user.UserAppService;
+import com.sky.AgentCore.service.user.UserService;
 import com.sky.AgentCore.utils.PasswordUtils;
 import org.springframework.stereotype.Service;
 
 @Service
-public class UserAppServiceImpl extends ServiceImpl<UserMapper,UserEntity> implements UserAppService {
+public class UserAppServiceImpl extends ServiceImpl<UserMapper,UserEntity> implements UserService {
     @Override
     public UserDTO getUserInfo(String userId) {
         UserDTO userDTO = new UserDTO();

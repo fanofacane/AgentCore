@@ -7,9 +7,9 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.sky.AgentCore.converter.*;
 import com.sky.AgentCore.dto.common.BaseEntity;
-import com.sky.AgentCore.dto.enums.ToolStatus;
-import com.sky.AgentCore.dto.enums.ToolType;
-import com.sky.AgentCore.dto.enums.UploadType;
+import com.sky.AgentCore.enums.ToolStatus;
+import com.sky.AgentCore.enums.ToolType;
+import com.sky.AgentCore.enums.UploadType;
 import lombok.Data;
 
 import java.util.List;

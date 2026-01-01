@@ -3,7 +3,7 @@ package com.sky.AgentCore.service.chat.Impl;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.sky.AgentCore.dto.chat.ContextEntity;
 import com.sky.AgentCore.dto.message.MessageEntity;
-import com.sky.AgentCore.dto.enums.Role;
+import com.sky.AgentCore.enums.Role;
 import com.sky.AgentCore.mapper.ContextMapper;
 import com.sky.AgentCore.mapper.MessageMapper;
 import com.sky.AgentCore.service.chat.MessageService;
@@ -59,7 +59,7 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, MessageEntity
 
     @Override
     public boolean isFirstConversation(String sessionId) {
-        return lambdaQuery().eq(MessageEntity::getSessionId, sessionId).count() <= 3;
+        return lambdaQuery().eq(MessageEntity::getSessionId, sessionId).count() <= 4;
     }
 
     @Override

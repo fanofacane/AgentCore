@@ -1,7 +1,7 @@
 package com.sky.AgentCore.dto.model;
 
 
-import com.sky.AgentCore.dto.enums.ModelType;
+import com.sky.AgentCore.enums.ModelType;
 import lombok.Data;
 
 import java.time.LocalDateTime;

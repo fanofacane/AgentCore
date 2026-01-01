@@ -9,7 +9,7 @@ import com.sky.AgentCore.config.Exceptions.BusinessException;
 import com.sky.AgentCore.converter.ListStringConverter;
 import com.sky.AgentCore.converter.WidgetTypeConverter;
 import com.sky.AgentCore.dto.common.BaseEntity;
-import com.sky.AgentCore.dto.enums.WidgetType;
+import com.sky.AgentCore.enums.WidgetType;
 import lombok.Data;
 
 import java.time.LocalDateTime;

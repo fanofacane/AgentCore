@@ -17,9 +17,9 @@ import com.sky.AgentCore.dto.message.TokenProcessResult;
 import com.sky.AgentCore.dto.model.*;
 import com.sky.AgentCore.dto.session.SessionEntity;
 import com.sky.AgentCore.dto.tool.UserToolEntity;
-import com.sky.AgentCore.dto.enums.MessageType;
-import com.sky.AgentCore.dto.enums.Role;
-import com.sky.AgentCore.dto.enums.TokenOverflowStrategyEnum;
+import com.sky.AgentCore.enums.MessageType;
+import com.sky.AgentCore.enums.Role;
+import com.sky.AgentCore.enums.TokenOverflowStrategyEnum;
 import com.sky.AgentCore.service.agent.AgentAppService;
 import com.sky.AgentCore.service.agent.AgentWorkspaceService;
 import com.sky.AgentCore.service.agent.SessionService;
@@ -73,6 +73,8 @@ public class ConversationAppServiceImpl implements ConversationAppService {
     @Autowired
     private TokenService tokenService;
     @Autowired
+    private RagSessionManager ragSessionManager;
+    @Autowired
     private MessageHandlerFactory messageHandlerFactory;
     @Autowired
     private HighAvailabilityService highAvailabilityService;
@@ -108,13 +110,14 @@ public class ConversationAppServiceImpl implements ConversationAppService {
 
         // 1. 根据请求类型准备对话环境
         ChatContext environment = prepareEnvironmentByRequestType(chatRequest, userId);
+
         // 2. 获取传输方式 (当前仅支持SSE，将来支持WebSocket)
         MessageTransport<SseEmitter> transport = transportFactory
                 .getTransport(MessageTransportFactory.TRANSPORT_TYPE_SSE);
 
-        // 3. todo 根据请求类型获取适合的消息处理器 暂时不支持链路追踪
-        //AbstractMessageHandler handler = messageHandlerFactory.getHandler(chatRequest);
-        AbstractMessageHandler handler = previewMessageHandler;
+        // 3. 根据请求类型获取适合的消息处理器
+        AbstractMessageHandler handler = messageHandlerFactory.getHandler(chatRequest);
+
         // 4. 处理对话
         SseEmitter emitter = handler.chat(environment, transport);
 
@@ -249,10 +252,14 @@ public class ConversationAppServiceImpl implements ConversationAppService {
         if (contextEntity != null) {
             // 获取活跃消息(包括摘要)
             List<String> activeMessageIds = contextEntity.getActiveMessages();
-            messageEntities = messageService.listByIds(activeMessageIds);
-
-            // 应用Token溢出策略, 上下文历史消息以token策略返回的为准
-            messageEntities = applyTokenOverflowStrategy(environment, contextEntity, messageEntities);
+            System.out.println("上下文"+contextEntity.getActiveMessages());
+            if (activeMessageIds !=null && !activeMessageIds.isEmpty()) {
+                System.out.println("进入");
+                messageEntities = messageService.listByIds(activeMessageIds);
+                // 应用Token溢出策略, 上下文历史消息以token策略返回的为准
+                messageEntities = applyTokenOverflowStrategy(environment,
+                        contextEntity, messageEntities);
+            }
         } else {
             contextEntity = new ContextEntity();
             contextEntity.setSessionId(sessionId);
@@ -403,12 +410,12 @@ public class ConversationAppServiceImpl implements ConversationAppService {
         String userDefaultModelId = userSettingsDomainService.getUserDefaultModelId(userId);
         ModelEntity model = llmDomainService.selectModelById(userDefaultModelId);
         List<String> fallbackChain = userSettingsDomainService.getUserFallbackChain(userId);
-        ProviderEntity provider = llmDomainService.getProvider(model.getProviderId());
-        // 4. todo 获取高可用服务商
-/*        HighAvailabilityResult result = highAvailabilityService.selectBestProvider(model, userId, sessionId,
+        //ProviderEntity provider = llmDomainService.getProvider(model.getProviderId());
+        // 4. 获取高可用服务商
+        HighAvailabilityResult result = highAvailabilityService.selectBestProvider(model, userId, sessionId,
                 fallbackChain);
         ProviderEntity provider = result.getProvider();
-        ModelEntity selectedModel = result.getModel();*/
+        ModelEntity selectedModel = result.getModel();
 
         // 5. 构建RAG上下文
         RagChatContext ragContext = new RagChatContext();
@@ -419,11 +426,9 @@ public class ConversationAppServiceImpl implements ConversationAppService {
         ragContext.setUserRagId(ragRequest.getUserRagId());
         ragContext.setFileId(ragRequest.getFileId());
         ragContext.setAgent(ragAgent);
-        // todo 暂时使用默认模型
-        // ragContext.setModel(selectedModel);
-        ragContext.setModel(model);
+        ragContext.setModel(selectedModel);
         ragContext.setProvider(provider);
-        ragContext.setInstanceId("1");
+        ragContext.setInstanceId(result.getInstanceId());
         ragContext.setContextEntity(contextEntity);
         ragContext.setMessageHistory(messageHistory);
         ragContext.setStreaming(true);
@@ -561,6 +566,8 @@ public class ConversationAppServiceImpl implements ConversationAppService {
         environment.setContextEntity(contextEntity);
         environment.setMessageHistory(messageEntities);
     }
+
+
     /** 创建ChatContext对象 */
     private ChatContext createChatContext(ChatRequest chatRequest, String userId, AgentEntity agent,
                                           ModelEntity originalModel, ModelEntity model, ProviderEntity originalProvider,
@@ -598,5 +605,42 @@ public class ConversationAppServiceImpl implements ConversationAppService {
                 """);
         ragAgent.setEnabled(true);
         return ragAgent;
+    }
+
+    // ========== RAG 支持方法 ==========
+
+    /** RAG流式问答 - 基于数据集
+     * @param request RAG流式聊天请求
+     * @param userId 用户ID
+     * @return SSE流式响应 */
+
+    @Override
+    public SseEmitter ragStreamChat(RagStreamChatRequest request, String userId) {
+        // 1. 创建临时RAG会话
+        String sessionId = ragSessionManager.createOrGetRagSession(userId);
+
+        // 2. 转换为RagChatRequest
+        RagChatRequest ragChatRequest = RagChatRequest.fromRagStreamChatRequest(request, sessionId);
+
+        // 3. 使用通用的chat入口
+        return chat(ragChatRequest, userId);
+    }
+
+    /** RAG流式问答 - 基于已安装知识库
+     * @param request RAG流式聊天请求
+     * @param userRagId 用户RAG ID
+     * @param userId 用户ID
+     * @return SSE流式响应 */
+    @Override
+    public SseEmitter ragStreamChatByUserRag(RagStreamChatRequest request, String userRagId, String userId) {
+        // 1. 创建用户RAG专用会话
+        String sessionId = ragSessionManager.createOrGetUserRagSession(userId, userRagId);
+
+        // 2. 转换为RagChatRequest（包含userRagId）
+        RagChatRequest ragChatRequest = RagChatRequest.fromRagStreamChatRequestWithUserRag(request, userRagId,
+                sessionId);
+
+        // 3. 使用通用的chat入口
+        return chat(ragChatRequest, userId);
     }
 }

@@ -5,5 +5,5 @@ import com.sky.AgentCore.dto.rag.RagVersionEntity;
 import org.apache.ibatis.annotations.Mapper;
 
 @Mapper
-public interface RagVersionMapper extends BaseMapper<RagVersionEntity> {
+public interface RagVersionMapper extends MyBatisPlusExtMapper<RagVersionEntity> {
 }

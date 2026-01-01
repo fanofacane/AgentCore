@@ -5,7 +5,7 @@ import com.sky.AgentCore.dto.product.CreateProductRequest;
 import com.sky.AgentCore.dto.product.ProductDTO;
 import com.sky.AgentCore.dto.product.ProductEntity;
 import com.sky.AgentCore.dto.product.UpdateProductRequest;
-import com.sky.AgentCore.dto.enums.BillingType;
+import com.sky.AgentCore.enums.BillingType;
 import org.springframework.beans.BeanUtils;
 
 import java.util.Collections;

@@ -17,7 +17,7 @@ import java.util.Map;
 
 /** Agent实体类，代表一个AI助手 */
 @Data
-@TableName(value = "agents")
+@TableName(value = "agents", autoResultMap = true)
 public class AgentEntity extends BaseEntity {
 
     /** Agent唯一ID */

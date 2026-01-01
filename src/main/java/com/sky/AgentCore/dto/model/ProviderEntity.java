@@ -7,7 +7,7 @@ import com.sky.AgentCore.config.Exceptions.BusinessException;
 import com.sky.AgentCore.converter.ProviderConfigConverter;
 import com.sky.AgentCore.converter.ProviderProtocolConverter;
 import com.sky.AgentCore.dto.common.BaseEntity;
-import com.sky.AgentCore.dto.enums.ProviderProtocol;
+import com.sky.AgentCore.enums.ProviderProtocol;
 import lombok.Data;
 
 import java.util.Objects;

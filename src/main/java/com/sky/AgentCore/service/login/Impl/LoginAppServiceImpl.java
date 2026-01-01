@@ -10,7 +10,7 @@ import com.sky.AgentCore.dto.login.RegisterRequest;
 import com.sky.AgentCore.dto.model.ModelEntity;
 import com.sky.AgentCore.dto.user.UserEntity;
 import com.sky.AgentCore.dto.user.UserSettingsEntity;
-import com.sky.AgentCore.dto.enums.AuthFeatureKey;
+import com.sky.AgentCore.enums.AuthFeatureKey;
 import com.sky.AgentCore.mapper.AccountMapper;
 import com.sky.AgentCore.mapper.UserMapper;
 import com.sky.AgentCore.mapper.UserSettingMapper;

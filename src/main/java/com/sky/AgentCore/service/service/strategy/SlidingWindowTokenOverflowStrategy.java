@@ -3,7 +3,7 @@ package com.sky.AgentCore.service.service.strategy;
 
 import com.sky.AgentCore.dto.message.TokenMessage;
 import com.sky.AgentCore.dto.message.TokenProcessResult;
-import com.sky.AgentCore.dto.enums.TokenOverflowStrategyEnum;
+import com.sky.AgentCore.enums.TokenOverflowStrategyEnum;
 import com.sky.AgentCore.service.service.TokenOverflowStrategy;
 import org.springframework.stereotype.Service;
 

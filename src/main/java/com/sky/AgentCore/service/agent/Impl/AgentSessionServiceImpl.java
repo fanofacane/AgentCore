@@ -8,7 +8,7 @@ import com.sky.AgentCore.dto.agent.AgentWorkspaceEntity;
 import com.sky.AgentCore.dto.message.MessageEntity;
 import com.sky.AgentCore.dto.session.SessionDTO;
 import com.sky.AgentCore.dto.session.SessionEntity;
-import com.sky.AgentCore.dto.enums.Role;
+import com.sky.AgentCore.enums.Role;
 import com.sky.AgentCore.service.agent.*;
 import com.sky.AgentCore.service.chat.MessageService;
 import org.springframework.beans.factory.annotation.Autowired;

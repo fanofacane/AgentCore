@@ -1,6 +1,6 @@
 package com.sky.AgentCore.config.Factory;
 
-import com.sky.AgentCore.dto.enums.TokenOverflowStrategyEnum;
+import com.sky.AgentCore.enums.TokenOverflowStrategyEnum;
 import com.sky.AgentCore.service.service.strategy.NoTokenOverflowStrategy;
 import com.sky.AgentCore.service.service.strategy.SlidingWindowTokenOverflowStrategy;
 import com.sky.AgentCore.service.service.strategy.SummarizeTokenOverflowStrategy;

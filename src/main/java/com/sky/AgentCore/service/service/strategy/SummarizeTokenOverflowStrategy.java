@@ -1,12 +1,12 @@
 package com.sky.AgentCore.service.service.strategy;
 
 
-import com.sky.AgentCore.dto.PromptTemplates.AgentPromptTemplates;
+import com.sky.AgentCore.dto.prompt.AgentPromptTemplates;
 import com.sky.AgentCore.dto.message.TokenMessage;
 import com.sky.AgentCore.dto.message.TokenProcessResult;
 import com.sky.AgentCore.dto.model.ProviderConfig;
-import com.sky.AgentCore.dto.enums.Role;
-import com.sky.AgentCore.dto.enums.TokenOverflowStrategyEnum;
+import com.sky.AgentCore.enums.Role;
+import com.sky.AgentCore.enums.TokenOverflowStrategyEnum;
 import com.sky.AgentCore.service.llm.Impl.LLMProviderService;
 import com.sky.AgentCore.service.service.TokenOverflowStrategy;
 import dev.langchain4j.data.message.Content;

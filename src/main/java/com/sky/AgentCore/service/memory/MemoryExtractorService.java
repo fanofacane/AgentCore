@@ -1,9 +1,14 @@
-/*
 package com.sky.AgentCore.service.memory;
 
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sky.AgentCore.dto.memory.CandidateMemory;
+import com.sky.AgentCore.dto.model.ModelConfig;
+import com.sky.AgentCore.dto.model.ProviderConfig;
+import com.sky.AgentCore.enums.MemoryType;
+import com.sky.AgentCore.service.llm.Impl.LLMProviderService;
+import com.sky.AgentCore.service.rag.UserModelConfigResolver;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.UserMessage;
@@ -27,9 +32,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-*/
-/** 记忆抽取服务（对话后从一轮对话提取可长期复用的要点） *//*
-
+/** 记忆抽取服务（对话后从一轮对话提取可长期复用的要点） */
 @Service
 public class MemoryExtractorService {
 
@@ -117,9 +120,7 @@ public class MemoryExtractorService {
         this.objectMapper = new ObjectMapper();
     }
 
-    */
-/** 异步抽取并持久化（供外部直接调用，无需处理返回值） *//*
-
+    /** 异步抽取并持久化（供外部直接调用，无需处理返回值） */
     @Async("memoryTaskExecutor")
     public void extractAndPersistAsync(String userId, String sessionId, String userMessage) {
         try {
@@ -132,13 +133,11 @@ public class MemoryExtractorService {
         }
     }
 
-    */
-/** 抽取候选记忆（仅基于用户当轮发言）
+    /** 抽取候选记忆（仅基于用户当轮发言）
      * @param userId 用户ID
      * @param sessionId 会话ID（仅记录来源）
      * @param userMessage 用户消息
-     * @return 候选记忆列表（可能为空） *//*
-
+     * @return 候选记忆列表（可能为空） */
     public List<CandidateMemory> extract(String userId, String sessionId, String userMessage) {
         if (!StringUtils.hasText(userMessage)) {
             return new ArrayList<>();
@@ -147,7 +146,7 @@ public class MemoryExtractorService {
             // 使用用户默认聊天模型
             ModelConfig chatCfg = userModelConfigResolver.getUserChatModelConfig(userId);
             ChatModel chatModel = LLMProviderService.getStrand(chatCfg.getProtocol(),
-                    new org.xhy.infrastructure.llm.config.ProviderConfig(chatCfg.getApiKey(), chatCfg.getBaseUrl(),
+                    new ProviderConfig(chatCfg.getApiKey(), chatCfg.getBaseUrl(),
                             chatCfg.getModelEndpoint(), chatCfg.getProtocol()));
 
             List<ChatMessage> messages = new ArrayList<>();
@@ -263,5 +262,3 @@ public class MemoryExtractorService {
         return v == null ? null : v.trim();
     }
 }
-
-*/

@@ -4,7 +4,9 @@ import com.sky.AgentCore.config.Factory.LLMServiceFactory;
 import com.sky.AgentCore.dto.agent.AgentChatResponse;
 import com.sky.AgentCore.dto.chat.ChatContext;
 import com.sky.AgentCore.dto.message.MessageEntity;
-import com.sky.AgentCore.dto.enums.MessageType;
+import com.sky.AgentCore.enums.MessageType;
+import com.sky.AgentCore.service.chat.Impl.ChatSessionManager;
+import com.sky.AgentCore.service.tool.builtin.BuiltInToolRegistry;
 import com.sky.AgentCore.service.user.AccountAppService;
 import com.sky.AgentCore.service.agent.Agent;
 import com.sky.AgentCore.service.agent.SessionService;
@@ -25,11 +27,13 @@ public class PreviewMessageHandler extends AbstractMessageHandler {
     public PreviewMessageHandler(LLMServiceFactory llmServiceFactory, MessageService messageDomainService,
                                  UserSettingsDomainService userSettingsDomainService,
                                  BillingService billingService, LLMDomainService llmDomainService,
+                                 BuiltInToolRegistry builtInToolRegistry,
                                  SessionService sessionService, AccountAppService accountService,
+                                 ChatSessionManager chatSessionManager,
                                  HighAvailabilityService highAvailabilityService) {
         super(llmServiceFactory, messageDomainService, userSettingsDomainService,
-                billingService, llmDomainService, sessionService,accountService,
-                highAvailabilityService);}
+                billingService, llmDomainService,builtInToolRegistry, sessionService,accountService,
+                chatSessionManager,highAvailabilityService);}
 
     /** 预览专用的聊天处理逻辑 与正常流程的区别是不保存消息到数据库 */
     @Override

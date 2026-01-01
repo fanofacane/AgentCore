@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.sky.AgentCore.config.Exceptions.BusinessException;
 import com.sky.AgentCore.config.Exceptions.InsufficientBalanceException;
 import com.sky.AgentCore.config.Exceptions.ParamValidationException;
-import com.sky.AgentCore.dto.enums.constant.UsageDataKeys;
+import com.sky.AgentCore.enums.constant.UsageDataKeys;
 import com.sky.AgentCore.converter.assembler.AgentAssembler;
 import com.sky.AgentCore.converter.assembler.AgentVersionAssembler;
 import com.sky.AgentCore.dto.agent.*;
@@ -13,15 +13,15 @@ import com.sky.AgentCore.dto.billing.RuleContext;
 import com.sky.AgentCore.dto.rag.RagVersionEntity;
 import com.sky.AgentCore.dto.rag.UserRagEntity;
 import com.sky.AgentCore.dto.tool.UserToolEntity;
-import com.sky.AgentCore.dto.enums.BillingType;
-import com.sky.AgentCore.dto.enums.PublishStatus;
-import com.sky.AgentCore.dto.enums.RagPublishStatus;
+import com.sky.AgentCore.enums.BillingType;
+import com.sky.AgentCore.enums.PublishStatus;
+import com.sky.AgentCore.enums.RagPublishStatus;
 import com.sky.AgentCore.mapper.AgentMapper;
 import com.sky.AgentCore.service.agent.AgentAppService;
 import com.sky.AgentCore.service.agent.AgentVersionService;
 import com.sky.AgentCore.service.agent.AgentWorkspaceService;
 import com.sky.AgentCore.service.billing.BillingService;
-import com.sky.AgentCore.service.rag.RagVersionService;
+import com.sky.AgentCore.service.rag.domain.RagVersionDomainService;
 import com.sky.AgentCore.service.rag.UserRagService;
 import com.sky.AgentCore.service.tool.ToolService;
 import org.slf4j.Logger;
@@ -51,7 +51,7 @@ public class AgentAppServiceImpl extends ServiceImpl<AgentMapper, AgentEntity> i
     @Autowired
     private ToolService toolService;
     @Autowired
-    private RagVersionService ragVersionService;
+    private RagVersionDomainService ragVersionService;
     @Autowired
     private UserRagService userRagService;
     /** 创建新Agent */
@@ -219,6 +219,7 @@ public class AgentAppServiceImpl extends ServiceImpl<AgentMapper, AgentEntity> i
 
         // 获取当前Agent
         AgentEntity agent = lambdaQuery().eq(AgentEntity::getId, agentId).eq(AgentEntity::getUserId, userId).one();
+
         if (agent == null) throw new BusinessException("Agent不存在"+agentId);
         // 获取最新版本，检查版本号大小
         AgentVersionEntity agentVersionEntity = agentVersionService.getLatestAgentVersion(agentId);

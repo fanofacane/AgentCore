@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import com.sky.AgentCore.config.Exceptions.BusinessException;
 import com.sky.AgentCore.converter.ModelTypeConverter;
 import com.sky.AgentCore.dto.common.BaseEntity;
-import com.sky.AgentCore.dto.enums.ModelType;
+import com.sky.AgentCore.enums.ModelType;
 import lombok.Data;
 import org.apache.ibatis.type.JdbcType;
 

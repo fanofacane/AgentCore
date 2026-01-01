@@ -2,8 +2,8 @@ package com.sky.AgentCore.dto.message;
 
 
 
-import com.sky.AgentCore.dto.enums.MessageType;
-import com.sky.AgentCore.dto.enums.Role;
+import com.sky.AgentCore.enums.MessageType;
+import com.sky.AgentCore.enums.Role;
 import lombok.Data;
 
 import java.time.LocalDateTime;

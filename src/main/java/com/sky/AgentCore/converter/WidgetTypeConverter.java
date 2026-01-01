@@ -1,7 +1,7 @@
 package com.sky.AgentCore.converter;
 
 
-import com.sky.AgentCore.dto.enums.WidgetType;
+import com.sky.AgentCore.enums.WidgetType;
 import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.MappedJdbcTypes;

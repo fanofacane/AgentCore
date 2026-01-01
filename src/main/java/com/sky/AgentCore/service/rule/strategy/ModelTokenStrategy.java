@@ -1,8 +1,8 @@
 package com.sky.AgentCore.service.rule.strategy;
 
 
-import com.sky.AgentCore.dto.enums.constant.PricingConfigKeys;
-import com.sky.AgentCore.dto.enums.constant.UsageDataKeys;
+import com.sky.AgentCore.enums.constant.PricingConfigKeys;
+import com.sky.AgentCore.enums.constant.UsageDataKeys;
 import com.sky.AgentCore.service.rule.RuleStrategy;
 import org.springframework.stereotype.Component;
 

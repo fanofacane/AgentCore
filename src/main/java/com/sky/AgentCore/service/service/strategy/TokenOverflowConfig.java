@@ -1,7 +1,7 @@
 package com.sky.AgentCore.service.service.strategy;
 
 import com.sky.AgentCore.dto.model.ProviderConfig;
-import com.sky.AgentCore.dto.enums.TokenOverflowStrategyEnum;
+import com.sky.AgentCore.enums.TokenOverflowStrategyEnum;
 import org.springframework.stereotype.Service;
 
 /** Token超限处理配置基础类 */

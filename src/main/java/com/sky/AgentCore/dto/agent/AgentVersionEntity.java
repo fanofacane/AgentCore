@@ -8,7 +8,7 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import com.sky.AgentCore.converter.ListConverter;
 import com.sky.AgentCore.converter.MapConverter;
 import com.sky.AgentCore.dto.common.BaseEntity;
-import com.sky.AgentCore.dto.enums.PublishStatus;
+import com.sky.AgentCore.enums.PublishStatus;
 import lombok.Data;
 
 import java.time.LocalDateTime;

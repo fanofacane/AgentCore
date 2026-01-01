@@ -13,7 +13,7 @@ import com.sky.AgentCore.dto.model.ModelEntity;
 import com.sky.AgentCore.dto.model.ProviderEntity;
 import com.sky.AgentCore.dto.model.UpdateModelConfigRequest;
 import com.sky.AgentCore.dto.session.SessionEntity;
-import com.sky.AgentCore.dto.enums.PublishStatus;
+import com.sky.AgentCore.enums.PublishStatus;
 import com.sky.AgentCore.mapper.AgentMapper;
 import com.sky.AgentCore.mapper.AgentVersionMapper;
 import com.sky.AgentCore.mapper.AgentWorkspaceMapper;

@@ -1,12 +1,12 @@
 package com.sky.AgentCore.service.login.Impl;
 
 import com.sky.AgentCore.config.Factory.SsoServiceFactory;
-import com.sky.AgentCore.dto.sso.SsoUserInfo;
+import com.sky.AgentCore.dto.login.SsoUserInfo;
 import com.sky.AgentCore.dto.user.UserEntity;
-import com.sky.AgentCore.dto.enums.SsoProvider;
+import com.sky.AgentCore.enums.SsoProvider;
 import com.sky.AgentCore.service.login.SsoAppService;
 import com.sky.AgentCore.service.login.SsoService;
-import com.sky.AgentCore.service.user.UserAppService;
+import com.sky.AgentCore.service.user.UserService;
 import com.sky.AgentCore.utils.JwtUtils;
 import com.sky.AgentCore.utils.PasswordUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +19,7 @@ public class SsoAppServiceImpl implements SsoAppService {
     @Autowired
     private SsoServiceFactory ssoServiceFactory;
     @Autowired
-    private UserAppService userAppService;
+    private UserService userAppService;
     @Override
     public String getSsoLoginUrl(String provider, String redirectUrl) {
         SsoService ssoService = ssoServiceFactory.getSsoService(provider);

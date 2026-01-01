@@ -1,7 +1,7 @@
 package com.sky.AgentCore.service.login;
 
-import com.sky.AgentCore.dto.sso.SsoUserInfo;
-import com.sky.AgentCore.dto.enums.SsoProvider;
+import com.sky.AgentCore.dto.login.SsoUserInfo;
+import com.sky.AgentCore.enums.SsoProvider;
 
 public interface SsoService {
 

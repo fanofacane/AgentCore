@@ -2,7 +2,7 @@ package com.sky.AgentCore.dto.agent;
 
 
 import com.sky.AgentCore.dto.tool.TaskDTO;
-import com.sky.AgentCore.dto.enums.MessageType;
+import com.sky.AgentCore.enums.MessageType;
 import lombok.Data;
 
 import java.util.List;

@@ -66,9 +66,8 @@ public class AgentAssembler {
 
     /** 将AgentEntity转换为AgentDTO */
     public static AgentVO toVO(AgentEntity entity, LLMModelConfig llmModelConfig) {
-        if (entity == null) {
-            return null;
-        }
+        if (entity == null) return null;
+
         AgentVO vo = new AgentVO();
         BeanUtils.copyProperties(entity, vo);
         vo.setLlmModelConfig(llmModelConfig);
