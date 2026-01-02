@@ -13,6 +13,8 @@ public interface AgentAppService extends IService<AgentEntity> {
 
     AgentVO getAgent(String agentId, String userId);
 
+    AgentEntity getAgent1(String agentId, String userId);
+
     AgentDTO updateAgent(UpdateAgentRequest request, String userId);
 
     AgentDTO toggleAgentStatus(String agentId);
@@ -34,4 +36,8 @@ public interface AgentAppService extends IService<AgentEntity> {
     List<AgentVersionDTO> getAgentVersions(String agentId, String userId);
 
     List<AgentEntity> getAgentsByIds(List<String> agentIds);
+
+    AgentVersionEntity getPublishedAgentVersion(String agentId);
+
+    AgentVersionEntity getAgentVersionById(String agentId);
 }

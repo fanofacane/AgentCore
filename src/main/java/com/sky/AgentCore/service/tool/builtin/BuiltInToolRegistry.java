@@ -94,10 +94,11 @@ public class BuiltInToolRegistry {
      * @return 所有内置工具的合并映射 */
     public Map<ToolSpecification, ToolExecutor> createToolsForAgent(AgentEntity agent) {
         Map<ToolSpecification, ToolExecutor> allTools = new HashMap<>();
+
         synchronized (toolProviders) {
             for (BuiltInToolProvider provider : toolProviders) {
+                System.out.println("进入配置工具");
                 try {
-                    if (provider.supports(agent)) {
                         Map<ToolSpecification, ToolExecutor> providerTools = provider.createTools(agent);
 
                         if (providerTools != null && !providerTools.isEmpty()) {
@@ -106,7 +107,6 @@ public class BuiltInToolRegistry {
                             logger.debug("为Agent {} 添加内置工具 {} 的 {} 个工具", agent.getId(), provider.getName(),
                                     providerTools.size());
                         }
-                    }
                 } catch (Exception e) {
                     logger.error("为Agent {} 创建内置工具 {} 时发生异常: {}", agent.getId(), provider.getName(), e.getMessage(), e);
                 }

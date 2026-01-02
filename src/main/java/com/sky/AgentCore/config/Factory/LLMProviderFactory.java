@@ -43,6 +43,8 @@ public class LLMProviderFactory {
             model = new OpenAiStreamingChatModel.OpenAiStreamingChatModelBuilder().apiKey(providerConfig.getApiKey())
                     .baseUrl(providerConfig.getBaseUrl()).customHeaders(providerConfig.getCustomHeaders())
                     .temperature(llmModelConfig.getTemperature())
+                    .returnThinking(false)
+                    .reasoningEffort("low")
                     .modelName(providerConfig.getModel()).timeout(Duration.ofMinutes(5))
                     .build();
         } else if (protocol == ProviderProtocol.ANTHROPIC) {

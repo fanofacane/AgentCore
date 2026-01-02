@@ -1,10 +1,14 @@
 package com.sky.AgentCore.service.rag.service.manager;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.sky.AgentCore.converter.assembler.RagVersionAssembler;
 import com.sky.AgentCore.dto.rag.PublishRagRequest;
+import com.sky.AgentCore.dto.rag.QueryUserRagVersionRequest;
 import com.sky.AgentCore.dto.rag.RagVersionDTO;
 import com.sky.AgentCore.dto.rag.RagVersionEntity;
 import com.sky.AgentCore.service.rag.domain.RagVersionDomainService;
+import com.sky.AgentCore.service.rag.domain.UserRagDomainService;
 import com.sky.AgentCore.service.user.UserService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +19,8 @@ import java.util.List;
 
 @Service
 public class RagPublishAppService {
+    @Autowired
+    private UserRagDomainService userRagDomainService;
     @Autowired
     private RagVersionDomainService ragVersionDomainService;
     @Autowired
@@ -73,4 +79,64 @@ public class RagPublishAppService {
 
         return dtoList;
     }
+
+    /** 获取用户的RAG版本列表
+     *
+     * @param userId 用户ID
+     * @param request 查询请求
+     * @return 版本列表 */
+    public Page<RagVersionDTO> getUserRagVersions(String userId, QueryUserRagVersionRequest request) {
+        IPage<RagVersionEntity> entityPage = ragVersionDomainService.listUserVersions(userId, request.getPage(),
+                request.getPageSize(), request.getKeyword());
+
+        // 转换为DTO
+        List<RagVersionDTO> dtoList = RagVersionAssembler.toDTOs(entityPage.getRecords());
+
+        // 设置用户信息和安装次数
+        for (RagVersionDTO dto : dtoList) {
+            enrichWithUserInfo(dto);
+            dto.setInstallCount(userRagDomainService.getInstallCount(dto.getId()));
+        }
+
+        // 创建DTO分页对象
+        Page<RagVersionDTO> dtoPage = new Page<>(entityPage.getCurrent(), entityPage.getSize(), entityPage.getTotal());
+        dtoPage.setRecords(dtoList);
+
+        return dtoPage;
+    }
+
+    /** 获取RAG版本详情
+     *
+     * @param versionId 版本ID
+     * @param currentUserId 当前用户ID（用于判断是否已安装）
+     * @return 版本详情 */
+    public RagVersionDTO getRagVersionDetail(String versionId, String currentUserId) {
+        RagVersionEntity version = ragVersionDomainService.getRagVersion(versionId);
+
+        // 转换为DTO
+        RagVersionDTO dto = RagVersionAssembler.toDTO(version);
+
+        // 设置用户信息
+        enrichWithUserInfo(dto);
+
+        // 设置安装次数
+        dto.setInstallCount(userRagDomainService.getInstallCount(versionId));
+
+        // 设置是否已安装
+        if (StringUtils.isNotBlank(currentUserId)) {
+            dto.setIsInstalled(userRagDomainService.isRagInstalled(currentUserId, versionId));
+        }
+
+        return dto;
+    }
+
+    /** 获取RAG数据集的最新版本号
+     *
+     * @param ragId 原始RAG数据集ID
+     * @param userId 用户ID
+     * @return 最新版本号，如果没有版本则返回null */
+    public String getLatestVersionNumber(String ragId, String userId) {
+        return ragVersionDomainService.getLatestVersionNumber(ragId, userId);
+    }
+
 }

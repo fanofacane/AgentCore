@@ -323,4 +323,42 @@ public class RagVersionDomainService {
         resultPage.setRecords(pageList);
         return resultPage;
     }
+
+    /** 分页查询用户的RAG版本
+     *
+     * @param userId 用户ID
+     * @param page 页码
+     * @param pageSize 每页大小
+     * @param keyword 搜索关键词
+     * @return 分页结果 */
+    public IPage<RagVersionEntity> listUserVersions(String userId, Integer page, Integer pageSize, String keyword) {
+        LambdaQueryWrapper<RagVersionEntity> wrapper = Wrappers.<RagVersionEntity>lambdaQuery()
+                .eq(RagVersionEntity::getUserId, userId);
+
+        if (StringUtils.isNotBlank(keyword)) {
+            wrapper.and(w -> w.like(RagVersionEntity::getName, keyword).or().like(RagVersionEntity::getDescription,
+                    keyword));
+        }
+
+        wrapper.orderByDesc(RagVersionEntity::getCreatedAt);
+
+        Page<RagVersionEntity> pageObj = new Page<>(page, pageSize);
+        return ragVersionMapper.selectPage(pageObj, wrapper);
+    }
+
+    /** 获取RAG数据集的最新版本号
+     *
+     * @param ragId 原始RAG数据集ID
+     * @param userId 用户ID
+     * @return 最新版本号，如果没有版本则返回null */
+    public String getLatestVersionNumber(String ragId, String userId) {
+        // 查询该数据集的最新版本
+        LambdaQueryWrapper<RagVersionEntity> wrapper = Wrappers.<RagVersionEntity>lambdaQuery()
+                .eq(RagVersionEntity::getOriginalRagId, ragId).eq(RagVersionEntity::getUserId, userId)
+                .orderByDesc(RagVersionEntity::getCreatedAt).last("limit 1");
+
+        RagVersionEntity latestVersion = ragVersionMapper.selectOne(wrapper);
+
+        return latestVersion != null ? latestVersion.getVersion() : null;
+    }
 }

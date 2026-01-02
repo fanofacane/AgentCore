@@ -143,10 +143,9 @@ public class ConversationAppServiceImpl implements ConversationAppService {
                 .getTransport(MessageTransportFactory.TRANSPORT_TYPE_SSE);
 
         // 3. 获取适合的消息处理器 (根据agent类型)
-        // todo 暂时使用预览模式消息处理器
-//        AbstractMessageHandler handler = messageHandlerFactory.getHandler(environment.getAgent());
+        AbstractMessageHandler handler = messageHandlerFactory.getHandler(environment.getAgent());
         // 4. 处理对话
-        SseEmitter emitter = previewMessageHandler.chat(environment, transport);
+        SseEmitter emitter = handler.chat(environment, transport);
 
         // 5. 注册会话到会话管理器（支持中断功能）
         chatSessionManager.registerSession(chatRequest.getSessionId(), emitter);
@@ -170,11 +169,11 @@ public class ConversationAppServiceImpl implements ConversationAppService {
         MessageTransport<ChatResponse> transport = transportFactory
                 .getTransport(MessageTransportFactory.TRANSPORT_TYPE_SYNC);
 
-        // 3. // todo 获取适合的消息处理器
-        //AbstractMessageHandler handler = messageHandlerFactory.getHandler(environment.getAgent());
+        // 3.获取适合的消息处理器
+        AbstractMessageHandler handler = messageHandlerFactory.getHandler(environment.getAgent());
 
         // 4. 处理对话
-        return previewMessageHandler.chat(environment, transport);
+        return handler.chat(environment, transport);
     }
 
     /** 根据请求类型准备环境

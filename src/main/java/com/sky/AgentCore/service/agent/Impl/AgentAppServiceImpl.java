@@ -1,6 +1,7 @@
 package com.sky.AgentCore.service.agent.Impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.sky.AgentCore.config.Exceptions.BusinessException;
 import com.sky.AgentCore.config.Exceptions.InsufficientBalanceException;
@@ -17,6 +18,7 @@ import com.sky.AgentCore.enums.BillingType;
 import com.sky.AgentCore.enums.PublishStatus;
 import com.sky.AgentCore.enums.RagPublishStatus;
 import com.sky.AgentCore.mapper.AgentMapper;
+import com.sky.AgentCore.mapper.AgentVersionMapper;
 import com.sky.AgentCore.service.agent.AgentAppService;
 import com.sky.AgentCore.service.agent.AgentVersionService;
 import com.sky.AgentCore.service.agent.AgentWorkspaceService;
@@ -54,6 +56,9 @@ public class AgentAppServiceImpl extends ServiceImpl<AgentMapper, AgentEntity> i
     private RagVersionDomainService ragVersionService;
     @Autowired
     private UserRagService userRagService;
+    @Autowired
+    private AgentVersionMapper agentVersionMapper;
+
     /** 创建新Agent */
     @Override
     @Transactional
@@ -108,6 +113,10 @@ public class AgentAppServiceImpl extends ServiceImpl<AgentMapper, AgentEntity> i
         if (agent == null)  throw new BusinessException("Agent不存在");
         AgentWorkspaceEntity workspace = agentWorkspaceService.getWorkspace(agentId, userId);
         return AgentAssembler.toVO(agent,workspace.getLlmModelConfig());
+    }
+    @Override
+    public AgentEntity getAgent1(String agentId, String userId) {
+        return lambdaQuery().eq(AgentEntity::getId, agentId).eq(AgentEntity::getUserId, userId).one();
     }
 
     @Override
@@ -271,6 +280,21 @@ public class AgentAppServiceImpl extends ServiceImpl<AgentMapper, AgentEntity> i
     @Override
     public List<AgentEntity> getAgentsByIds(List<String> agentIds) {
         return lambdaQuery().in(AgentEntity::getId,agentIds).list();
+    }
+
+    @Override
+    public AgentVersionEntity getPublishedAgentVersion(String agentId) {
+        LambdaQueryWrapper<AgentVersionEntity> queryWrapper = Wrappers.<AgentVersionEntity>lambdaQuery()
+                .eq(AgentVersionEntity::getAgentId, agentId)
+                .eq(AgentVersionEntity::getPublishStatus, PublishStatus.PUBLISHED.getCode())
+                .orderByDesc(AgentVersionEntity::getPublishedAt).last("LIMIT 1");
+
+        return agentVersionMapper.selectOne(queryWrapper);
+    }
+
+    @Override
+    public AgentVersionEntity getAgentVersionById(String versionId) {
+        return agentVersionMapper.selectById(versionId);
     }
 
     /** 发布Agent版本 */

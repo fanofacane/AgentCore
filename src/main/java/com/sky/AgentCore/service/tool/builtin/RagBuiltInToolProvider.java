@@ -61,7 +61,7 @@ public class RagBuiltInToolProvider extends AbstractBuiltInToolProvider {
                 description += "。可用的知识库包括：" + String.join("、", knowledgeBaseNames);
             }
 
-            ToolDefinition ragTool = ToolDefinition.builder().name("knowledge_search").description(description)
+            ToolDefinition ragTool = ToolDefinition.builder().name("rag_search").description(description)
                     .addRequiredStringParameter("query", "搜索查询内容，描述用户想要了解的问题或关键词")
                     .addIntegerParameter("maxResults", "最大返回结果数量，默认为10，范围1-20")
                     .addNumberParameter("minScore", "最小相似度阈值，默认为0.5，范围0.0-1.0，值越高结果越精确")
@@ -79,9 +79,7 @@ public class RagBuiltInToolProvider extends AbstractBuiltInToolProvider {
     /** 实现融合架构：执行RAG工具逻辑 替代原来的RagToolExecutor类 */
     @Override
     protected String doExecute(String toolName, JsonNode arguments, AgentEntity agent, Object memoryId) {
-        if (!"knowledge_search".equals(toolName)) {
-            return formatError("未知工具: " + toolName);
-        }
+        if (!"rag_search".equals(toolName)) return formatError("未知工具: " + toolName);
 
         try {
             log.info("执行RAG工具搜索，agent: {}, user: {}, memoryId: {}", agent.getId(), agent.getUserId(), memoryId);

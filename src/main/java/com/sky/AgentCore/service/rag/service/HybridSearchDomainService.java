@@ -73,8 +73,9 @@ public class HybridSearchDomainService {
                     config.getDataSetIds().size(), finalMaxResults, config.hasValidChatModelConfig());
 
             // HyDE处理：生成假设文档用于向量检索
-            String hypotheticalDocument = hydeDomainService.generateHypotheticalDocument(config.getQuestion(),
-                    config.getChatModelConfig());
+            // todo 暂时不使用假想文档,而是直接使用模型输入的指令
+/*            String hypotheticalDocument = hydeDomainService.generateHypotheticalDocument(config.getQuestion(),
+                    config.getChatModelConfig());*/
 
             config.setQuestion(config.getQuestion());
 

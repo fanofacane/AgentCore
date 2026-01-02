@@ -59,7 +59,7 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, MessageEntity
 
     @Override
     public boolean isFirstConversation(String sessionId) {
-        return lambdaQuery().eq(MessageEntity::getSessionId, sessionId).count() <= 4;
+        return lambdaQuery().eq(MessageEntity::getSessionId, sessionId).count() <= 5;
     }
 
     @Override

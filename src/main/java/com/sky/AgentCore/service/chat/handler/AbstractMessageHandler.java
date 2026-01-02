@@ -38,13 +38,13 @@ import com.sky.AgentCore.service.gateway.HighAvailabilityService;
 import com.sky.AgentCore.service.llm.LLMDomainService;
 import com.sky.AgentCore.service.user.UserSettingsDomainService;
 import com.sky.AgentCore.service.chat.MessageTransport;
+import com.sky.AgentCore.service.agent.Impl.ParallelStreamingAgent;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.*;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.response.ChatResponse;
-import dev.langchain4j.service.AiServices;
 import dev.langchain4j.service.TokenStream;
 import dev.langchain4j.service.tool.ToolExecution;
 import dev.langchain4j.service.tool.ToolExecutor;
@@ -320,10 +320,10 @@ public abstract class AbstractMessageHandler {
         // 部分响应处理
         tokenStream.onPartialResponse(reply -> {
             messageBuilder.get().append(reply);
+
             // 删除换行后消息为空字符串
-            if (messageBuilder.get().toString().trim().isEmpty()) {
-                return;
-            }
+            if (messageBuilder.get().toString().trim().isEmpty()) return;
+
             // 直接发送消息，transport内部处理连接异常
             transport.sendMessage(connection, AgentChatResponse.build(reply, MessageType.TEXT));
         });
@@ -361,6 +361,10 @@ public abstract class AbstractMessageHandler {
 
         // 工具执行处理
         tokenStream.onToolExecuted(toolExecution -> {
+            String message = "执行工具:" + toolExecution.request().name();
+            // 直接发送工具调用消息
+            transport.sendMessage(connection, AgentChatResponse.buildEndMessage(message, MessageType.TOOL_CALL));
+
             if (!messageBuilder.get().isEmpty()) {
                 transport.sendMessage(connection, AgentChatResponse.buildEndMessage(MessageType.TEXT));
                 llmEntity.setContent(messageBuilder.get().toString());
@@ -368,14 +372,12 @@ public abstract class AbstractMessageHandler {
                         chatContext.getContextEntity());
                 messageBuilder.set(new StringBuilder());
             }
-            String message = "执行工具：" + toolExecution.request().name();
+
             MessageEntity toolMessage = createLlmMessage(chatContext);
             toolMessage.setMessageType(MessageType.TOOL_CALL);
             toolMessage.setContent(message);
             messageDomainService.saveMessageAndUpdateContext(Collections.singletonList(toolMessage),
                     chatContext.getContextEntity());
-            // 直接发送工具调用消息
-            transport.sendMessage(connection, AgentChatResponse.buildEndMessage(message, MessageType.TOOL_CALL));
 
             // 调用工具调用完成钩子
             ToolCallInfo toolCallInfo = buildToolCallInfo(toolExecution);
@@ -554,7 +556,6 @@ public abstract class AbstractMessageHandler {
 
         Map<ToolSpecification, ToolExecutor> builtInTools = builtInToolRegistry.createToolsForAgent(agent);
 
-
         // 2. 创建本次请求的计数器 (必须是局部变量，确保线程安全，每次请求独立计数)
         AtomicInteger toolExecutionCounter = new AtomicInteger(0);
 
@@ -586,21 +587,8 @@ public abstract class AbstractMessageHandler {
             builtInTools = wrappedTools;
         }
 
-
-/*        String url="http://115.190.126.170:7000/tongyi-wanxiang";
-        McpTransport transport = new HttpMcpTransport.Builder().sseUrl(url).logRequests(true).logResponses(true)
-                .timeout(Duration.ofHours(1)).build();
-
-        McpClient mcpClient = new DefaultMcpClient.Builder().transport(transport).build();
-        McpToolProvider toolProvider1 = McpToolProvider.builder().mcpClients(mcpClient).build();*/
-
-        AiServices<Agent> agentService = AiServices.builder(Agent.class).streamingChatModel(model).chatMemory(memory);
-
-        if (builtInTools != null) agentService.tools(builtInTools);
-
-        if (toolProvider != null) agentService.toolProvider(toolProvider);
-
-        return agentService.build();
+        // 使用 ParallelStreamingAgent 替代 AiServices
+        return new ParallelStreamingAgent(model, memory, builtInTools != null ? builtInTools : new HashMap<>());
     }
     /** 构建历史消息到内存中 */
     protected void buildHistoryMessage(ChatContext chatContext, MessageWindowChatMemory memory) {
