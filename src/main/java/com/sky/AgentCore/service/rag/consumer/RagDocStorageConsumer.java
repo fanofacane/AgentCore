@@ -12,7 +12,7 @@ import com.sky.AgentCore.dto.mq.MessageEnvelope;
 import com.sky.AgentCore.dto.mq.events.RagDocSyncStorageEvent;
 import com.sky.AgentCore.dto.rag.DocumentUnitEntity;
 import com.sky.AgentCore.dto.rag.RagDocSyncStorageMessage;
-import com.sky.AgentCore.mapper.DocumentUnitMapper;
+import com.sky.AgentCore.mapper.rag.DocumentUnitMapper;
 import com.sky.AgentCore.service.rag.domain.EmbeddingDomainService;
 import com.sky.AgentCore.service.rag.domain.FileDetailDomainService;
 import org.slf4j.Logger;

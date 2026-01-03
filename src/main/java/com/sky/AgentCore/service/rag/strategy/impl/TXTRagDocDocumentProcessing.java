@@ -5,12 +5,11 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.sky.AgentCore.dto.rag.DocumentUnitEntity;
 import com.sky.AgentCore.dto.rag.FileDetailEntity;
 import com.sky.AgentCore.dto.rag.RagDocMessage;
-import com.sky.AgentCore.mapper.DocumentUnitMapper;
-import com.sky.AgentCore.mapper.FileDetailMapper;
+import com.sky.AgentCore.mapper.rag.DocumentUnitMapper;
+import com.sky.AgentCore.mapper.rag.FileDetailMapper;
 import dev.langchain4j.data.document.Document;
 import dev.langchain4j.data.document.DocumentParser;
 import dev.langchain4j.data.document.parser.TextDocumentParser;
-import dev.langchain4j.data.document.splitter.DocumentByCharacterSplitter;
 import dev.langchain4j.data.document.splitter.DocumentBySentenceSplitter;
 import dev.langchain4j.data.segment.TextSegment;
 import jakarta.annotation.Resource;
@@ -68,8 +67,8 @@ public class TXTRagDocDocumentProcessing extends AbstractDocumentProcessingStrat
             InputStream inputStream = new ByteArrayInputStream(bytes);
             Document document = parser.parse(inputStream);
 
-            final DocumentByCharacterSplitter documentByCharacterSplitter =
-                    new DocumentByCharacterSplitter(1000, 20);
+            final DocumentBySentenceSplitter documentByCharacterSplitter =
+                    new DocumentBySentenceSplitter(500, 0);
             final List<TextSegment> split = documentByCharacterSplitter.split(document);
 
             int segmentCount = split.size();
@@ -144,8 +143,8 @@ public class TXTRagDocDocumentProcessing extends AbstractDocumentProcessingStrat
         try {
             document = parser.parse(inputStream);
 
-            final DocumentByCharacterSplitter documentByCharacterSplitter =
-                    new DocumentByCharacterSplitter(1000, 20);
+            final DocumentBySentenceSplitter documentByCharacterSplitter =
+                    new DocumentBySentenceSplitter(500, 0);
             final List<TextSegment> split = documentByCharacterSplitter.split(document);
 
             Steam.of(split).forEachIdx((textSegment, index) -> {

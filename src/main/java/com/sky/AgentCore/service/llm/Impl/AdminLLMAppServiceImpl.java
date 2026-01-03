@@ -7,7 +7,7 @@ import com.sky.AgentCore.converter.assembler.ProviderAssembler;
 import com.sky.AgentCore.dto.model.*;
 import com.sky.AgentCore.enums.ModelType;
 import com.sky.AgentCore.enums.ProviderProtocol;
-import com.sky.AgentCore.mapper.ProvidersMapper;
+import com.sky.AgentCore.mapper.llm.ProvidersMapper;
 import com.sky.AgentCore.service.llm.AdminLLMAppService;
 import com.sky.AgentCore.service.llm.LLMDomainService;
 import org.springframework.beans.factory.annotation.Autowired;

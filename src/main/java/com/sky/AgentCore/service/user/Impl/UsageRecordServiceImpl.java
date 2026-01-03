@@ -11,7 +11,7 @@ import com.sky.AgentCore.converter.assembler.UsageRecordAssembler;
 import com.sky.AgentCore.dto.billing.QueryUsageRecordRequest;
 import com.sky.AgentCore.dto.billing.UsageRecordDTO;
 import com.sky.AgentCore.dto.billing.UsageRecordEntity;
-import com.sky.AgentCore.mapper.UsageRecordMapper;
+import com.sky.AgentCore.mapper.user.UsageRecordMapper;
 import com.sky.AgentCore.service.user.UsageRecordService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

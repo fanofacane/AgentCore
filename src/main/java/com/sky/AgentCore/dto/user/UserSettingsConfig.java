@@ -1,6 +1,7 @@
 package com.sky.AgentCore.dto.user;
 
 import com.sky.AgentCore.dto.model.FallbackConfig;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -28,4 +29,13 @@ public class UserSettingsConfig implements Serializable {
      * 降级配置
      */
     private FallbackConfig fallbackConfig;
+
+    public UserSettingsConfig(String defaultModel,String defaultOcrModel, String defaultEmbeddingModel) {
+        this.defaultModel = defaultModel;
+        this.defaultOcrModel = defaultOcrModel;
+        this.defaultEmbeddingModel = defaultEmbeddingModel;
+    }
+
+    public UserSettingsConfig() {
+    }
 }

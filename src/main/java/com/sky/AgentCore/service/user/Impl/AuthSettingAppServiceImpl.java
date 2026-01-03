@@ -8,7 +8,7 @@ import com.sky.AgentCore.dto.login.LoginMethodDTO;
 import com.sky.AgentCore.enums.AuthFeatureKey;
 import com.sky.AgentCore.enums.FeatureType;
 import com.sky.AgentCore.enums.SsoProvider;
-import com.sky.AgentCore.mapper.AuthMapper;
+import com.sky.AgentCore.mapper.user.AuthMapper;
 import com.sky.AgentCore.service.user.AuthSettingAppService;
 import com.sky.AgentCore.utils.JsonUtils;
 import org.springframework.stereotype.Service;

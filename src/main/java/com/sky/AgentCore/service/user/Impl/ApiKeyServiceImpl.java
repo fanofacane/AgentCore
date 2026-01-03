@@ -9,7 +9,7 @@ import com.sky.AgentCore.dto.agent.AgentEntity;
 import com.sky.AgentCore.dto.apiKey.ApiKeyDTO;
 import com.sky.AgentCore.dto.apiKey.ApiKeyEntity;
 import com.sky.AgentCore.dto.apiKey.QueryApiKeyRequest;
-import com.sky.AgentCore.mapper.ApiKeyMapper;
+import com.sky.AgentCore.mapper.agent.ApiKeyMapper;
 import com.sky.AgentCore.service.agent.AgentAppService;
 import com.sky.AgentCore.service.user.ApiKeyService;
 import org.slf4j.Logger;

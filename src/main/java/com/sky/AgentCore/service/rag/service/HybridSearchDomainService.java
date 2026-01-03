@@ -7,7 +7,7 @@ import com.sky.AgentCore.dto.rag.DocumentUnitEntity;
 import com.sky.AgentCore.dto.rag.HybridSearchConfig;
 import com.sky.AgentCore.dto.rag.model.VectorStoreResult;
 import com.sky.AgentCore.enums.SearchType;
-import com.sky.AgentCore.mapper.DocumentUnitMapper;
+import com.sky.AgentCore.mapper.rag.DocumentUnitMapper;
 import com.sky.AgentCore.service.rag.domain.EmbeddingDomainService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

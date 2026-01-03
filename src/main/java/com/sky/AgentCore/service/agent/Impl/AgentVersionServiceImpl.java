@@ -1,14 +1,12 @@
 package com.sky.AgentCore.service.agent.Impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.sky.AgentCore.dto.agent.AgentEntity;
 import com.sky.AgentCore.dto.agent.AgentVersionEntity;
 import com.sky.AgentCore.enums.PublishStatus;
-import com.sky.AgentCore.mapper.AgentMapper;
-import com.sky.AgentCore.mapper.AgentVersionMapper;
+import com.sky.AgentCore.mapper.agent.AgentMapper;
+import com.sky.AgentCore.mapper.agent.AgentVersionMapper;
 import com.sky.AgentCore.service.agent.AgentVersionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

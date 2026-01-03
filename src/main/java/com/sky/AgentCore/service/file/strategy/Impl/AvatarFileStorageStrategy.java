@@ -9,7 +9,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sky.AgentCore.dto.rag.FileDetailEntity;
-import com.sky.AgentCore.mapper.FileDetailMapper;
+import com.sky.AgentCore.mapper.rag.FileDetailMapper;
 import com.sky.AgentCore.service.file.strategy.FileStorageStrategy;
 import org.dromara.x.file.storage.core.FileInfo;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -8,7 +8,7 @@ import com.sky.AgentCore.dto.rag.FileDetailEntity;
 import com.sky.AgentCore.dto.rag.RagDocMessage;
 import com.sky.AgentCore.dto.rag.RagDocSyncStorageMessage;
 import com.sky.AgentCore.enums.EventType;
-import com.sky.AgentCore.mapper.DocumentUnitMapper;
+import com.sky.AgentCore.mapper.rag.DocumentUnitMapper;
 import com.sky.AgentCore.service.rag.UserModelConfigResolver;
 import com.sky.AgentCore.service.rag.domain.FileDetailDomainService;
 import com.sky.AgentCore.service.rag.strategy.context.ProcessingContext;

@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.sky.AgentCore.dto.rag.DocumentUnitEntity;
-import com.sky.AgentCore.mapper.DocumentUnitMapper;
+import com.sky.AgentCore.mapper.rag.DocumentUnitMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;

@@ -2,7 +2,7 @@ package com.sky.AgentCore.service.tool.Impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.sky.AgentCore.dto.tool.ToolConfig;
-import com.sky.AgentCore.mapper.ToolConfigMapper;
+import com.sky.AgentCore.mapper.tool.ToolConfigMapper;
 import com.sky.AgentCore.service.tool.ToolConfigService;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;

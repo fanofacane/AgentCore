@@ -4,7 +4,7 @@ import com.sky.AgentCore.dto.agent.AgentEntity;
 import com.sky.AgentCore.dto.model.ModelEntity;
 import com.sky.AgentCore.dto.product.ProductEntity;
 import com.sky.AgentCore.enums.BillingType;
-import com.sky.AgentCore.mapper.AgentMapper;
+import com.sky.AgentCore.mapper.agent.AgentMapper;
 import com.sky.AgentCore.service.llm.LLMDomainService;
 import com.sky.AgentCore.service.rule.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;

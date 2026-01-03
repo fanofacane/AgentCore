@@ -5,9 +5,7 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
-/** RAG知识库数据集数据传输对象
- * @author shilong.zang
- * @date 2024-12-09 */
+/** RAG知识库数据集数据传输对象 */
 @Data
 public class RagQaDatasetDTO {
 

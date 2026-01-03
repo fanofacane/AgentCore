@@ -1,7 +1,7 @@
 package com.sky.AgentCore.service.rag.domain;
 
 import com.sky.AgentCore.dto.rag.UserRagFileEntity;
-import com.sky.AgentCore.mapper.UserRagFileMapper;
+import com.sky.AgentCore.mapper.rag.UserRagFileMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

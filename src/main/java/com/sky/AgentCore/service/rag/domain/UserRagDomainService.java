@@ -11,7 +11,7 @@ import com.sky.AgentCore.dto.rag.RagVersionEntity;
 import com.sky.AgentCore.dto.rag.UserRagEntity;
 import com.sky.AgentCore.enums.InstallType;
 import com.sky.AgentCore.enums.RagPublishStatus;
-import com.sky.AgentCore.mapper.UserRagMapper;
+import com.sky.AgentCore.mapper.rag.UserRagMapper;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

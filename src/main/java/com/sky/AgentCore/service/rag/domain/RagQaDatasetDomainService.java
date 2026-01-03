@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.sky.AgentCore.config.Exceptions.BusinessException;
 import com.sky.AgentCore.dto.rag.RagQaDatasetEntity;
-import com.sky.AgentCore.mapper.RagQaDatasetMapper;
+import com.sky.AgentCore.mapper.rag.RagQaDatasetMapper;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

@@ -1,9 +1,0 @@
-package com.sky.AgentCore.mapper;
-
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.sky.AgentCore.dto.rag.RagVersionFileEntity;
-import org.apache.ibatis.annotations.Mapper;
-
-@Mapper
-public interface RagVersionFileMapper extends MyBatisPlusExtMapper<RagVersionFileEntity> {
-}

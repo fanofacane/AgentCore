@@ -6,9 +6,7 @@ import lombok.Data;
 
 import java.util.List;
 
-/** RAG搜索请求DTO
- *
- * @author shilong.zang */
+/** RAG搜索请求DTO */
 @Data
 public class RagSearchRequest {
 

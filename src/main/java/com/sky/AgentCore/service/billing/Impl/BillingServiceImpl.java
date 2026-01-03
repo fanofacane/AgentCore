@@ -120,7 +120,7 @@ public class BillingServiceImpl implements BillingService {
 
         // 6. 检查余额并扣费
         accountAppService.deduct(context.getUserId(), cost);
-        System.out.println("扣费成功");
+
         // 7. 记录用量
         recordUsage(context, product, cost);
     }

@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.sky.AgentCore.config.Exceptions.BusinessException;
 import com.sky.AgentCore.dto.account.AccountDTO;
 import com.sky.AgentCore.dto.account.AccountEntity;
-import com.sky.AgentCore.mapper.AccountMapper;
+import com.sky.AgentCore.mapper.user.AccountMapper;
 import com.sky.AgentCore.service.user.AccountAppService;
 import org.springframework.stereotype.Service;
 

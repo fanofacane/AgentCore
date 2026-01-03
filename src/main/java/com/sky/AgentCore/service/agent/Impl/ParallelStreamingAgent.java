@@ -1,11 +1,14 @@
 package com.sky.AgentCore.service.agent.Impl;
 
 import com.sky.AgentCore.service.agent.Agent;
+import com.sky.AgentCore.utils.UserContext;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.data.message.UserMessage;
+import dev.langchain4j.invocation.DefaultInvocationContext;
+import dev.langchain4j.invocation.InvocationContext;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
@@ -18,6 +21,16 @@ import dev.langchain4j.service.tool.ToolExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import dev.langchain4j.service.tool.ToolProvider;
+import dev.langchain4j.service.tool.ToolProviderResult;
+import dev.langchain4j.service.tool.ToolProviderRequest;
+
+import dev.langchain4j.invocation.InvocationContext;
+import dev.langchain4j.invocation.InvocationParameters;
+
+import java.time.Instant;
+import java.util.UUID;
+import java.util.Collections;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -39,16 +52,20 @@ public class ParallelStreamingAgent implements Agent {
     private final MessageWindowChatMemory chatMemory;
     private final Map<String, ToolExecutor> toolExecutorMap;
     private final List<ToolSpecification> toolSpecifications;
-    
+    private final List<ToolProvider> toolProviders; // 支持多个 ToolProvider
+
     // 使用缓存线程池来并发执行工具
     private final ExecutorService executorService = Executors.newCachedThreadPool();
+    private final Runnable onClose; // 新增关闭回调
 
-    public ParallelStreamingAgent(StreamingChatModel chatModel, MessageWindowChatMemory chatMemory, Map<ToolSpecification, ToolExecutor> tools) {
+    public ParallelStreamingAgent(StreamingChatModel chatModel, MessageWindowChatMemory chatMemory, Map<ToolSpecification, ToolExecutor> tools, List<ToolProvider> toolProviders, Runnable onClose) {
         this.chatModel = chatModel;
         this.chatMemory = chatMemory;
         this.toolSpecifications = new ArrayList<>(tools.keySet());
         this.toolExecutorMap = new HashMap<>();
-        
+        this.toolProviders = toolProviders != null ? toolProviders : new ArrayList<>();
+        this.onClose = onClose;
+
         for (Map.Entry<ToolSpecification, ToolExecutor> entry : tools.entrySet()) {
             this.toolExecutorMap.put(entry.getKey().name(), entry.getValue());
         }
@@ -81,7 +98,12 @@ public class ParallelStreamingAgent implements Agent {
 
             @Override
             public TokenStream onError(Consumer<Throwable> handler) {
-                this.onErrorHandler = handler;
+                this.onErrorHandler = error -> {
+                    handler.accept(error);
+                    if (onClose != null) {
+                        onClose.run();
+                    }
+                };
                 return this;
             }
 
@@ -113,9 +135,54 @@ public class ParallelStreamingAgent implements Agent {
             private void doChat() {
                 List<ChatMessage> messages = chatMemory.messages();
                 
+                // 动态获取 MCP 工具
+                List<ToolSpecification> currentToolSpecs = new ArrayList<>(toolSpecifications);
+                Map<String, ToolExecutor> currentToolExecutors = new HashMap<>(toolExecutorMap);
+
+                if (!toolProviders.isEmpty()) {
+                    InvocationContext invocationContext = new InvocationContext() {
+                        @Override
+                        public UUID invocationId() { return UUID.randomUUID(); }
+                        @Override
+                        public String interfaceName() { return "Agent"; }
+                        @Override
+                        public String methodName() { return "chat"; }
+                        @Override
+                        public List<Object> methodArguments() { return Collections.singletonList(userMessage); }
+                        @Override
+                        public Object chatMemoryId() { return UserContext.getCurrentUserId(); }
+                        @Override
+                        public InvocationParameters invocationParameters() { return null; }
+
+                        @Override
+                        public Instant timestamp() {
+                            return null;
+                        }
+                    };
+
+                    ToolProviderRequest request = ToolProviderRequest.builder()
+                            .userMessage(new UserMessage(userMessage))
+                            .invocationContext(invocationContext)
+                            .build();
+
+                    for (ToolProvider provider : toolProviders) {
+                        try {
+                            ToolProviderResult toolProviderResult = provider.provideTools(request);
+                            if (toolProviderResult != null && toolProviderResult.tools() != null) {
+                                for (Map.Entry<ToolSpecification, ToolExecutor> entry : toolProviderResult.tools().entrySet()) {
+                                    currentToolSpecs.add(entry.getKey());
+                                    currentToolExecutors.put(entry.getKey().name(), entry.getValue());
+                                }
+                            }
+                        } catch (Exception e) {
+                            logger.error("Error fetching tools from provider", e);
+                        }
+                    }
+                }
+
                 ChatRequest chatRequest = ChatRequest.builder()
                         .messages(messages)
-                        .toolSpecifications(toolSpecifications)
+                        .toolSpecifications(currentToolSpecs)
                         .build();
 
                 chatModel.chat(chatRequest, new StreamingChatResponseHandler() {
@@ -137,7 +204,7 @@ public class ParallelStreamingAgent implements Agent {
                             List<CompletableFuture<Void>> futures = aiMessage.toolExecutionRequests().stream()
                                     .map(request -> CompletableFuture.runAsync(() -> {
                                         try {
-                                            ToolExecutor toolExecutor = toolExecutorMap.get(request.name());
+                                            ToolExecutor toolExecutor = currentToolExecutors.get(request.name());
                                             if (toolExecutor == null) {
                                                 throw new RuntimeException("Tool not found: " + request.name());
                                             }
@@ -165,7 +232,7 @@ public class ParallelStreamingAgent implements Agent {
                                             }
                                         }
                                     }, executorService))
-                                    .collect(Collectors.toList());
+                                    .toList();
 
                             // 等待所有工具执行完成
                             CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
@@ -176,6 +243,10 @@ public class ParallelStreamingAgent implements Agent {
                             chatMemory.add(aiMessage);
                             if (onCompleteResponseHandler != null) {
                                 onCompleteResponseHandler.accept(completeResponse);
+                            }
+                            // 仅在对话真正结束（没有后续工具调用）时执行清理
+                            if (onClose != null) {
+                                onClose.run();
                             }
                         }
                     }

@@ -2,7 +2,7 @@ package com.sky.AgentCore.service.rag.service;
 
 import com.sky.AgentCore.dto.rag.model.VectorStoreResult;
 import com.sky.AgentCore.enums.SearchType;
-import com.sky.AgentCore.mapper.VectorStoreMapper;
+import com.sky.AgentCore.mapper.rag.VectorStoreMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

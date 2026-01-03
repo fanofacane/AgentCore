@@ -7,7 +7,7 @@ import com.sky.AgentCore.dto.login.ChangePasswordRequest;
 import com.sky.AgentCore.dto.user.UserDTO;
 import com.sky.AgentCore.dto.user.UserEntity;
 import com.sky.AgentCore.dto.user.UserUpdateRequest;
-import com.sky.AgentCore.mapper.UserMapper;
+import com.sky.AgentCore.mapper.user.UserMapper;
 import com.sky.AgentCore.service.user.UserService;
 import com.sky.AgentCore.utils.PasswordUtils;
 import org.springframework.stereotype.Service;

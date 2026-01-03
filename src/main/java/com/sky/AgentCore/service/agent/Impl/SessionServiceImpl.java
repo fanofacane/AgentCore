@@ -2,8 +2,8 @@ package com.sky.AgentCore.service.agent.Impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.sky.AgentCore.dto.session.SessionEntity;
-import com.sky.AgentCore.mapper.MessageMapper;
-import com.sky.AgentCore.mapper.SessionMapper;
+import com.sky.AgentCore.mapper.session.MessageMapper;
+import com.sky.AgentCore.mapper.session.SessionMapper;
 import com.sky.AgentCore.service.agent.SessionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

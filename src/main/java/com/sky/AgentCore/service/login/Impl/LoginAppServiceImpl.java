@@ -9,11 +9,13 @@ import com.sky.AgentCore.dto.login.LoginRequest;
 import com.sky.AgentCore.dto.login.RegisterRequest;
 import com.sky.AgentCore.dto.model.ModelEntity;
 import com.sky.AgentCore.dto.user.UserEntity;
+import com.sky.AgentCore.dto.user.UserSettingsConfig;
 import com.sky.AgentCore.dto.user.UserSettingsEntity;
 import com.sky.AgentCore.enums.AuthFeatureKey;
-import com.sky.AgentCore.mapper.AccountMapper;
-import com.sky.AgentCore.mapper.UserMapper;
-import com.sky.AgentCore.mapper.UserSettingMapper;
+import com.sky.AgentCore.enums.ModelType;
+import com.sky.AgentCore.mapper.user.AccountMapper;
+import com.sky.AgentCore.mapper.user.UserMapper;
+import com.sky.AgentCore.mapper.user.UserSettingMapper;
 import com.sky.AgentCore.service.user.AuthSettingAppService;
 import com.sky.AgentCore.service.llm.LLMDomainService;
 import com.sky.AgentCore.service.login.LoginAppService;
@@ -25,7 +27,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static com.sky.AgentCore.utils.VerificationCode.BUSINESS_TYPE_EMAIL_LOGIN;
 import static com.sky.AgentCore.utils.VerificationCode.BUSINESS_TYPE_REGISTER;
@@ -151,10 +156,20 @@ public class LoginAppServiceImpl extends ServiceImpl<UserMapper,UserEntity> impl
         //创建用户默认模型设置
         UserSettingsEntity userSettingsEntity = new UserSettingsEntity();
         userSettingsEntity.setUserId(userEntity.getId());
-        ModelEntity model = llmDomainService.lambdaQuery().eq(ModelEntity::getIsOfficial, true)
-                .eq(ModelEntity::getStatus, true)
-                .eq(ModelEntity::getName, "gpt-5").list().getFirst();
-        userSettingsEntity.setDefaultModelId(model.getId());
+        List<ModelEntity> modelList = llmDomainService.lambdaQuery().eq(ModelEntity::getIsOfficial, true)
+                .eq(ModelEntity::getStatus, true).list();
+        Map<ModelType, ModelEntity> singleModelMap = modelList.stream()
+                .collect(Collectors.toMap(
+                        ModelEntity::getType,  // key：type
+                        entity -> entity,      // value：ModelEntity 本身
+                        (existing, replacement) -> existing  // 重复时保留原有值
+                ));
+        UserSettingsConfig userSettingsConfig = new UserSettingsConfig(
+                singleModelMap.get(ModelType.CHAT).getId(),
+                singleModelMap.get(ModelType.CHAT).getId(),
+                singleModelMap.get(ModelType.EMBEDDING).getId()
+        );
+        userSettingsEntity.setSettingConfig(userSettingsConfig);
         userSettingMapper.insert(userSettingsEntity);
     }
     public void checkAccountExists(String email,String phone) {

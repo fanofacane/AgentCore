@@ -3,7 +3,7 @@ package com.sky.AgentCore.service.tool.Impl;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.sky.AgentCore.config.Exceptions.BusinessException;
 import com.sky.AgentCore.dto.tool.UserToolEntity;
-import com.sky.AgentCore.mapper.UserToolMapper;
+import com.sky.AgentCore.mapper.tool.UserToolMapper;
 import com.sky.AgentCore.service.tool.UserToolService;
 import org.springframework.stereotype.Service;
 

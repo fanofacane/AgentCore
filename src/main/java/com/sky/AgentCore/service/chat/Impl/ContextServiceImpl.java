@@ -2,7 +2,7 @@ package com.sky.AgentCore.service.chat.Impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.sky.AgentCore.dto.chat.ContextEntity;
-import com.sky.AgentCore.mapper.ContextMapper;
+import com.sky.AgentCore.mapper.agent.ContextMapper;
 import com.sky.AgentCore.service.chat.ContextService;
 import org.springframework.stereotype.Service;
 

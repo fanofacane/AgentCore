@@ -3,9 +3,7 @@ package com.sky.AgentCore.dto.rag;
 import com.sky.AgentCore.dto.tool.Page;
 import jakarta.validation.constraints.NotBlank;
 
-/** 查询文件语料请求
- *
- * @author shilong.zang */
+/** 查询文件语料请求 */
 public class QueryDocumentUnitsRequest extends Page {
 
     /** 文件ID */

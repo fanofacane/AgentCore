@@ -10,7 +10,7 @@ import com.sky.AgentCore.dto.model.ProviderEntity;
 import com.sky.AgentCore.dto.product.ProductDTO;
 import com.sky.AgentCore.dto.product.ProductEntity;
 import com.sky.AgentCore.enums.BillingType;
-import com.sky.AgentCore.mapper.ProductMapper;
+import com.sky.AgentCore.mapper.product.ProductMapper;
 import com.sky.AgentCore.service.llm.LLMAppService;
 import com.sky.AgentCore.service.llm.LLMDomainService;
 import com.sky.AgentCore.service.rule.ProductService;

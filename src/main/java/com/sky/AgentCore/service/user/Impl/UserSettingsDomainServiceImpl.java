@@ -8,7 +8,7 @@ import com.sky.AgentCore.dto.model.FallbackConfig;
 import com.sky.AgentCore.dto.user.UserSettingsDTO;
 import com.sky.AgentCore.dto.user.UserSettingsEntity;
 import com.sky.AgentCore.dto.user.UserSettingsUpdateRequest;
-import com.sky.AgentCore.mapper.UserSettingMapper;
+import com.sky.AgentCore.mapper.user.UserSettingMapper;
 import com.sky.AgentCore.service.user.UserSettingsDomainService;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;

@@ -39,8 +39,14 @@ import com.sky.AgentCore.service.llm.LLMDomainService;
 import com.sky.AgentCore.service.user.UserSettingsDomainService;
 import com.sky.AgentCore.service.chat.MessageTransport;
 import com.sky.AgentCore.service.agent.Impl.ParallelStreamingAgent;
+import com.sky.AgentCore.dto.config.McpProperties;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.*;
+import dev.langchain4j.mcp.McpToolProvider;
+import dev.langchain4j.mcp.client.DefaultMcpClient;
+import dev.langchain4j.mcp.client.McpClient;
+import dev.langchain4j.mcp.client.transport.McpTransport;
+import dev.langchain4j.mcp.client.transport.http.HttpMcpTransport;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
@@ -56,11 +62,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.Nullable;
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.BiFunction;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public abstract class AbstractMessageHandler {
@@ -68,7 +73,7 @@ public abstract class AbstractMessageHandler {
     private static final Logger logger = LoggerFactory.getLogger(AbstractMessageHandler.class);
     private static final String MEMORY_SECTION_TITLE = "[记忆要点]";
     private static final int MEMORY_TOP_K = 5;
-    private static final int MAX_TOOL_EXECUTION_COUNT = 2;
+    private static final int MAX_TOOL_EXECUTION_COUNT = 4;
 
     protected final LLMServiceFactory llmServiceFactory;
     protected final MessageService messageDomainService;
@@ -80,6 +85,8 @@ public abstract class AbstractMessageHandler {
     protected final HighAvailabilityService highAvailabilityService;
     protected final BuiltInToolRegistry builtInToolRegistry;
     protected final ChatSessionManager chatSessionManager;
+    @Autowired
+    protected McpProperties mcpProperties;
 
     @Autowired
     protected MemoryDomainService memoryDomainService;
@@ -302,6 +309,7 @@ public abstract class AbstractMessageHandler {
 
         // 记录调用开始时间
         long startTime = System.currentTimeMillis();
+
         tokenStream.onError(throwable -> {
             // 直接发送错误消息，transport内部处理连接异常
             transport.sendMessage(connection,
@@ -361,6 +369,7 @@ public abstract class AbstractMessageHandler {
 
         // 工具执行处理
         tokenStream.onToolExecuted(toolExecution -> {
+
             String message = "执行工具:" + toolExecution.request().name();
             // 直接发送工具调用消息
             transport.sendMessage(connection, AgentChatResponse.buildEndMessage(message, MessageType.TOOL_CALL));
@@ -573,7 +582,9 @@ public abstract class AbstractMessageHandler {
                     if (currentCount > MAX_TOOL_EXECUTION_COUNT) {
                         logger.warn("Agent工具调用次数达到上限 ({})，强制停止。", MAX_TOOL_EXECUTION_COUNT);
                         // B. 拦截并返回系统提示
-                        return "工具调用次数已达上限,并且用户等待时间过长,立即停止调用工具,并且不要再次调用";
+                        return "工具调用次数已达上限,用户等待时间过长,立即停止调用工具," +
+                                "并根据目前已有的信息回答用户,如果信息不足以回答就告诉用户" +
+                                "内置工具:"+spec.name()+"找不到相关资料";
                     }
 
                     // C. 未超限，正常执行原始逻辑
@@ -587,8 +598,55 @@ public abstract class AbstractMessageHandler {
             builtInTools = wrappedTools;
         }
 
+        List<ToolProvider> toolProviders = new ArrayList<>();
+        List<McpClient> mcpClientsToClose = new ArrayList<>();
+
+        if (toolProvider != null) toolProviders.add(toolProvider);
+
+        // 从配置文件加载 MCP 服务
+        if (mcpProperties != null && mcpProperties.getServers() != null) {
+            for (McpProperties.McpServerConfig serverConfig : mcpProperties.getServers()) {
+                try {
+                    McpTransport transport = new HttpMcpTransport.Builder()
+                            .sseUrl(serverConfig.getUrl())
+                            .logRequests(true)
+                            .logResponses(true)
+                            .timeout(Duration.ofMinutes(serverConfig.getTimeoutMinutes()))
+                            .build();
+
+                    McpClient mcpClient = new DefaultMcpClient.Builder()
+                            .transport(transport)
+                            .build();
+                    
+                    mcpClientsToClose.add(mcpClient);
+
+                    McpToolProvider mcpToolProvider = McpToolProvider.builder()
+                            .mcpClients(mcpClient)
+                            .build();
+                    
+                    toolProviders.add(mcpToolProvider);
+
+                } catch (Exception e) {
+                    logger.error("Failed to load MCP server: {}", serverConfig.getName(), e);
+                }
+            }
+        }
+        logger.info("Agent:"+agent.getId()+"创建工具个数{}",toolProviders.size());
+
+        // 定义关闭回调
+        Runnable onClose = () -> {
+            for (McpClient client : mcpClientsToClose) {
+                try {
+                    client.close();
+                    logger.debug("Closed MCP client connection");
+                } catch (Exception e) {
+                    logger.warn("Error closing MCP client", e);
+                }
+            }
+        };
+
         // 使用 ParallelStreamingAgent 替代 AiServices
-        return new ParallelStreamingAgent(model, memory, builtInTools != null ? builtInTools : new HashMap<>());
+        return new ParallelStreamingAgent(model, memory, builtInTools != null ? builtInTools : new HashMap<>(), toolProviders, onClose);
     }
     /** 构建历史消息到内存中 */
     protected void buildHistoryMessage(ChatContext chatContext, MessageWindowChatMemory memory) {

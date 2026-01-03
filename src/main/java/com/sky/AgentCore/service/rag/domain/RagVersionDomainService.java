@@ -8,7 +8,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.sky.AgentCore.config.Exceptions.BusinessException;
 import com.sky.AgentCore.dto.rag.*;
 import com.sky.AgentCore.enums.RagPublishStatus;
-import com.sky.AgentCore.mapper.*;
+import com.sky.AgentCore.mapper.rag.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -82,7 +82,7 @@ public class RagVersionDomainService {
         ragVersion.setChangeLog(changeLog);
         ragVersion.setOriginalRagId(ragId);
         ragVersion.setOriginalRagName(dataset.getName());
-        ragVersion.setPublishStatus(RagPublishStatus.REVIEWING.getCode());
+        ragVersion.setPublishStatus(RagPublishStatus.PUBLISHED.getCode());
         ragVersionMapper.insert(ragVersion);
 
         // 复制文件和文档数据

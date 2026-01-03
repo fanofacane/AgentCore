@@ -3,7 +3,7 @@ package com.sky.AgentCore.service.rag;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.sky.AgentCore.dto.rag.UserRagEntity;
-import com.sky.AgentCore.mapper.UserRagMapper;
+import com.sky.AgentCore.mapper.rag.UserRagMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

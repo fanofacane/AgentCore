@@ -1,6 +1,8 @@
 package com.sky.AgentCore.dto.user;
 
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.sky.AgentCore.config.Exceptions.BusinessException;
@@ -10,6 +12,7 @@ import lombok.Data;
 @Data
 @TableName("users")
 public class UserEntity extends BaseEntity {
+    @TableId(type = IdType.ASSIGN_UUID)
     private String id;
     private String nickname;
     private String email;

@@ -10,7 +10,7 @@ import com.sky.AgentCore.config.Exceptions.BusinessException;
 import com.sky.AgentCore.dto.rag.FileDetailEntity;
 import com.sky.AgentCore.enums.FileProcessingEventEnum;
 import com.sky.AgentCore.enums.FileProcessingStatusEnum;
-import com.sky.AgentCore.mapper.FileDetailMapper;
+import com.sky.AgentCore.mapper.rag.FileDetailMapper;
 import com.sky.AgentCore.service.rag.FileProcessingStateMachineService;
 import org.apache.commons.lang3.StringUtils;
 import org.dromara.x.file.storage.core.FileInfo;

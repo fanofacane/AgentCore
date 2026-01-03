@@ -1,7 +1,7 @@
 package com.sky.AgentCore.controller.agent;
 
 import com.sky.AgentCore.dto.agent.AgentConfig;
-import com.sky.AgentCore.mapper.AgentConfigMapper;
+import com.sky.AgentCore.mapper.agent.AgentConfigMapper;
 import com.sky.AgentCore.service.agent.AgentConfigService;
 import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.GetMapping;

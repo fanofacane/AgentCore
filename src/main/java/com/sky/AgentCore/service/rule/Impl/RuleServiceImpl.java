@@ -2,7 +2,7 @@ package com.sky.AgentCore.service.rule.Impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.sky.AgentCore.dto.product.RuleEntity;
-import com.sky.AgentCore.mapper.RuleMapper;
+import com.sky.AgentCore.mapper.product.RuleMapper;
 import com.sky.AgentCore.service.rule.RuleService;
 import org.springframework.stereotype.Service;
 

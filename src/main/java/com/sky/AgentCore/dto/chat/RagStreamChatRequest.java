@@ -7,9 +7,7 @@ import lombok.Data;
 
 import java.util.List;
 
-/** RAG流式问答请求DTO
- *
- * @author shilong.zang */
+/** RAG流式问答请求DTO */
 @Data
 public class RagStreamChatRequest {
 

@@ -9,7 +9,7 @@ import com.sky.AgentCore.dto.memory.CandidateMemory;
 import com.sky.AgentCore.dto.memory.MemoryItemEntity;
 import com.sky.AgentCore.dto.memory.MemoryResult;
 import com.sky.AgentCore.enums.MemoryType;
-import com.sky.AgentCore.mapper.MemoryItemMapper;
+import com.sky.AgentCore.mapper.session.MemoryItemMapper;
 import com.sky.AgentCore.service.rag.UserModelConfigResolver;
 import dev.langchain4j.data.document.Metadata;
 import dev.langchain4j.data.embedding.Embedding;
