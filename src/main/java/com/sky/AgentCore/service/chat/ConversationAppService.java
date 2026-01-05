@@ -1,6 +1,8 @@
 package com.sky.AgentCore.service.chat;
 
 import com.sky.AgentCore.dto.agent.AgentPreviewRequest;
+import com.sky.AgentCore.dto.agent.AgentWidgetEntity;
+import com.sky.AgentCore.dto.agent.widget.WidgetChatRequest;
 import com.sky.AgentCore.dto.chat.ChatRequest;
 import com.sky.AgentCore.dto.chat.ChatResponse;
 import com.sky.AgentCore.dto.chat.RagStreamChatRequest;
@@ -25,4 +27,8 @@ public interface ConversationAppService {
     SseEmitter ragStreamChat(RagStreamChatRequest request, String userId);
 
     SseEmitter ragStreamChatByUserRag(RagStreamChatRequest request, String userRagId, String userId);
+
+    SseEmitter widgetChat(String publicId, WidgetChatRequest request, AgentWidgetEntity widget);
+
+    ChatResponse widgetChatSync(String publicId, WidgetChatRequest request, AgentWidgetEntity widget);
 }

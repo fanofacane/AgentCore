@@ -1,11 +1,13 @@
 package com.sky.AgentCore.service.agent.Impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.sky.AgentCore.config.Exceptions.BusinessException;
 import com.sky.AgentCore.config.Exceptions.InsufficientBalanceException;
 import com.sky.AgentCore.config.Exceptions.ParamValidationException;
+import com.sky.AgentCore.dto.model.LLMModelConfig;
 import com.sky.AgentCore.enums.constant.UsageDataKeys;
 import com.sky.AgentCore.converter.assembler.AgentAssembler;
 import com.sky.AgentCore.converter.assembler.AgentVersionAssembler;
@@ -34,10 +36,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -104,7 +103,40 @@ public class AgentAppServiceImpl extends ServiceImpl<AgentMapper, AgentEntity> i
     public List<AgentDTO> getUserAgents(String userId, SearchAgentsRequest searchAgentsRequest) {
         List<AgentEntity> agentList = lambdaQuery().eq(AgentEntity::getUserId, userId)
                 .like(!StringUtils.isEmpty(searchAgentsRequest.getName()),AgentEntity::getName, searchAgentsRequest.getName()).list();
-        return AgentAssembler.toDTOs(agentList);
+        List<String> list = agentList.stream().map(AgentEntity::getId).toList();
+
+        List<AgentWorkspaceEntity> agentWorkspaceEntities = agentWorkspaceService.listAgents(list, userId);
+        // 4. 将 AgentWorkspaceEntity 转成 Map：key=agentId，value=llmModelConfig（核心：快速匹配）
+        Map<String, LLMModelConfig> agentIdToLlmConfigMap = new HashMap<>();
+        if (!CollectionUtils.isEmpty(agentWorkspaceEntities)) {
+            agentIdToLlmConfigMap = agentWorkspaceEntities.stream()
+                    .collect(Collectors.toMap(
+                            // key：AgentWorkspaceEntity中的agentId字段（根据实际字段名调整）
+                            AgentWorkspaceEntity::getAgentId,
+                            // value：需要的llmModelConfig字段
+                            AgentWorkspaceEntity::getLlmModelConfig,
+                            // 解决重复key冲突（若有）：保留第一个值
+                            (existing, replacement) -> existing
+                    ));
+        }
+        // 5. 组装 AgentDTO 列表（核心逻辑）
+        Map<String, LLMModelConfig> finalAgentIdToLlmConfigMap = agentIdToLlmConfigMap;
+        List<AgentDTO> agentDTOList = agentList.stream()
+                .map(agentEntity -> {
+                    // 创建DTO对象
+                    AgentDTO agentDTO = new AgentDTO();
+
+                    // 1. 复制 AgentEntity 的所有字段到DTO（两种方式）
+                    // 使用Bean拷贝（推荐，字段多时更高效）
+                     BeanUtils.copyProperties(agentEntity, agentDTO);
+
+                    // 2. 匹配 llmModelConfig（根据agentId从Map中获取）
+                    LLMModelConfig llmModelConfig = finalAgentIdToLlmConfigMap.get(agentEntity.getId());
+                    agentDTO.setLlmModelConfig(llmModelConfig);
+
+                    return agentDTO;
+                }).toList();
+        return agentDTOList;
     }
 
     @Override

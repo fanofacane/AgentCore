@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.AbstractMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -352,10 +353,19 @@ public class AgentExecutionTraceAppService {
 
     /** 批量获取会话映射 */
     private Map<String, SessionEntity> getSessionMap(List<String> sessionIds, String userId) {
+        // 1. 先过滤掉 null 值，再收集为 Map，避免 toMap 遇到 null 抛 NPE
         return sessionIds.stream()
-                .collect(Collectors.toMap(Function.identity(), sessionId -> getSession(sessionId, userId))).entrySet()
-                .stream().filter(entry -> entry.getValue() != null)
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                // 先映射为键值对（保留非 null 的值）
+                .map(sessionId -> new AbstractMap.SimpleEntry<>(sessionId, getSession(sessionId, userId)))
+                // 过滤掉值为 null 的条目
+                .filter(entry -> entry.getValue() != null)
+                // 收集为 Map（此时键值均非 null，安全）
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        Map.Entry::getValue,
+                        // 额外处理：避免重复 key 导致的 IllegalStateException（可选但建议加）
+                        (existing, replacement) -> existing
+                ));
     }
 
     /** 获取单个会话信息（容错处理） */

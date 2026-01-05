@@ -61,9 +61,7 @@ public class MemoryDomainService {
      *
      * @return 写入/更新后的 itemId 列表 */
     public List<String> saveMemories(String userId, String sessionId, List<CandidateMemory> candidates) {
-        if (CollectionUtils.isEmpty(candidates)) {
-            return Collections.emptyList();
-        }
+        if (CollectionUtils.isEmpty(candidates)) return Collections.emptyList();
 
         // 构造嵌入模型
         var embeddingCfg = userModelConfigResolver.getUserEmbeddingModelConfig(userId);
@@ -72,9 +70,7 @@ public class MemoryDomainService {
 
         List<String> itemIds = new ArrayList<>();
         for (CandidateMemory c : candidates) {
-            if (c == null || !StringUtils.hasText(c.getText())) {
-                continue;
-            }
+            if (c == null || !StringUtils.hasText(c.getText())) continue;
 
             MemoryType type = (c.getType() != null) ? c.getType() : MemoryType.FACT;
             String normalized = normalizeText(c.getText());
