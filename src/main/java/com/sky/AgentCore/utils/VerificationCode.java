@@ -49,9 +49,7 @@ public class VerificationCode {
      * @return 生成的验证码 */
     public String generateCode(String email, String captchaUuid, String captchaCode, String ip, String businessType) {
         // 验证图形验证码
-        if (!CaptchaUtils.verifyCaptcha(captchaUuid, captchaCode)) {
-            throw new BusinessException("图形验证码错误或已过期");
-        }
+        if (!CaptchaUtils.verifyCaptcha(captchaUuid, captchaCode)) throw new BusinessException("图形验证码错误或已过期");
 
         // 检查IP限制
         checkIpLimit(ip);

@@ -42,9 +42,7 @@ public class TraceCollector {
             // 立即记录用户消息，并保存记录ID到上下文中
             Long messageId = traceDomainService.recordUserMessage(traceContext, userMessage, messageType,
                     java.time.LocalDateTime.now());
-            if (messageId != null) {
-                traceContext.setCurrentUserMessageId(messageId);
-            }
+            if (messageId != null) traceContext.setCurrentUserMessageId(messageId);
 
             // 将用户消息信息存储到追踪上下文中，用于后续处理
             traceContext.setUserMessage(userMessage);
@@ -64,9 +62,7 @@ public class TraceCollector {
      * @param aiResponse AI响应内容
      * @param modelCallInfo 模型调用信息 */
     public void recordModelCall(TraceContext traceContext, String aiResponse, ModelCallInfo modelCallInfo) {
-        if (!traceContext.isTraceEnabled()) {
-            return;
-        }
+        if (!traceContext.isTraceEnabled()) return;
 
         try {
             // 发布模型调用事件，监听器负责记录用户消息和AI响应
@@ -82,9 +78,7 @@ public class TraceCollector {
      * @param traceContext 追踪上下文
      * @param toolCallInfo 工具调用信息 */
     public void recordToolCall(TraceContext traceContext, ToolCallInfo toolCallInfo) {
-        if (!traceContext.isTraceEnabled()) {
-            return;
-        }
+        if (!traceContext.isTraceEnabled()) return;
 
         try {
             // 发布工具执行事件，监听器负责记录工具调用
@@ -102,9 +96,7 @@ public class TraceCollector {
      * @param errorMessage 错误信息 */
     public void completeExecution(TraceContext traceContext, boolean success, ExecutionPhase errorPhase,
                                   String errorMessage) {
-        if (!traceContext.isTraceEnabled()) {
-            return;
-        }
+        if (!traceContext.isTraceEnabled()) return;
 
         try {
             // 发布执行完成事件，监听器负责完成追踪记录
@@ -165,9 +157,7 @@ public class TraceCollector {
      * @param errorPhase 错误阶段
      * @param throwable 异常信息 */
     public void recordErrorDetail(TraceContext traceContext, ExecutionPhase errorPhase, Throwable throwable) {
-        if (!traceContext.isTraceEnabled()) {
-            return;
-        }
+        if (!traceContext.isTraceEnabled()) return;
 
         try {
             String errorMessage = throwable != null ? throwable.getMessage() : "未知错误";

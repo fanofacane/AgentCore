@@ -39,14 +39,10 @@ public class CaptchaUtils {
      * @param code 用户输入的验证码
      * @return 验证是否成功 */
     public static boolean verifyCaptcha(String uuid, String code) {
-        if (uuid == null || code == null) {
-            return false;
-        }
+        if (uuid == null || code == null) return false;
 
         CaptchaInfo captchaInfo = captchaMap.get(uuid);
-        if (captchaInfo == null) {
-            return false;
-        }
+        if (captchaInfo == null) return false;
 
         // 检查是否过期
         if (System.currentTimeMillis() > captchaInfo.getExpirationTime()) {
@@ -56,9 +52,7 @@ public class CaptchaUtils {
 
         // 验证码校验（忽略大小写）
         boolean result = captchaInfo.getCode().equalsIgnoreCase(code);
-        if (result) {
-            captchaMap.remove(uuid);
-        }
+        if (result) captchaMap.remove(uuid);
 
         return result;
     }

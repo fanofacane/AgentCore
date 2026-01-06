@@ -64,9 +64,7 @@ public class AgentExecutionTraceDomainService {
      * @return 插入记录的ID */
     public Long recordUserMessage(TraceContext traceContext, String userMessage, String messageType,
                                   LocalDateTime eventTime) {
-        if (!traceContext.isTraceEnabled()) {
-            return null;
-        }
+        if (!traceContext.isTraceEnabled()) return null;
 
         AgentExecutionDetailEntity detail = AgentExecutionDetailEntity.createUserMessageStep(
                 traceContext.getSessionId(), traceContext.nextSequence(), userMessage, messageType, eventTime);
@@ -103,9 +101,7 @@ public class AgentExecutionTraceDomainService {
      * @param eventTime 事件发生时间（AI开始响应的时间） */
     public void recordAiResponse(TraceContext traceContext, String aiResponse, ModelCallInfo modelCallInfo,
                                  LocalDateTime eventTime) {
-        if (!traceContext.isTraceEnabled()) {
-            return;
-        }
+        if (!traceContext.isTraceEnabled()) return;
 
         AgentExecutionDetailEntity detail = AgentExecutionDetailEntity.createAiResponseStep(traceContext.getSessionId(),
                 traceContext.nextSequence(), aiResponse, modelCallInfo.getModelEndpoint(),
@@ -137,9 +133,7 @@ public class AgentExecutionTraceDomainService {
      * @param toolCallInfo 工具调用信息
      * @param eventTime 事件发生时间（工具开始执行的时间） */
     public void recordToolCall(TraceContext traceContext, ToolCallInfo toolCallInfo, LocalDateTime eventTime) {
-        if (!traceContext.isTraceEnabled()) {
-            return;
-        }
+        if (!traceContext.isTraceEnabled()) return;
 
         AgentExecutionDetailEntity detail = AgentExecutionDetailEntity.createToolCallStep(traceContext.getSessionId(),
                 traceContext.nextSequence(), toolCallInfo.getToolName(), toolCallInfo.getRequestArgs(),
@@ -164,9 +158,7 @@ public class AgentExecutionTraceDomainService {
      * @param errorMessage 错误信息 */
     public void completeTrace(TraceContext traceContext, boolean success, ExecutionPhase errorPhase,
                               String errorMessage) {
-        if (!traceContext.isTraceEnabled()) {
-            return;
-        }
+        if (!traceContext.isTraceEnabled()) return;
 
         LambdaQueryWrapper<AgentExecutionSummaryEntity> wrapper = Wrappers.<AgentExecutionSummaryEntity>lambdaQuery()
                 .eq(AgentExecutionSummaryEntity::getSessionId, traceContext.getSessionId());
@@ -482,9 +474,7 @@ public class AgentExecutionTraceDomainService {
      * @param recordId 记录ID
      * @param messageTokens 消息Token数 */
     public void updateUserMessageTokens(Long recordId, Integer messageTokens) {
-        if (recordId == null || messageTokens == null) {
-            return;
-        }
+        if (recordId == null || messageTokens == null) return;
 
         AgentExecutionDetailEntity detail = detailMapper.selectById(recordId);
         if (detail != null) {
@@ -603,9 +593,7 @@ public class AgentExecutionTraceDomainService {
      * @param errorMessage 错误信息
      * @param eventTime 事件发生时间 */
     public void recordErrorMessage(TraceContext traceContext, String errorMessage, LocalDateTime eventTime) {
-        if (!traceContext.isTraceEnabled()) {
-            return;
-        }
+        if (!traceContext.isTraceEnabled()) return;
 
         try {
             // 创建异常记录

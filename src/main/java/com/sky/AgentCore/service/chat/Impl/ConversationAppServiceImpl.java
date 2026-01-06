@@ -249,9 +249,7 @@ public class ConversationAppServiceImpl implements ConversationAppService {
         if (contextEntity != null) {
             // 获取活跃消息(包括摘要)
             List<String> activeMessageIds = contextEntity.getActiveMessages();
-            System.out.println("上下文"+contextEntity.getActiveMessages());
             if (activeMessageIds !=null && !activeMessageIds.isEmpty()) {
-                System.out.println("进入");
                 messageEntities = messageService.listByIds(activeMessageIds);
                 // 应用Token溢出策略, 上下文历史消息以token策略返回的为准
                 messageEntities = applyTokenOverflowStrategy(environment,
