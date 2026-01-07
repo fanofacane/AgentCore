@@ -2,6 +2,7 @@ package com.sky.AgentCore.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
@@ -13,7 +14,8 @@ import java.util.concurrent.ThreadPoolExecutor;
 public class AsyncConfig {
 
     /** 专用于记忆抽取与持久化的线程池，避免与其他异步任务互相影响 */
-    @Bean(name = "memoryTaskExecutor")
+    @Primary
+    @Bean(name = {"memoryTaskExecutor", "taskExecutor"})
     public ThreadPoolTaskExecutor memoryTaskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(2);

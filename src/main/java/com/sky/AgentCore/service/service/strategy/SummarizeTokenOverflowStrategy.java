@@ -1,13 +1,14 @@
 package com.sky.AgentCore.service.service.strategy;
 
 
+import com.sky.AgentCore.config.Factory.ProviderRegistry;
 import com.sky.AgentCore.dto.prompt.AgentPromptTemplates;
 import com.sky.AgentCore.dto.message.TokenMessage;
 import com.sky.AgentCore.dto.message.TokenProcessResult;
 import com.sky.AgentCore.dto.model.ProviderConfig;
 import com.sky.AgentCore.enums.Role;
 import com.sky.AgentCore.enums.TokenOverflowStrategyEnum;
-import com.sky.AgentCore.service.llm.Impl.LLMProviderService;
+import com.sky.AgentCore.service.llm.provider.Provider;
 import com.sky.AgentCore.service.service.TokenOverflowStrategy;
 import dev.langchain4j.data.message.Content;
 import dev.langchain4j.data.message.SystemMessage;
@@ -15,6 +16,8 @@ import dev.langchain4j.data.message.TextContent;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.response.ChatResponse;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -24,7 +27,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /** 摘要策略Token超限处理实现 将超出阈值的早期消息生成摘要，保留摘要和最新消息 */
+@Component
 public class SummarizeTokenOverflowStrategy implements TokenOverflowStrategy {
+    @Autowired
+    private ProviderRegistry providerRegistry;
 
     /** 策略配置 */
     private final TokenOverflowConfig config;
@@ -34,6 +40,8 @@ public class SummarizeTokenOverflowStrategy implements TokenOverflowStrategy {
 
     /** 生成的摘要消息对象 */
     private TokenMessage summaryMessage;
+
+
 
     /** 构造函数
      *
@@ -107,9 +115,9 @@ public class SummarizeTokenOverflowStrategy implements TokenOverflowStrategy {
         return messages.size() > config.getSummaryThreshold();
     }
 
-    /** 获取需要摘要的消息列表（按时间排序） 这是应用层应该使用的方法，用于获取需要进行摘要处理的消息对象
-     *
-     * @return 需要摘要的消息列表（按时间从旧到新排序） */
+    /*获取需要摘要的消息列表（按时间排序） 这是应用层应该使用的方法，用于获取需要进行摘要处理的消息对象
+    * @return 需要摘要的消息列表（按时间从旧到新排序） */
+
     public List<TokenMessage> getMessagesToSummarize() {
         return messagesToSummarize;
     }
@@ -122,7 +130,9 @@ public class SummarizeTokenOverflowStrategy implements TokenOverflowStrategy {
         String summaryPrefixPrompt = "。最后请你以这段话作为生成摘要的开头返回，开头：" + AgentPromptTemplates.getSummaryPrefix();
 
         // 使用当前服务商调用大模型
-        ChatModel chatLanguageModel = LLMProviderService.getStrand(providerConfig.getProtocol(), providerConfig);
+        Provider p = providerRegistry.get(providerConfig.getProtocol());
+        ChatModel chatModel = p.createChatModel(providerConfig);
+
         SystemMessage systemMessage = new SystemMessage("你是一个专业的对话摘要生成器，请严格按照以下要求工作：\n"
                 + "1. 只基于提供的对话内容生成客观摘要，不得添加任何原对话中没有的信息\n" + "2. 特别关注：用户问题、回答中的关键信息、重要事实\n" + "3. 去除所有寒暄、表情符号和情感表达\n"
                 + "4. 使用简洁的第三人称陈述句\n" + "5. 保持时间顺序和逻辑关系\n" + "6. 示例格式：[用户]问... [AI]回答...\n" + "禁止使用任何表情符号或拟人化表达"
@@ -130,7 +140,8 @@ public class SummarizeTokenOverflowStrategy implements TokenOverflowStrategy {
         List<Content> contents = messages.stream().map(message -> new TextContent(message.getContent()))
                 .collect(Collectors.toList());
         UserMessage userMessage = new UserMessage(contents);
-        ChatResponse chatResponse = chatLanguageModel.chat(Arrays.asList(systemMessage, userMessage));
+        ChatResponse chatResponse = chatModel.chat(Arrays.asList(systemMessage, userMessage));
+
         return this.createNewSummaryMessage(chatResponse.aiMessage().text(),
                 chatResponse.tokenUsage().outputTokenCount(), historyMessages);
     }

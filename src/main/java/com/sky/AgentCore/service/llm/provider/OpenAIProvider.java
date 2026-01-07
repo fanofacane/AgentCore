@@ -38,8 +38,6 @@ public class OpenAIProvider implements Provider {
                 .baseUrl(providerConfig.getBaseUrl())
                 .customHeaders(providerConfig.getCustomHeaders())
                 .temperature(llmModelConfig.getTemperature())
-                .returnThinking(false)
-                .reasoningEffort("low")
                 .modelName(providerConfig.getModel())
                 .timeout(Duration.ofMinutes(5))
                 .build();

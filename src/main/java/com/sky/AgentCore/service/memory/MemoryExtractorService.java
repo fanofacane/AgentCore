@@ -3,11 +3,12 @@ package com.sky.AgentCore.service.memory;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sky.AgentCore.config.Factory.ProviderRegistry;
 import com.sky.AgentCore.dto.memory.CandidateMemory;
 import com.sky.AgentCore.dto.model.ModelConfig;
 import com.sky.AgentCore.dto.model.ProviderConfig;
 import com.sky.AgentCore.enums.MemoryType;
-import com.sky.AgentCore.service.llm.Impl.LLMProviderService;
+import com.sky.AgentCore.service.llm.provider.Provider;
 import com.sky.AgentCore.service.rag.UserModelConfigResolver;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.SystemMessage;
@@ -16,6 +17,7 @@ import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -37,6 +39,9 @@ import java.util.Map;
 public class MemoryExtractorService {
 
     private static final Logger log = LoggerFactory.getLogger(MemoryExtractorService.class);
+
+    @Autowired
+    private ProviderRegistry providerRegistry;
 
     private static final String EXTRACT_PROMPT = """
             你是一名对话记忆提取器。你的任务是从“本轮用户发言”中抽取对后续多轮交互有复用价值的要点。
@@ -144,10 +149,13 @@ public class MemoryExtractorService {
         }
         try {
             // 使用用户默认聊天模型
-            ModelConfig chatCfg = userModelConfigResolver.getUserChatModelConfig(userId);
-            ChatModel chatModel = LLMProviderService.getStrand(chatCfg.getProtocol(),
-                    new ProviderConfig(chatCfg.getApiKey(), chatCfg.getBaseUrl(),
-                            chatCfg.getModelEndpoint(), chatCfg.getProtocol()));
+            ModelConfig config = userModelConfigResolver.getUserChatModelConfig(userId);
+
+            ProviderConfig providerConfig = new ProviderConfig(config.getApiKey(), config.getBaseUrl(),
+                    config.getModelEndpoint(), config.getProtocol());
+
+            Provider p = providerRegistry.get(config.getProtocol());
+            ChatModel chatModel = p.createChatModel(providerConfig);
 
             List<ChatMessage> messages = new ArrayList<>();
             messages.add(new SystemMessage(EXTRACT_PROMPT));
@@ -158,9 +166,7 @@ public class MemoryExtractorService {
             ChatResponse resp = chatModel.chat(messages);
 
             String xml = resp.aiMessage().text();
-            if (!StringUtils.hasText(xml)) {
-                return new ArrayList<>();
-            }
+            if (!StringUtils.hasText(xml)) return new ArrayList<>();
 
             return parseXmlMemories(xml);
         } catch (Exception e) {

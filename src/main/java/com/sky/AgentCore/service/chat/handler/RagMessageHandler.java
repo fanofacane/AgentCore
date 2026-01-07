@@ -239,21 +239,13 @@ public class RagMessageHandler extends AbstractMessageHandler {
         });
 
         // todo 思维链处理
-        tokenStream.onPartialThinking(reasoning ->{
+/*        tokenStream.onPartialThinking(reasoning ->{
             hasThinkingProcess[0] = true;
             if (!thinkingStarted[0]) {
                 transport.sendMessage(connection, AgentChatResponse.build("开始思考...", MessageType.RAG_THINKING_START));
                 thinkingStarted[0] = true;
             }
             transport.sendMessage(connection, AgentChatResponse.build(reasoning.text(), MessageType.RAG_THINKING_PROGRESS));
-        });
-/*        tokenStream.onPartialReasoning(reasoning -> {
-            hasThinkingProcess[0] = true;
-            if (!thinkingStarted[0]) {
-                transport.sendMessage(connection, AgentChatResponse.build("开始思考...", MessageType.RAG_THINKING_START));
-                thinkingStarted[0] = true;
-            }
-            transport.sendMessage(connection, AgentChatResponse.build(reasoning, MessageType.RAG_THINKING_PROGRESS));
         });*/
 
         // 完整响应处理

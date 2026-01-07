@@ -1,7 +1,7 @@
 package com.sky.AgentCore.service.rag.translator;
 
-import com.sky.AgentCore.enums.ProviderProtocol;
-import com.sky.AgentCore.service.llm.Impl.LLMProviderService;
+import com.sky.AgentCore.config.Factory.ProviderRegistry;
+import com.sky.AgentCore.service.llm.provider.Provider;
 import com.sky.AgentCore.service.rag.strategy.context.ProcessingContext;
 import com.vladsch.flexmark.ast.Image;
 import com.vladsch.flexmark.util.ast.Node;
@@ -11,6 +11,7 @@ import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
@@ -24,7 +25,8 @@ public class ImageTranslator implements NodeTranslator {
     private final static String SYSTEM_PROMPT = "请分析以下图片的内容，描述图片中的内容。场景：RAG 中的图片向量化，因此你需要尽可能的描述，为了后续的向量化以及检索";
 
     private static final Logger log = LoggerFactory.getLogger(ImageTranslator.class);
-
+    @Autowired
+    private ProviderRegistry providerRegistry;
     @Override
     public boolean canTranslate(Node node) {
         return node instanceof Image;
@@ -67,7 +69,9 @@ public class ImageTranslator implements NodeTranslator {
     /** 使用视觉模型分析图片 */
     private String analyzeImageWithVisionModel(String imageUrl, ProcessingContext context) {
         try {
-            ChatModel chatModel = LLMProviderService.getStrand(ProviderProtocol.OPENAI, context.getVisionModelConfig());
+
+            Provider p = providerRegistry.get(context.getLlmConfig().getProtocol());
+            ChatModel chatModel = p.createChatModel(context.getVisionModelConfig());
 
             UserMessage textMessage = UserMessage.from(SYSTEM_PROMPT);
             ImageContent imageContent = new ImageContent(imageUrl);

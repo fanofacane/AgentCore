@@ -1,6 +1,8 @@
 package com.sky.AgentCore.dto.model;
 
+import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.sky.AgentCore.config.Exceptions.BusinessException;
 import com.sky.AgentCore.converter.ModelTypeConverter;
@@ -12,7 +14,7 @@ import org.apache.ibatis.type.JdbcType;
 @Data
 @TableName("models")
 public class ModelEntity extends BaseEntity {
-
+    @TableId(value = "id", type = IdType.ASSIGN_UUID)
     private String id;
 
     private String userId;

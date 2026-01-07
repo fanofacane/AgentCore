@@ -1,7 +1,7 @@
 package com.sky.AgentCore.service.rag.translator;
 
-import com.sky.AgentCore.enums.ProviderProtocol;
-import com.sky.AgentCore.service.llm.Impl.LLMProviderService;
+import com.sky.AgentCore.config.Factory.ProviderRegistry;
+import com.sky.AgentCore.service.llm.provider.Provider;
 import com.sky.AgentCore.service.rag.strategy.context.ProcessingContext;
 import com.vladsch.flexmark.ext.tables.TableBlock;
 import com.vladsch.flexmark.util.ast.Node;
@@ -10,6 +10,7 @@ import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 
@@ -20,7 +21,8 @@ import org.springframework.stereotype.Component;
 public class TableTranslator implements NodeTranslator {
 
     private static final Logger log = LoggerFactory.getLogger(TableTranslator.class);
-
+    @Autowired
+    private ProviderRegistry providerRegistry;
     @Override
     public boolean canTranslate(Node node) {
         return node instanceof TableBlock;
@@ -64,7 +66,8 @@ public class TableTranslator implements NodeTranslator {
     /** 使用LLM分析表格内容 */
     private String analyzeTableWithLLM(String tableContent, ProcessingContext context) {
         try {
-            ChatModel chatModel = LLMProviderService.getStrand(ProviderProtocol.OPENAI, context.getLlmConfig());
+            Provider p = providerRegistry.get(context.getLlmConfig().getProtocol());
+            ChatModel chatModel = p.createChatModel(context.getLlmConfig());
 
             String prompt = buildTableAnalysisPrompt(tableContent);
 

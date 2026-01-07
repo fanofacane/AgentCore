@@ -4,6 +4,7 @@ import cn.hutool.core.codec.Base64;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.sky.AgentCore.config.Exceptions.BusinessException;
+import com.sky.AgentCore.config.Factory.ProviderRegistry;
 import com.sky.AgentCore.converter.PdfToBase64Converter;
 import com.sky.AgentCore.dto.model.ProviderConfig;
 import com.sky.AgentCore.dto.rag.DocumentUnitEntity;
@@ -12,7 +13,7 @@ import com.sky.AgentCore.dto.rag.RagDocMessage;
 import com.sky.AgentCore.enums.ProviderProtocol;
 import com.sky.AgentCore.mapper.rag.DocumentUnitMapper;
 import com.sky.AgentCore.mapper.rag.FileDetailMapper;
-import com.sky.AgentCore.service.llm.Impl.LLMProviderService;
+import com.sky.AgentCore.service.llm.provider.Provider;
 import com.sky.AgentCore.service.rag.TikaFileTypeDetector;
 import dev.langchain4j.data.message.ImageContent;
 import dev.langchain4j.data.message.TextContent;
@@ -41,10 +42,11 @@ public class PDFRagDocDocumentProcessing extends AbstractDocumentProcessingStrat
     private static final Logger log = LoggerFactory.getLogger(PDFRagDocDocumentProcessing.class);
 
     @Autowired
+    private ProviderRegistry providerRegistry;
+    @Autowired
     private DocumentUnitMapper documentUnitMapper;
     @Autowired
     private FileDetailMapper fileDetailMapper;
-
     @Resource
     private FileStorageService fileStorageService;
 
@@ -119,7 +121,7 @@ public class PDFRagDocDocumentProcessing extends AbstractDocumentProcessingStrat
                         ImageContent.from(base64, TikaFileTypeDetector.detectFileType(Base64.decode(base64))),
                         TextContent.from(OCR_PROMPT));
 
-                /** 创建OCR处理的模型配置 - 从消息中获取用户配置的OCR模型 */
+                /* 创建OCR处理的模型配置 - 从消息中获取用户配置的OCR模型 */
                 ChatModel ocrModel = createOcrModelFromMessage(ragDocSyncOcrMessage);
 
                 final ChatResponse chat = ocrModel.chat(userMessage);
@@ -243,7 +245,8 @@ public class PDFRagDocDocumentProcessing extends AbstractDocumentProcessingStrat
             ProviderConfig ocrProviderConfig = new ProviderConfig(modelConfig.getApiKey(), modelConfig.getBaseUrl(),
                     modelConfig.getModelEndpoint(), ProviderProtocol.OPENAI);
 
-            ChatModel ocrModel = LLMProviderService.getStrand(ProviderProtocol.OPENAI, ocrProviderConfig);
+            Provider p = providerRegistry.get(ProviderProtocol.OPENAI);
+            ChatModel ocrModel = p.createChatModel(ocrProviderConfig);
 
             log.info("成功为用户{}创建OCR模型: {}", ragDocSyncOcrMessage.getUserId(), modelConfig.getModelEndpoint());
             return ocrModel;

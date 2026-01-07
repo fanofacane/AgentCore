@@ -1,7 +1,8 @@
 package com.sky.AgentCore.service.rag.translator;
 
+import com.sky.AgentCore.config.Factory.ProviderRegistry;
 import com.sky.AgentCore.enums.ProviderProtocol;
-import com.sky.AgentCore.service.llm.Impl.LLMProviderService;
+import com.sky.AgentCore.service.llm.provider.Provider;
 import com.sky.AgentCore.service.rag.strategy.context.ProcessingContext;
 import com.vladsch.flexmark.ast.FencedCodeBlock;
 import com.vladsch.flexmark.ast.IndentedCodeBlock;
@@ -11,6 +12,7 @@ import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /** 代码翻译器
@@ -20,7 +22,8 @@ import org.springframework.stereotype.Component;
 public class CodeTranslator implements NodeTranslator {
 
     private static final Logger log = LoggerFactory.getLogger(CodeTranslator.class);
-
+    @Autowired
+    private ProviderRegistry providerRegistry;
     @Override
     public boolean canTranslate(Node node) {
         return node instanceof FencedCodeBlock || node instanceof IndentedCodeBlock;
@@ -77,7 +80,9 @@ public class CodeTranslator implements NodeTranslator {
     /** 使用LLM生成代码描述 */
     private String describeCodeWithLLM(String code, String language, ProcessingContext context) {
         try {
-            ChatModel chatModel = LLMProviderService.getStrand(ProviderProtocol.OPENAI, context.getLlmConfig());
+
+            Provider p = providerRegistry.get(ProviderProtocol.OPENAI);
+            ChatModel chatModel = p.createChatModel(context.getLlmConfig());
 
             String prompt = buildCodeAnalysisPrompt(code, language);
 

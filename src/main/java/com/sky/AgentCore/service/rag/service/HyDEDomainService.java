@@ -1,15 +1,17 @@
 package com.sky.AgentCore.service.rag.service;
 
 
+import com.sky.AgentCore.config.Factory.ProviderRegistry;
 import com.sky.AgentCore.dto.model.ModelConfig;
 import com.sky.AgentCore.dto.model.ProviderConfig;
-import com.sky.AgentCore.service.llm.Impl.LLMProviderService;
+import com.sky.AgentCore.service.llm.provider.Provider;
 import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -22,6 +24,9 @@ import java.util.Arrays;
 public class HyDEDomainService {
 
     private static final Logger log = LoggerFactory.getLogger(HyDEDomainService.class);
+
+    @Autowired
+    private ProviderRegistry providerRegistry;
 
     /** HyDE提示词模板 */
     private static final String HYDE_PROMPT_TEMPLATE = """
@@ -53,8 +58,8 @@ public class HyDEDomainService {
 
             ProviderConfig providerConfig = new ProviderConfig(chatModelConfig.getApiKey(),
                     chatModelConfig.getBaseUrl(), chatModelConfig.getModelEndpoint(), chatModelConfig.getProtocol());
-            ChatModel chatModel = LLMProviderService.getStrand(chatModelConfig.getProtocol(), providerConfig);
-
+            Provider p = providerRegistry.get(chatModelConfig.getProtocol());
+            ChatModel chatModel = p.createChatModel(providerConfig);
             // 构建提示词
             SystemMessage systemMessage = new SystemMessage(HYDE_PROMPT_TEMPLATE);
             UserMessage userMessage = new UserMessage(trimmedQuery);

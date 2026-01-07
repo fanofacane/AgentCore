@@ -563,40 +563,8 @@ public abstract class AbstractMessageHandler {
     protected Agent buildStreamingAgent(StreamingChatModel model, MessageWindowChatMemory memory,
                                         ToolProvider toolProvider, AgentEntity agent) {
 
-        Map<ToolSpecification, ToolExecutor> builtInTools = builtInToolRegistry.createToolsForAgent(agent);
-
-        // 2. 创建本次请求的计数器 (必须是局部变量，确保线程安全，每次请求独立计数)
-        AtomicInteger toolExecutionCounter = new AtomicInteger(0);
-
-        // 3. 包装工具执行器 (如果有内置工具)
-        if (builtInTools != null && !builtInTools.isEmpty()) {
-            // 创建一个新的 Map 来存放包装后的工具
-            Map<ToolSpecification, ToolExecutor> wrappedTools = new HashMap<>();
-
-            builtInTools.forEach((spec, originalExecutor) -> {
-                // 创建包装后的执行器
-                ToolExecutor wrappedExecutor = (toolExecutionRequest, memoryId) -> {
-                    // A. 检查计数
-                    int currentCount = toolExecutionCounter.incrementAndGet();
-
-                    if (currentCount > MAX_TOOL_EXECUTION_COUNT) {
-                        logger.warn("Agent工具调用次数达到上限 ({})，强制停止。", MAX_TOOL_EXECUTION_COUNT);
-                        // B. 拦截并返回系统提示
-                        return "工具调用次数已达上限,用户等待时间过长,立即停止调用工具," +
-                                "并根据目前已有的信息回答用户,如果信息不足以回答就告诉用户" +
-                                "内置工具:"+spec.name()+"找不到相关资料";
-                    }
-
-                    // C. 未超限，正常执行原始逻辑
-                    return originalExecutor.execute(toolExecutionRequest, memoryId);
-                };
-
-                wrappedTools.put(spec, wrappedExecutor);
-            });
-
-            // 使用包装后的工具集
-            builtInTools = wrappedTools;
-        }
+        //用计数器包装工具,限制无限制调用
+        Map<ToolSpecification, ToolExecutor> builtInTools = wrapTools(agent);
 
         List<ToolProvider> toolProviders = new ArrayList<>();
         List<McpClient> mcpClientsToClose = new ArrayList<>();
@@ -609,8 +577,6 @@ public abstract class AbstractMessageHandler {
                 try {
                     McpTransport transport = new HttpMcpTransport.Builder()
                             .sseUrl(serverConfig.getUrl())
-                            .logRequests(true)
-                            .logResponses(true)
                             .timeout(Duration.ofMinutes(serverConfig.getTimeoutMinutes()))
                             .build();
 
@@ -648,6 +614,45 @@ public abstract class AbstractMessageHandler {
         // 使用 ParallelStreamingAgent 替代 AiServices
         return new ParallelStreamingAgent(model, memory, builtInTools != null ? builtInTools : new HashMap<>(), toolProviders, onClose);
     }
+
+    private Map<ToolSpecification, ToolExecutor> wrapTools(AgentEntity agent) {
+        //获取内置工具
+        Map<ToolSpecification, ToolExecutor> builtInTools = builtInToolRegistry.createToolsForAgent(agent);
+        // 2. 创建本次请求的计数器 (必须是局部变量，确保线程安全，每次请求独立计数)
+        AtomicInteger toolExecutionCounter = new AtomicInteger(0);
+
+        // 3. 包装工具执行器 (如果有内置工具)
+        if (builtInTools != null && !builtInTools.isEmpty()) {
+            // 创建一个新的 Map 来存放包装后的工具
+            Map<ToolSpecification, ToolExecutor> wrappedTools = new HashMap<>();
+
+            builtInTools.forEach((spec, originalExecutor) -> {
+                // 创建包装后的执行器
+                ToolExecutor wrappedExecutor = (toolExecutionRequest, memoryId) -> {
+                    // A. 检查计数
+                    int currentCount = toolExecutionCounter.incrementAndGet();
+
+                    if (currentCount > MAX_TOOL_EXECUTION_COUNT) {
+                        logger.warn("Agent工具调用次数达到上限 ({})，强制停止。", MAX_TOOL_EXECUTION_COUNT);
+                        // B. 拦截并返回系统提示
+                        return "工具调用次数已达上限,用户等待时间过长,立即停止调用工具," +
+                                "并根据目前已有的信息回答用户,如果信息不足以回答就告诉用户" +
+                                "内置工具:"+spec.name()+"找不到相关资料";
+                    }
+
+                    // C. 未超限，正常执行原始逻辑
+                    return originalExecutor.execute(toolExecutionRequest, memoryId);
+                };
+
+                wrappedTools.put(spec, wrappedExecutor);
+            });
+
+            // 使用包装后的工具集
+            builtInTools = wrappedTools;
+        }
+        return builtInTools;
+    }
+
     /** 构建历史消息到内存中 */
     protected void buildHistoryMessage(ChatContext chatContext, MessageWindowChatMemory memory) {
         //摘要
