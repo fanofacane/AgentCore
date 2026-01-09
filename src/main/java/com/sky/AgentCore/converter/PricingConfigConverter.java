@@ -19,7 +19,6 @@ import java.sql.SQLException;
 import java.util.Map;
 
 /** 价格配置JSON字段转换器 专门处理商品价格配置的序列化和反序列化 */
-@Component
 @MappedJdbcTypes(JdbcType.OTHER)
 @MappedTypes({Map.class})
 public class PricingConfigConverter extends BaseTypeHandler<Map<String, Object>> {

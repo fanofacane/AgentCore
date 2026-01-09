@@ -49,6 +49,6 @@ public class SystemPromptGeneratorAppServiceImpl implements SystemPromptGenerato
 
         // 5. 调用系统提示词生成领域服务（只负责核心生成逻辑）
         return systemPrompt.generateSystemPrompt(request.getAgentName(),
-                request.getAgentDescription(), tools, chatModel);
+                request.getAgentDescription(),request.getExistingPrompt(), tools, chatModel);
     }
 }

@@ -15,7 +15,7 @@ import com.sky.AgentCore.dto.rag.model.VectorStoreResult;
 import com.sky.AgentCore.enums.EventType;
 import com.sky.AgentCore.enums.FileProcessingStatusEnum;
 import com.sky.AgentCore.enums.SearchType;
-import com.sky.AgentCore.enums.constant.MetadataConstant;
+import com.sky.AgentCore.constant.MetadataConstant;
 import com.sky.AgentCore.mapper.rag.DocumentUnitMapper;
 import com.sky.AgentCore.mapper.rag.FileDetailMapper;
 import dev.langchain4j.data.document.Metadata;

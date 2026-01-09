@@ -1,4 +1,4 @@
-package com.sky.AgentCore.enums.constant;
+package com.sky.AgentCore.constant;
 
 
 /** 用量数据键值常量 定义BillingContext中usageData字段的标准键名 */

@@ -8,7 +8,7 @@ import com.sky.AgentCore.config.Exceptions.BusinessException;
 import com.sky.AgentCore.config.Exceptions.InsufficientBalanceException;
 import com.sky.AgentCore.config.Exceptions.ParamValidationException;
 import com.sky.AgentCore.dto.model.LLMModelConfig;
-import com.sky.AgentCore.enums.constant.UsageDataKeys;
+import com.sky.AgentCore.constant.UsageDataKeys;
 import com.sky.AgentCore.converter.assembler.AgentAssembler;
 import com.sky.AgentCore.converter.assembler.AgentVersionAssembler;
 import com.sky.AgentCore.dto.agent.*;
@@ -101,12 +101,15 @@ public class AgentAppServiceImpl extends ServiceImpl<AgentMapper, AgentEntity> i
 
     @Override
     public List<AgentDTO> getUserAgents(String userId, SearchAgentsRequest searchAgentsRequest) {
+        // 获取匹配的agentId
         List<AgentEntity> agentList = lambdaQuery().eq(AgentEntity::getUserId, userId)
                 .like(!StringUtils.isEmpty(searchAgentsRequest.getName()),AgentEntity::getName, searchAgentsRequest.getName()).list();
         List<String> list = agentList.stream().map(AgentEntity::getId).toList();
+        if (list.isEmpty()) return Collections.emptyList();
 
+        //根据agentId获取agent配置
         List<AgentWorkspaceEntity> agentWorkspaceEntities = agentWorkspaceService.listAgents(list, userId);
-        // 4. 将 AgentWorkspaceEntity 转成 Map：key=agentId，value=llmModelConfig（核心：快速匹配）
+        // 将 AgentWorkspaceEntity 转成 Map：key=agentId，value=llmModelConfig（核心：快速匹配）
         Map<String, LLMModelConfig> agentIdToLlmConfigMap = new HashMap<>();
         if (!CollectionUtils.isEmpty(agentWorkspaceEntities)) {
             agentIdToLlmConfigMap = agentWorkspaceEntities.stream()
@@ -119,7 +122,7 @@ public class AgentAppServiceImpl extends ServiceImpl<AgentMapper, AgentEntity> i
                             (existing, replacement) -> existing
                     ));
         }
-        // 5. 组装 AgentDTO 列表（核心逻辑）
+        // 组装 AgentDTO 列表（核心逻辑）
         Map<String, LLMModelConfig> finalAgentIdToLlmConfigMap = agentIdToLlmConfigMap;
         List<AgentDTO> agentDTOList = agentList.stream()
                 .map(agentEntity -> {

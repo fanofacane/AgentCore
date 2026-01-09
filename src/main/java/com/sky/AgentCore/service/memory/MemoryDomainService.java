@@ -31,7 +31,7 @@ import java.security.MessageDigest;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.sky.AgentCore.enums.constant.MemoryMetadataConstant.*;
+import static com.sky.AgentCore.constant.MemoryMetadataConstant.*;
 
 
 /** 记忆存取领域服务（与现有向量/模型体系对齐） */
@@ -134,9 +134,8 @@ public class MemoryDomainService {
 
     /** 记忆检索（相似度 + 重要性加权） */
     public List<MemoryResult> searchRelevant(String userId, String query, int topK) {
-        if (!StringUtils.hasText(query)) {
-            return Collections.emptyList();
-        }
+        if (!StringUtils.hasText(query)) return Collections.emptyList();
+
         int k = Math.max(1, Math.min(topK, 16));
 
         // 构造嵌入模型
@@ -153,17 +152,13 @@ public class MemoryDomainService {
 
             EmbeddingSearchResult<TextSegment> result = memoryEmbeddingStore.search(req);
             List<EmbeddingMatch<TextSegment>> matches = result.matches();
-            if (CollectionUtils.isEmpty(matches)) {
-                return Collections.emptyList();
-            }
+            if (CollectionUtils.isEmpty(matches)) return Collections.emptyList();
 
             // 批量获取 itemIds 并过滤 status=1
             List<String> itemIds = matches.stream().map(m -> (String) m.embedded().metadata().toMap().get(ITEM_ID))
                     .filter(Objects::nonNull).collect(Collectors.toList());
 
-            if (itemIds.isEmpty()) {
-                return Collections.emptyList();
-            }
+            if (itemIds.isEmpty()) return Collections.emptyList();
 
             List<MemoryItemEntity> items = memoryItemMapper
                     .selectList(Wrappers.<MemoryItemEntity>lambdaQuery().in(MemoryItemEntity::getId, itemIds));

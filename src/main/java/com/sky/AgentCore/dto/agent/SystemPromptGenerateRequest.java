@@ -13,4 +13,10 @@ public class SystemPromptGenerateRequest {
 
     /** 工具ID列表 */
     private List<String> toolIds;
+
+    /** 已有提示词 */
+    private String existingPrompt;
+
+    /** 模型id */
+    private String modelId;
 }

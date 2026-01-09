@@ -11,7 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sky.AgentCore.dto.rag.DocumentUnitEntity;
 import com.sky.AgentCore.dto.rag.FileDetailEntity;
 import com.sky.AgentCore.enums.FileProcessingStatusEnum;
-import com.sky.AgentCore.enums.constant.MetadataConstant;
+import com.sky.AgentCore.constant.MetadataConstant;
 import com.sky.AgentCore.mapper.rag.DocumentUnitMapper;
 import com.sky.AgentCore.mapper.rag.FileDetailMapper;
 import com.sky.AgentCore.service.file.strategy.FileStorageStrategy;

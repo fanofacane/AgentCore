@@ -14,7 +14,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 /** 模型类型转换器 */
-@Component
 @MappedJdbcTypes(JdbcType.VARCHAR)
 @MappedTypes(ProviderProtocol.class)
 public class ProviderProtocolConverter extends BaseTypeHandler<ProviderProtocol> {

@@ -3,6 +3,7 @@ package com.sky.AgentCore.service.chat.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sky.AgentCore.config.Factory.LLMServiceFactory;
+import com.sky.AgentCore.constant.prompt.PromptConstant;
 import com.sky.AgentCore.dto.agent.AgentChatResponse;
 import com.sky.AgentCore.dto.agent.AgentEntity;
 import com.sky.AgentCore.dto.chat.ChatContext;
@@ -44,18 +45,6 @@ import java.util.concurrent.atomic.AtomicReference;
 @Component("ragMessageHandler")
 public class RagMessageHandler extends AbstractMessageHandler {
 
-    private final static String ragSystemPrompt = """
-            你是一个专业、精准的AI助手。请严格且仅根据提供的<context>来回答用户的问题。请遵循以下规则：
-            1.  ** grounding（信息 grounding）**：你的答案必须完全基于提供的<context>生成。不允许引入外部知识或内部记忆。
-            2.  ** 准确性 **：如果<context>中包含的具体信息能直接回答问题，请直接、准确地引用这些信息。
-            3.  ** 不确定性处理 **：如果<context>中的信息不足以完全回答问题，或者信息与问题部分相关但不完全匹配，请在回答中明确指出信息的局限性。
-            4.  ** 拒绝机制 **：如果<context>中完全没有任何与问题相关的信息，或者问题超出了提供的文档范围，你必须明确且礼貌地告知用户“根据提供的资料，我无法找到相关信息来回答这个问题。” 严禁编造答案（即防止幻觉）。
-            5.  ** 格式与结构 **：在可能的情况下，使用清晰、有条理的方式组织答案（如分点、列表或简短的段落）。如果答案涉及多个方面，请合理地进行分点说明。
-
-            context为：${context}
-
-            请现在开始处理用户的问题。
-                """;
 
     private static final Logger logger = LoggerFactory.getLogger(RagMessageHandler.class);
 
@@ -339,7 +328,7 @@ public class RagMessageHandler extends AbstractMessageHandler {
                 .chatMemoryStore(new InMemoryChatMemoryStore()).build();
 
         // 添加RAG专用系统提示词
-        ragMemory.add(new SystemMessage(ragSystemPrompt.replace("${context}", documentUnitDTOS.toString())));
+        ragMemory.add(new SystemMessage(PromptConstant.ragSystemPrompt.replace("${context}", documentUnitDTOS.toString())));
 
         return buildStreamingAgent(model, ragMemory, toolProvider, agent);
     }

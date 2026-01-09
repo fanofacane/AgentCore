@@ -25,6 +25,7 @@ import com.sky.AgentCore.utils.PasswordUtils;
 import com.sky.AgentCore.utils.VerificationCode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
@@ -142,7 +143,7 @@ public class LoginAppServiceImpl extends ServiceImpl<UserMapper,UserEntity> impl
         if (user==null) throw new BusinessException("用户不存在");
         return JwtUtils.generateToken(user.getId());
     }
-
+    @Transactional
     public void fillRegister(RegisterRequest registerRequest) {
         UserEntity userEntity = new UserEntity();
         BeanUtil.copyProperties(registerRequest,userEntity);

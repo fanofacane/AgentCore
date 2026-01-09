@@ -24,9 +24,10 @@ public class FileStorageConfig {
      * @param generalFileStorageStrategy 通用文件策略
      * @return 策略映射Map */
     @Bean
-    public Map<FileTypeEnum, FileStorageStrategy> fileStorageStrategyMap(RagFileStorageStrategy ragFileStorageStrategy,
-                                                                         AvatarFileStorageStrategy avatarFileStorageStrategy,
-                                                                         GeneralFileStorageStrategy generalFileStorageStrategy) {
+    public Map<FileTypeEnum, FileStorageStrategy> fileStorageStrategyMap(
+            RagFileStorageStrategy ragFileStorageStrategy,
+            AvatarFileStorageStrategy avatarFileStorageStrategy,
+            GeneralFileStorageStrategy generalFileStorageStrategy) {
 
         Map<FileTypeEnum, FileStorageStrategy> strategyMap = new HashMap<>();
 

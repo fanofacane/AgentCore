@@ -6,6 +6,7 @@ import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.MappedJdbcTypes;
 import org.postgresql.util.PGobject;
+import org.springframework.stereotype.Component;
 
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
@@ -53,9 +54,8 @@ public abstract class JsonToStringConverter<T> extends BaseTypeHandler<T> {
     }
 
     protected T parseJson(String json) throws SQLException {
-        if (json == null) {
-            return null;
-        }
+        if (json == null) return null;
+
         return JsonUtils.parseObject(json, type);
     }
 }

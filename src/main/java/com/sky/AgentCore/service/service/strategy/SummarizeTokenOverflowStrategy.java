@@ -2,7 +2,7 @@ package com.sky.AgentCore.service.service.strategy;
 
 
 import com.sky.AgentCore.config.Factory.ProviderRegistry;
-import com.sky.AgentCore.dto.prompt.AgentPromptTemplates;
+import com.sky.AgentCore.constant.prompt.AgentPromptTemplates;
 import com.sky.AgentCore.dto.message.TokenMessage;
 import com.sky.AgentCore.dto.message.TokenProcessResult;
 import com.sky.AgentCore.dto.model.ProviderConfig;

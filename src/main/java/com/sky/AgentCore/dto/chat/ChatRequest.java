@@ -9,8 +9,10 @@ import java.util.List;
 public class ChatRequest {
     /** 消息内容 */
     private String message;
+
     /** 会话ID */
     private String sessionId;
 
+    /** 文件ID */
     private List<String> fileUrls = new ArrayList<>();
 }

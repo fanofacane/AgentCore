@@ -1,4 +1,4 @@
-package com.sky.AgentCore.enums.constant;
+package com.sky.AgentCore.constant;
 
 
 /** 记忆向量的元数据键名常量（与向量存储中的 metadata 对应） */

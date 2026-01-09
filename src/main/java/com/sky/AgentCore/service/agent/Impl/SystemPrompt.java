@@ -1,7 +1,7 @@
 package com.sky.AgentCore.service.agent.Impl;
 
 import com.sky.AgentCore.config.Exceptions.BusinessException;
-import com.sky.AgentCore.dto.prompt.SystemPromptTemplates;
+import com.sky.AgentCore.constant.prompt.SystemPromptTemplates;
 import com.sky.AgentCore.dto.tool.ToolEntity;
 import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.UserMessage;
@@ -16,11 +16,11 @@ import java.util.List;
 public class SystemPrompt {
 
     /** 生成系统提示词 该方法只负责核心的提示词生成逻辑，不涉及其他领域的调用 */
-    public String generateSystemPrompt(String agentName, String agentDescription, List<ToolEntity> tools,
-                                       ChatModel chatModel) {
+    public String generateSystemPrompt(String agentName, String agentDescription,
+                                       String agentPrompt, List<ToolEntity> tools, ChatModel chatModel) {
 
         // 1. 构建生成prompt
-        String generationPrompt = buildGenerationPrompt(agentName, agentDescription, tools);
+        String generationPrompt = buildGenerationPrompt(agentName, agentDescription,agentPrompt,tools);
 
         // 2. 调用LLM生成（LLM客户端由应用层传入）
         SystemMessage systemMessage = new SystemMessage(SystemPromptTemplates.SYSTEM_PROMPT_GENERATION_TEMPLATE);
@@ -33,12 +33,14 @@ public class SystemPrompt {
     }
 
     /** 构建用于生成的提示词 */
-    private String buildGenerationPrompt(String agentName, String agentDescription, List<ToolEntity> tools) {
+    private String buildGenerationPrompt(String agentName, String agentDescription,
+                                         String agentPrompt, List<ToolEntity> tools) {
 
         //  高效地构建助手和工具的概览信息
         StringBuilder overview = new StringBuilder();
         overview.append("名称: ").append(agentName).append("\n");
-        overview.append("描述: ").append(agentDescription).append("\n\n");
+        overview.append("描述: ").append(agentDescription).append("\n");
+        overview.append("用户提供的提示词").append(agentPrompt).append("\n");
         overview.append("可用工具概览:\n");
 
         if (tools != null && !tools.isEmpty()) {

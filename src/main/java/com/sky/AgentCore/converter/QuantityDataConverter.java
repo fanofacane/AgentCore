@@ -19,7 +19,6 @@ import java.sql.SQLException;
 import java.util.Map;
 
 /** 用量数据JSON字段转换器 专门处理用量记录中用量数据的序列化和反序列化 */
-@Component
 @MappedJdbcTypes(JdbcType.OTHER)
 @MappedTypes({Map.class})
 public class QuantityDataConverter extends BaseTypeHandler<Map<String, Object>> {

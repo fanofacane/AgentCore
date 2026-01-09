@@ -96,6 +96,7 @@ public class ConversationAppServiceImpl implements ConversationAppService {
         sessionService.find(sessionId, userId);
 
         List<MessageEntity> conversationMessages = messageService.getConversationMessages(sessionId);
+        System.out.println(conversationMessages);
         return MessageAssembler.toDTOs(conversationMessages);
     }
     /** 对话方法 - 统一入口，支持根据请求类型自动选择处理器

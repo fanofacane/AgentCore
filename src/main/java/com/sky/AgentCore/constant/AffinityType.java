@@ -1,4 +1,4 @@
-package com.sky.AgentCore.enums.constant;
+package com.sky.AgentCore.constant;
 
 public class AffinityType {
 

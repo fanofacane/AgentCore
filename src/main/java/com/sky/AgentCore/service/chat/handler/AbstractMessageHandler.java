@@ -7,8 +7,8 @@ import com.sky.AgentCore.config.Exceptions.InsufficientBalanceException;
 import com.sky.AgentCore.dto.gateway.HighAvailabilityResult;
 import com.sky.AgentCore.dto.memory.MemoryResult;
 import com.sky.AgentCore.dto.trace.ToolCallInfo;
-import com.sky.AgentCore.enums.constant.UsageDataKeys;
-import com.sky.AgentCore.dto.prompt.AgentPromptTemplates;
+import com.sky.AgentCore.constant.UsageDataKeys;
+import com.sky.AgentCore.constant.prompt.AgentPromptTemplates;
 import com.sky.AgentCore.config.Factory.LLMServiceFactory;
 import com.sky.AgentCore.dto.account.AccountEntity;
 import com.sky.AgentCore.dto.agent.AgentChatResponse;
@@ -71,7 +71,7 @@ import java.util.stream.Collectors;
 public abstract class AbstractMessageHandler {
     /** 日志记录器 */
     private static final Logger logger = LoggerFactory.getLogger(AbstractMessageHandler.class);
-    private static final String MEMORY_SECTION_TITLE = "[记忆要点]";
+    private static final String MEMORY_SECTION_TITLE = "[记忆要点]-['我'通常指的是用户]";
     private static final int MEMORY_TOP_K = 5;
     private static final int MAX_TOOL_EXECUTION_COUNT = 4;
 
@@ -539,6 +539,7 @@ public abstract class AbstractMessageHandler {
         if (summary != null) messageDomainService.saveMessage(Collections.singletonList(summary));
 
         List<String> activeMessages = chatContext.getMessageHistory().stream().filter(Objects::nonNull)
+                .filter(msg -> msg.getCreatedAt() != null) // 新增过滤：消息的创建时间不能为空
                 .sorted(Comparator.comparing(MessageEntity::getCreatedAt)).map(MessageEntity::getId)
                 .collect(Collectors.toList());
         contextEntity.setActiveMessages(activeMessages);
@@ -591,7 +592,7 @@ public abstract class AbstractMessageHandler {
                             .build();
                     
                     toolProviders.add(mcpToolProvider);
-
+                    logger.info("加载MCP server: {}",serverConfig.getName());
                 } catch (Exception e) {
                     logger.error("Failed to load MCP server: {}", serverConfig.getName(), e);
                 }
@@ -699,14 +700,12 @@ public abstract class AbstractMessageHandler {
             String title = MEMORY_SECTION_TITLE;
             // 必须有用户消息和 userId 才进行召回
             if (chatContext == null || !StringUtils.isNotBlank(chatContext.getUserId())
-                    || !org.apache.commons.lang3.StringUtils.isNotBlank(chatContext.getUserMessage())) {
-                return "";
-            }
-            var results = memoryDomainService.searchRelevant(chatContext.getUserId(), chatContext.getUserMessage(),
-                    topK);
-            if (results == null || results.isEmpty()) {
-                return "";
-            }
+                    || !StringUtils.isNotBlank(chatContext.getUserMessage())) return "";
+
+            var results = memoryDomainService.searchRelevant(chatContext.getUserId(),
+                    chatContext.getUserMessage(), topK);
+            if (results == null || results.isEmpty()) return "";
+
             StringBuilder sb = new StringBuilder();
             sb.append(title).append('\n');
             int idx = 0;
@@ -733,6 +732,7 @@ public abstract class AbstractMessageHandler {
         messageEntity.setContent(environment.getUserMessage());
         messageEntity.setSessionId(environment.getSessionId());
         messageEntity.setFileUrls(environment.getFileUrls());
+        System.out.println("文件路径"+environment.getFileUrls());
         return messageEntity;
     }
 

@@ -1,7 +1,7 @@
 package com.sky.AgentCore.service.gateway.Impl;
 
 import com.sky.AgentCore.config.Exceptions.BusinessException;
-import com.sky.AgentCore.enums.constant.AffinityType;
+import com.sky.AgentCore.constant.AffinityType;
 import com.sky.AgentCore.dto.config.HighAvailabilityProperties;
 import com.sky.AgentCore.dto.gateway.*;
 import com.sky.AgentCore.dto.model.*;

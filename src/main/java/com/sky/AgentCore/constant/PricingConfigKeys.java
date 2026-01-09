@@ -1,4 +1,4 @@
-package com.sky.AgentCore.enums.constant;
+package com.sky.AgentCore.constant;
 
 
 /** 价格配置键值常量 定义ProductEntity中pricingConfig字段的标准键名 */

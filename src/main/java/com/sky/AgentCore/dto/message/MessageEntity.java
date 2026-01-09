@@ -1,11 +1,10 @@
 package com.sky.AgentCore.dto.message;
 
-
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.sky.AgentCore.converter.ListConverter;
+import com.sky.AgentCore.converter.ListStringConverter;
 import com.sky.AgentCore.converter.MessageTypeConverter;
 import com.sky.AgentCore.converter.RoleConverter;
 import com.sky.AgentCore.dto.common.BaseEntity;
@@ -57,7 +56,8 @@ public class MessageEntity extends BaseEntity {
 
     /** 消息元数据 */
     private String metadata;
-    @TableField(value = "file_urls", typeHandler = ListConverter.class)
+
+    @TableField(value = "file_urls", typeHandler = ListStringConverter.class)
     private List<String> fileUrls = new ArrayList<>();
 
     public boolean isUserMessage() {
