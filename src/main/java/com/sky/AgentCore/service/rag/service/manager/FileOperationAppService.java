@@ -9,6 +9,7 @@ import com.sky.AgentCore.dto.mq.MessagePublisher;
 import com.sky.AgentCore.dto.mq.events.RagDocSyncStorageEvent;
 import com.sky.AgentCore.dto.rag.*;
 import com.sky.AgentCore.enums.EventType;
+import com.sky.AgentCore.service.rag.UserModelConfigResolver;
 import com.sky.AgentCore.service.rag.domain.DocumentUnitDomainService;
 import com.sky.AgentCore.service.rag.domain.FileDetailDomainService;
 import org.dromara.x.file.storage.core.FileStorageService;
@@ -28,6 +29,8 @@ public class FileOperationAppService {
     private DocumentUnitDomainService documentUnitDomainService;
     @Autowired
     private MessagePublisher messagePublisher;
+    @Autowired
+    private UserModelConfigResolver userModelConfigResolver;
     /** 根据文件ID获取文件详细信息
      *
      * @param fileId 文件ID
@@ -118,6 +121,9 @@ public class FileOperationAppService {
             storageMessage.setContent(newContent);
             storageMessage.setIsVector(true);
             storageMessage.setDatasetId(fileEntity.getDataSetId());
+            // 获取用户的嵌入模型配置
+            storageMessage.setEmbeddingModelConfig(
+                    userModelConfigResolver.getUserEmbeddingModelConfig(fileEntity.getUserId()));
 
             // 发送消息
             MessageEnvelope<RagDocSyncStorageMessage> envelope = MessageEnvelope.builder(storageMessage)

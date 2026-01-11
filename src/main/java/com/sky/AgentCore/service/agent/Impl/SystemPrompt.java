@@ -17,10 +17,10 @@ public class SystemPrompt {
 
     /** 生成系统提示词 该方法只负责核心的提示词生成逻辑，不涉及其他领域的调用 */
     public String generateSystemPrompt(String agentName, String agentDescription,
-                                       String agentPrompt, List<ToolEntity> tools, ChatModel chatModel) {
+                                       String agentPrompt, ChatModel chatModel) {
 
         // 1. 构建生成prompt
-        String generationPrompt = buildGenerationPrompt(agentName, agentDescription,agentPrompt,tools);
+        String generationPrompt = buildGenerationPrompt(agentName, agentDescription,agentPrompt);
 
         // 2. 调用LLM生成（LLM客户端由应用层传入）
         SystemMessage systemMessage = new SystemMessage(SystemPromptTemplates.SYSTEM_PROMPT_GENERATION_TEMPLATE);
@@ -34,23 +34,13 @@ public class SystemPrompt {
 
     /** 构建用于生成的提示词 */
     private String buildGenerationPrompt(String agentName, String agentDescription,
-                                         String agentPrompt, List<ToolEntity> tools) {
+                                         String agentPrompt) {
 
         //  高效地构建助手和工具的概览信息
         StringBuilder overview = new StringBuilder();
         overview.append("名称: ").append(agentName).append("\n");
         overview.append("描述: ").append(agentDescription).append("\n");
         overview.append("用户提供的提示词").append(agentPrompt).append("\n");
-        overview.append("可用工具概览:\n");
-
-        if (tools != null && !tools.isEmpty()) {
-            for (ToolEntity tool : tools) {
-                overview.append("- 工具名称: ").append(tool.getName()).append("\n");
-                overview.append("  工具描述: ").append(tool.getDescription()).append("\n");
-            }
-        } else {
-            overview.append("该助手当前没有配置任何特定工具。\n");
-        }
 
         // 3. 将模板和信息组合成最终的、发往LLM的完整指令
         return overview.toString();

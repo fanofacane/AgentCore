@@ -14,7 +14,6 @@ import com.sky.AgentCore.dto.message.TokenMessage;
 import com.sky.AgentCore.dto.message.TokenProcessResult;
 import com.sky.AgentCore.dto.model.*;
 import com.sky.AgentCore.dto.session.SessionEntity;
-import com.sky.AgentCore.dto.tool.UserToolEntity;
 import com.sky.AgentCore.enums.MessageType;
 import com.sky.AgentCore.enums.Role;
 import com.sky.AgentCore.enums.TokenOverflowStrategyEnum;
@@ -30,7 +29,6 @@ import com.sky.AgentCore.service.chat.handler.AbstractMessageHandler;
 import com.sky.AgentCore.service.gateway.HighAvailabilityService;
 import com.sky.AgentCore.service.service.strategy.TokenOverflowConfig;
 import com.sky.AgentCore.service.service.strategy.TokenService;
-import com.sky.AgentCore.service.tool.UserToolService;
 import com.sky.AgentCore.service.user.UserSettingsDomainService;
 import com.sky.AgentCore.service.chat.MessageTransport;
 import com.sky.AgentCore.config.Factory.MessageTransportFactory;
@@ -66,8 +64,6 @@ public class ConversationAppServiceImpl implements ConversationAppService {
     private AgentAppService agentAppService;
     @Autowired
     private AgentWorkspaceService agentWorkspaceService;
-    @Autowired
-    private UserToolService userToolService;
     @Autowired
     private TokenService tokenService;
     @Autowired
@@ -361,11 +357,7 @@ public class ConversationAppServiceImpl implements ConversationAppService {
 
     /** 获取MCP服务器名称列表 */
     private List<String> getMcpServerNames(List<String> toolIds, String userId) {
-        if (toolIds == null || toolIds.isEmpty()) {
             return new ArrayList<>();
-        }
-        List<UserToolEntity> installTool = userToolService.getInstallTool(toolIds, userId);
-        return installTool.stream().map(UserToolEntity::getMcpServerName).collect(Collectors.toList());
     }
     /** 获取Agent并进行验证 */
     private AgentEntity getAgentWithValidation(String agentId, String userId) {
@@ -406,7 +398,7 @@ public class ConversationAppServiceImpl implements ConversationAppService {
         String userDefaultModelId = userSettingsDomainService.getUserDefaultModelId(userId);
         ModelEntity model = llmDomainService.selectModelById(userDefaultModelId);
         List<String> fallbackChain = userSettingsDomainService.getUserFallbackChain(userId);
-        //ProviderEntity provider = llmDomainService.getProvider(model.getProviderId());
+
         // 4. 获取高可用服务商
         HighAvailabilityResult result = highAvailabilityService.selectBestProvider(model, userId, sessionId,
                 fallbackChain);

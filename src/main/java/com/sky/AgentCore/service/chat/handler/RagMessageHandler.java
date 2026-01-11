@@ -82,12 +82,13 @@ public class RagMessageHandler extends AbstractMessageHandler {
             RagRetrievalResult retrievalResult = performRagRetrieval(ragContext, transport, connection);
 
             if (!retrievalResult.hasDocuments()) {
-                transport.sendEndMessage(connection, AgentChatResponse.build("没有搜索到相关文档，可以换一个方式提问", MessageType.TEXT));
+                transport.sendEndMessage(connection, AgentChatResponse.buildEndMessage("没有搜索到相关文档，可以换一个方式提问", MessageType.RAG_RETRIEVAL_END));
+            }else{
+                // 第二阶段：基于检索结果生成回答
+                generateRagAnswer(ragContext, retrievalResult, connection, transport, userEntity, llmEntity, memory,
+                        toolProvider);
             }
 
-            // 第二阶段：基于检索结果生成回答
-            generateRagAnswer(ragContext, retrievalResult, connection, transport, userEntity, llmEntity, memory,
-                    toolProvider);
 
         } catch (Exception e) {
             logger.error("RAG流式处理失败", e);
@@ -120,18 +121,20 @@ public class RagMessageHandler extends AbstractMessageHandler {
                 fullRetrievedDocuments = ragSearchAppService.ragSearch(ragContext.getRagSearchRequest(),
                         ragContext.getUserId());
             }
-
-            // 转换为轻量级DTO用于前端展示
-            List<RagRetrievalDocumentDTO> lightweightDocuments = convertToLightweightDTOs(fullRetrievedDocuments);
-
             // 构建检索结果响应
-            String retrievalMessage = String.format("检索完成，找到 %d 个相关文档", lightweightDocuments.size());
+            String retrievalMessage = String.format("检索完成，找到 %d 个相关文档", fullRetrievedDocuments.size());
             AgentChatResponse retrievalEndResponse = AgentChatResponse.build(retrievalMessage,
                     MessageType.RAG_RETRIEVAL_END);
 
+
+
             // 设置轻量级文档作为payload（优化传输）
             try {
-                retrievalEndResponse.setPayload(objectMapper.writeValueAsString(lightweightDocuments));
+                if (!fullRetrievedDocuments.isEmpty()){
+                    // 转换为轻量级DTO用于前端展示
+                    List<RagRetrievalDocumentDTO> lightweightDocuments = convertToLightweightDTOs(fullRetrievedDocuments);
+                    retrievalEndResponse.setPayload(objectMapper.writeValueAsString(lightweightDocuments));
+                }
             } catch (Exception e) {
                 logger.error("序列化检索文档失败", e);
             }
@@ -191,11 +194,6 @@ public class RagMessageHandler extends AbstractMessageHandler {
         // 记录调用开始时间
         long startTime = System.currentTimeMillis();
 
-        // 思维链状态跟踪
-        final boolean[] thinkingStarted = {false};
-        final boolean[] thinkingEnded = {false};
-        final boolean[] hasThinkingProcess = {false};
-
         // 错误处理
         tokenStream.onError(throwable -> {
             transport.sendMessage(connection,
@@ -209,33 +207,10 @@ public class RagMessageHandler extends AbstractMessageHandler {
 
         // 部分回答处理
         tokenStream.onPartialResponse(fragment -> {
-            // 如果有思考过程但还没结束思考，先结束思考阶段
-            if (hasThinkingProcess[0] && !thinkingEnded[0]) {
-                transport.sendMessage(connection, AgentChatResponse.build("思考完成", MessageType.RAG_THINKING_END));
-                thinkingEnded[0] = true;
-            }
-
-            // 如果没有思考过程且还没开始过思考，先发送思考开始和结束
-            if (!hasThinkingProcess[0] && !thinkingStarted[0]) {
-                transport.sendMessage(connection, AgentChatResponse.build("开始思考...", MessageType.RAG_THINKING_START));
-                transport.sendMessage(connection, AgentChatResponse.build("思考完成", MessageType.RAG_THINKING_END));
-                thinkingStarted[0] = true;
-                thinkingEnded[0] = true;
-            }
 
             messageBuilder.get().append(fragment);
             transport.sendMessage(connection, AgentChatResponse.build(fragment, MessageType.RAG_ANSWER_PROGRESS));
         });
-
-        // todo 思维链处理
-/*        tokenStream.onPartialThinking(reasoning ->{
-            hasThinkingProcess[0] = true;
-            if (!thinkingStarted[0]) {
-                transport.sendMessage(connection, AgentChatResponse.build("开始思考...", MessageType.RAG_THINKING_START));
-                thinkingStarted[0] = true;
-            }
-            transport.sendMessage(connection, AgentChatResponse.build(reasoning.text(), MessageType.RAG_THINKING_PROGRESS));
-        });*/
 
         // 完整响应处理
         tokenStream.onCompleteResponse(chatResponse -> {

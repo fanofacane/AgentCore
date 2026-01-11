@@ -1,14 +1,13 @@
 package com.sky.AgentCore.service.agent.Impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.sky.AgentCore.config.Exceptions.BusinessException;
 import com.sky.AgentCore.converter.assembler.AgentAssembler;
+import com.sky.AgentCore.converter.assembler.AgentVersionAssembler;
 import com.sky.AgentCore.converter.assembler.AgentWorkspaceAssembler;
+import com.sky.AgentCore.dto.agent.*;
 import com.sky.AgentCore.dto.model.LLMModelConfig;
-import com.sky.AgentCore.dto.agent.AgentDTO;
-import com.sky.AgentCore.dto.agent.AgentEntity;
-import com.sky.AgentCore.dto.agent.AgentVersionEntity;
-import com.sky.AgentCore.dto.agent.AgentWorkspaceEntity;
 import com.sky.AgentCore.dto.model.ModelEntity;
 import com.sky.AgentCore.dto.model.ProviderEntity;
 import com.sky.AgentCore.dto.model.UpdateModelConfigRequest;
@@ -21,12 +20,12 @@ import com.sky.AgentCore.service.agent.AgentWorkspaceService;
 import com.sky.AgentCore.service.agent.SessionService;
 import com.sky.AgentCore.service.chat.MessageService;
 import com.sky.AgentCore.service.llm.LLMAppService;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -43,16 +42,56 @@ public class AgentWorkspaceServiceImpl extends ServiceImpl<AgentWorkspaceMapper,
     private MessageService messageService;
     @Override
     public List<AgentDTO> getAgents(String userId) {
+        //获取用户添加到工作区的agent
         List<AgentWorkspaceEntity> list = lambdaQuery()
                 .eq(AgentWorkspaceEntity::getUserId, userId)
                 .select(AgentWorkspaceEntity::getAgentId).list();
+        if (list.isEmpty()) return Collections.emptyList();
+
+        //收集ids
         List<String> agentIds = list.stream()
                 .map(AgentWorkspaceEntity::getAgentId).toList();
 
-        if (agentIds.isEmpty()) return Collections.emptyList();
+        //过滤被禁用的agent
+        LambdaQueryWrapper<AgentEntity> wrap = new LambdaQueryWrapper<>();
+        wrap.in(AgentEntity::getId,agentIds).eq(AgentEntity::getEnabled,true);
+        List<AgentEntity> agentEntities1 = agentMapper.selectList(wrap);
 
-        List<AgentEntity> agentEntities = agentMapper.selectByIds(agentIds);
-        return AgentAssembler.toDTOs(agentEntities);
+        //用户添加的并且启用的agentIds
+        Set<String> AgentIdSet = agentEntities1.stream()
+                .map(AgentEntity::getId)
+                .collect(Collectors.toSet());
+        if (AgentIdSet.isEmpty()) return Collections.emptyList();
+
+        //获取agent的最新版本
+        LambdaQueryWrapper<AgentVersionEntity> wrapper = new LambdaQueryWrapper<>();
+        wrapper.in(AgentVersionEntity::getAgentId,AgentIdSet)
+                .eq(AgentVersionEntity::getPublishStatus,PublishStatus.PUBLISHED.getCode())
+                .orderByDesc(AgentVersionEntity::getPublishedAt);
+        List<AgentVersionEntity> agentVersionEntities = agentVersionMapper.selectList(wrapper);
+        List<AgentVersionEntity> finalResult = agentVersionEntities.stream()
+                // 1. 先按照 agentId 分组，把同一个agent的所有版本分到一组
+                .collect(Collectors.groupingBy(AgentVersionEntity::getAgentId))
+                // 2. 遍历每一个分组，每组内只保留【发布时间最新】的那一条数据
+                .values().stream()
+                .map(groupList -> groupList.stream()
+                        // 按发布时间倒序，取第一个就是最新版本
+                        .max(Comparator.comparing(AgentVersionEntity::getPublishedAt))
+                        .orElse(null)
+                )
+                // 过滤掉空值（防止有分组无数据的极端情况）
+                .filter(Objects::nonNull)
+                // 转成最终List集合
+                .toList();
+        return finalResult.stream().map(entity -> {
+            // 1. 新建一个空的DTO对象
+            AgentDTO dto = new AgentDTO();
+            // 2. 拷贝
+            BeanUtils.copyProperties(entity, dto);
+            dto.setId(entity.getAgentId());
+            // 3. 返回拷贝完成的DTO，流转为DTO的List
+            return dto;
+        }).toList();
     }
     /** 保存agent的模型配置
      * @param agentId agent ID

@@ -64,7 +64,6 @@ public class HybridSearchDomainService {
 
         // 设置默认值
         int finalMaxResults = config.getMaxResults() != null ? Math.min(config.getMaxResults(), 100) : 15;
-        Double finalMinScore = config.getMinScore() != null ? Math.max(0.0, Math.min(config.getMinScore(), 1.0)) : 0.7;
 
         long startTime = System.currentTimeMillis();
 
@@ -81,7 +80,7 @@ public class HybridSearchDomainService {
 
             CompletableFuture<List<VectorStoreResult>> vectorSearchFuture = CompletableFuture
                     .supplyAsync(() -> embeddingDomainService.vectorSearch(config.getDataSetIds(), config.getQuestion(),
-                            finalMaxResults * 2, finalMinScore, false, config.getCandidateMultiplier(),
+                            finalMaxResults * 2, config.getMinScore(), false, config.getCandidateMultiplier(),
                             config.getEmbeddingConfig()));
 
             CompletableFuture<List<VectorStoreResult>> keywordSearchFuture = CompletableFuture

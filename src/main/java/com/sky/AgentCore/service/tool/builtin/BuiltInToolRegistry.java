@@ -97,7 +97,6 @@ public class BuiltInToolRegistry {
 
         synchronized (toolProviders) {
             for (BuiltInToolProvider provider : toolProviders) {
-                System.out.println("进入配置工具");
                 try {
                         Map<ToolSpecification, ToolExecutor> providerTools = provider.createTools(agent);
 

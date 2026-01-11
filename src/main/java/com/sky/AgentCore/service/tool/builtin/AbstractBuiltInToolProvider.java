@@ -43,24 +43,18 @@ public abstract class AbstractBuiltInToolProvider implements BuiltInToolProvider
             logger.info("执行内置工具: {} for agent: {} (user: {})", toolName, agent.getId(), agent.getUserId());
 
             // 参数验证
-            if (!StringUtils.hasText(toolName)) {
-                return formatError("工具名称不能为空");
-            }
+            if (!StringUtils.hasText(toolName)) return formatError("工具名称不能为空");
 
-            if (!StringUtils.hasText(arguments)) {
-                return formatError("工具参数不能为空");
-            }
+
+            if (!StringUtils.hasText(arguments)) return formatError("工具参数不能为空");
 
             // 解析参数
             JsonNode argsNode = parseArguments(arguments);
-            if (argsNode == null) {
-                return formatError("参数解析失败：无效的JSON格式");
-            }
+            if (argsNode == null) return formatError("参数解析失败：无效的JSON格式");
+
 
             // 检查是否支持该工具
-            if (!supportsTools(toolName, agent)) {
-                return formatError("不支持的工具: " + toolName);
-            }
+            if (!supportsTools(toolName, agent)) return formatError("不支持的工具: " + toolName);
 
             // 委托给子类实现
             String result = doExecute(toolName, argsNode, agent, memoryId);

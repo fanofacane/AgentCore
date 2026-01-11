@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -23,8 +24,6 @@ public class SystemPromptGeneratorAppServiceImpl implements SystemPromptGenerato
     private UserSettingsDomainService userSettingsDomainService;
     @Autowired
     private LLMDomainService llmDomainService;
-    @Autowired
-    private ToolService toolService;
     @Autowired
     private LLMServiceFactory llmServiceFactory;
     @Autowired SystemPrompt systemPrompt;
@@ -38,17 +37,11 @@ public class SystemPromptGeneratorAppServiceImpl implements SystemPromptGenerato
         ModelEntity model = llmDomainService.selectModelById(defaultModelId);
         ProviderEntity provider = llmDomainService.getProvider(model.getProviderId());
 
-        // 3. 获取工具详细信息
-        List<ToolEntity> tools = new ArrayList<>();
-        if (request.getToolIds() != null && !request.getToolIds().isEmpty()) {
-            tools = toolService.getByIds(request.getToolIds());
-        }
-
-        // 4. 创建LLM客户端
+        // 3. 创建LLM客户端
         ChatModel chatModel = llmServiceFactory.getStrandClient(provider, model);
 
-        // 5. 调用系统提示词生成领域服务（只负责核心生成逻辑）
+        // 4. 调用系统提示词生成领域服务（只负责核心生成逻辑）
         return systemPrompt.generateSystemPrompt(request.getAgentName(),
-                request.getAgentDescription(),request.getExistingPrompt(), tools, chatModel);
+                request.getAgentDescription(),request.getExistingPrompt(), chatModel);
     }
 }

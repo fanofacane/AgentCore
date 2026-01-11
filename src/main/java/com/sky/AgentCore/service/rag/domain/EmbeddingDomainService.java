@@ -99,7 +99,7 @@ public class EmbeddingDomainService implements MetadataConstant {
 
         // 设置默认值和合理上限
         int finalMaxResults = maxResults != null ? Math.min(maxResults, 100) : 15;
-        double finalMinScore = minScore != null ? Math.max(0.0, Math.min(minScore, 1.0)) : 0.7;
+        double finalMinScore = minScore != null ? Math.max(0.66, Math.min(minScore, 1.0)) : 0.7;
         boolean finalEnableRerank = enableRerank != null ? enableRerank : true;
         int finalCandidateMultiplier = candidateMultiplier != null ? Math.max(1, Math.min(candidateMultiplier, 5)) : 2;
 
@@ -114,25 +114,16 @@ public class EmbeddingDomainService implements MetadataConstant {
                     ? Math.max(finalMaxResults * finalCandidateMultiplier, 30)
                     : finalMaxResults;
 
-            log.debug("开始向量搜索 参数: datasets={}, question='{}', maxResults={}, minScore={}, searchLimit={}", dataSetIds,
+            log.info("开始向量搜索 参数: datasets={}, question='{}', maxResults={}, minScore={}, searchLimit={}", dataSetIds,
                     question, finalMaxResults, finalMinScore, searchLimit);
 
             // 执行向量查询
             final EmbeddingSearchResult<TextSegment> searchResult = embeddingStore.search(EmbeddingSearchRequest
-                    .builder().filter(new IsIn(DATA_SET_ID, dataSetIds)).maxResults(searchLimit).minScore(finalMinScore)
+                    .builder().filter(new IsIn(DATA_SET_ID, dataSetIds)).maxResults(searchLimit).minScore(minScore)
                     .queryEmbedding(Embedding.from(embeddingModel.embed(question).content().vector())).build());
 
             List<EmbeddingMatch<TextSegment>> embeddingMatches = searchResult.matches();
-
-            // 回退搜索（降低阈值）
-            if (embeddingMatches.isEmpty() && finalMinScore > 0.3) {
-                log.info("在最小分数{}下没有找到向量结果，尝试使用较低阈值重试", finalMinScore);
-                final EmbeddingSearchResult<TextSegment> fallbackResult = embeddingStore.search(EmbeddingSearchRequest
-                        .builder().filter(new IsIn(DATA_SET_ID, dataSetIds)).maxResults(searchLimit).minScore(0.3)
-                        .queryEmbedding(Embedding.from(embeddingModel.embed(question).content().vector())).build());
-                embeddingMatches = fallbackResult.matches();
-                log.debug("回退向量搜索找到{}个匹配结果", embeddingMatches.size());
-            }
+            if (embeddingMatches.isEmpty()) return Collections.emptyList();
 
             // 转换为VectorStoreResult格式
             List<VectorStoreResult> results = embeddingMatches.stream().limit(finalMaxResults).map(match -> {

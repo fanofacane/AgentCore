@@ -67,7 +67,7 @@ public class DocumentUnitDomainService {
                 .eq(DocumentUnitEntity::getId, entity.getId()).set(DocumentUnitEntity::getContent, entity.getContent())
                 .set(entity.getIsVector() != null, DocumentUnitEntity::getIsVector, entity.getIsVector());
 
-        documentUnitMapper.checkedUpdate(entity, updateWrapper);
+        documentUnitMapper.checkedUpdate(updateWrapper);
     }
 
     /** 删除语料

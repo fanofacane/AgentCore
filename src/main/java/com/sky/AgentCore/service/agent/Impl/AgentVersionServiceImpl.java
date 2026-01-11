@@ -10,6 +10,7 @@ import com.sky.AgentCore.mapper.agent.AgentVersionMapper;
 import com.sky.AgentCore.service.agent.AgentVersionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.Collections;
 import java.util.List;
@@ -27,8 +28,12 @@ public class AgentVersionServiceImpl extends ServiceImpl<AgentVersionMapper, Age
     @Override
     public List<AgentVersionEntity> getPublishedAgentsByName(AgentEntity entity) {
 
+        String likeName = null;
+        if (StringUtils.hasText(entity.getName())) {
+            likeName = "%" + entity.getName() + "%";
+        }
         List<AgentVersionEntity> list = agentVersionMapper
-                .selectLatestVersionsByNameAndStatus(entity.getName(), PublishStatus.PUBLISHED.getCode());
+                .selectLatestVersionsByNameAndStatus(likeName, PublishStatus.PUBLISHED.getCode());
         return combineAgentsWithVersions(list);
     }
 

@@ -129,7 +129,7 @@ public class AgentVersionEntity extends BaseEntity {
         version.setKnowledgeBaseIds(agent.getKnowledgeBaseIds());
         version.setChangeLog(changeLog);
         version.setUserId(agent.getUserId());
-
+        version.setMultiModal(agent.getMultiModal());
         // 创建时间和发布时间应该相同
         LocalDateTime now = LocalDateTime.now();
         version.setCreatedAt(now);

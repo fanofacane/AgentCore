@@ -39,12 +39,4 @@ public class AgentMessageHandler extends TracingMessageHandler {
         this.agentToolManager = agentToolManager;
     }
 
-    @Override
-    protected ToolProvider provideTools(ChatContext chatContext) {
-        // todo 传递用户ID给工具管理器
-/*        return agentToolManager.createToolProvider(agentToolManager.getAvailableTools(chatContext),
-                chatContext.getAgent().getToolPresetParams(), chatContext.getUserId()); // 新增：传递用户ID*/
-
-        return null;
-    }
 }

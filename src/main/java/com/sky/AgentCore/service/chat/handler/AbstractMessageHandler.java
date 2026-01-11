@@ -6,6 +6,7 @@ import com.sky.AgentCore.config.Exceptions.BusinessException;
 import com.sky.AgentCore.config.Exceptions.InsufficientBalanceException;
 import com.sky.AgentCore.dto.gateway.HighAvailabilityResult;
 import com.sky.AgentCore.dto.memory.MemoryResult;
+import com.sky.AgentCore.dto.tool.ToolEntity;
 import com.sky.AgentCore.dto.trace.ToolCallInfo;
 import com.sky.AgentCore.constant.UsageDataKeys;
 import com.sky.AgentCore.constant.prompt.AgentPromptTemplates;
@@ -28,6 +29,7 @@ import com.sky.AgentCore.enums.Role;
 import com.sky.AgentCore.service.chat.Impl.ChatSessionManager;
 import com.sky.AgentCore.service.memory.MemoryDomainService;
 import com.sky.AgentCore.service.memory.MemoryExtractorService;
+import com.sky.AgentCore.service.tool.ToolService;
 import com.sky.AgentCore.service.tool.builtin.BuiltInToolRegistry;
 import com.sky.AgentCore.service.user.AccountAppService;
 import com.sky.AgentCore.service.agent.Agent;
@@ -87,11 +89,13 @@ public abstract class AbstractMessageHandler {
     protected final ChatSessionManager chatSessionManager;
     @Autowired
     protected McpProperties mcpProperties;
-
     @Autowired
     protected MemoryDomainService memoryDomainService;
     @Autowired
     protected MemoryExtractorService memoryExtractorService;
+    @Autowired
+    protected ToolService toolService;
+
     /** 连接超时时间（毫秒） */
     protected static final long CONNECTION_TIMEOUT = 3000000L;
     public AbstractMessageHandler(LLMServiceFactory llmServiceFactory, MessageService messageDomainService,
@@ -366,13 +370,12 @@ public abstract class AbstractMessageHandler {
 
             smartRenameSession(chatContext);
         });
-
         // 工具执行处理
         tokenStream.onToolExecuted(toolExecution -> {
 
             String message = "执行工具:" + toolExecution.request().name();
             // 直接发送工具调用消息
-            transport.sendMessage(connection, AgentChatResponse.buildEndMessage(message, MessageType.TOOL_CALL));
+            transport.sendMessage(connection, AgentChatResponse.build(message, MessageType.TOOL_CALL));
 
             if (!messageBuilder.get().isEmpty()) {
                 transport.sendMessage(connection, AgentChatResponse.buildEndMessage(MessageType.TEXT));
@@ -381,12 +384,22 @@ public abstract class AbstractMessageHandler {
                         chatContext.getContextEntity());
                 messageBuilder.set(new StringBuilder());
             }
-
+            //保存工具调用消息
             MessageEntity toolMessage = createLlmMessage(chatContext);
             toolMessage.setMessageType(MessageType.TOOL_CALL);
             toolMessage.setContent(message);
             messageDomainService.saveMessageAndUpdateContext(Collections.singletonList(toolMessage),
                     chatContext.getContextEntity());
+
+            String toolResult = toolExecution.result();
+            if (toolResult != null) {
+                streamToolResult(connection, transport, toolResult);
+                MessageEntity toolResultMessage = createLlmMessage(chatContext);
+                toolResultMessage.setMessageType(MessageType.TOOL_RESULT);
+                toolResultMessage.setContent(toolResult);
+                messageDomainService.saveMessageAndUpdateContext(Collections.singletonList(toolResultMessage),
+                        chatContext.getContextEntity());
+            }
 
             // 调用工具调用完成钩子
             ToolCallInfo toolCallInfo = buildToolCallInfo(toolExecution);
@@ -395,6 +408,21 @@ public abstract class AbstractMessageHandler {
 
         // 启动流处理
         tokenStream.start();
+    }
+    
+    private <T> void streamToolResult(T connection, MessageTransport<T> transport, String result) {
+        final int CHUNK_SIZE = 50;
+        if (result == null || result.isEmpty()) {
+            transport.sendMessage(connection, AgentChatResponse.build("", MessageType.TOOL_RESULT));
+            return;
+        }
+        int len = result.length();
+        for (int i = 0; i < len; i += CHUNK_SIZE) {
+            int end = Math.min(i + CHUNK_SIZE, len);
+            String chunk = result.substring(i, end);
+            transport.sendMessage(connection, AgentChatResponse.build(chunk, MessageType.TOOL_RESULT_CHUNK));
+        }
+        //transport.sendMessage(connection, AgentChatResponse.build(r, MessageType.TOOL_RESULT));
     }
 
     /** 构建工具调用信息
@@ -565,20 +593,23 @@ public abstract class AbstractMessageHandler {
                                         ToolProvider toolProvider, AgentEntity agent) {
 
         //用计数器包装工具,限制无限制调用
-        Map<ToolSpecification, ToolExecutor> builtInTools = wrapTools(agent);
+        //Map<ToolSpecification, ToolExecutor> builtInTools = wrapTools(agent);
+
+        //获取内置工具
+        Map<ToolSpecification, ToolExecutor> builtInTools = builtInToolRegistry.createToolsForAgent(agent);
 
         List<ToolProvider> toolProviders = new ArrayList<>();
         List<McpClient> mcpClientsToClose = new ArrayList<>();
 
         if (toolProvider != null) toolProviders.add(toolProvider);
-
+        List<ToolEntity> tools = toolService.getAllEnableTools(agent.getToolIds());
         // 从配置文件加载 MCP 服务
-        if (mcpProperties != null && mcpProperties.getServers() != null) {
-            for (McpProperties.McpServerConfig serverConfig : mcpProperties.getServers()) {
+        if (tools != null) {
+            for (ToolEntity tool : tools) {
                 try {
                     McpTransport transport = new HttpMcpTransport.Builder()
-                            .sseUrl(serverConfig.getUrl())
-                            .timeout(Duration.ofMinutes(serverConfig.getTimeoutMinutes()))
+                            .sseUrl(tool.getUploadUrl())
+                            .timeout(Duration.ofMinutes(5))
                             .build();
 
                     McpClient mcpClient = new DefaultMcpClient.Builder()
@@ -592,13 +623,13 @@ public abstract class AbstractMessageHandler {
                             .build();
                     
                     toolProviders.add(mcpToolProvider);
-                    logger.info("加载MCP server: {}",serverConfig.getName());
+                    logger.info("加载MCP server: {}",tool.getMcpServerName());
                 } catch (Exception e) {
-                    logger.error("Failed to load MCP server: {}", serverConfig.getName(), e);
+                    logger.error("Failed to load MCP server: {}", tool.getMcpServerName(), e);
                 }
             }
         }
-        logger.info("Agent:"+agent.getId()+"创建工具个数{}",toolProviders.size());
+        logger.info("Agent:"+agent.getId()+"创建外部工具个数{}",toolProviders.size());
 
         // 定义关闭回调
         Runnable onClose = () -> {
@@ -676,8 +707,14 @@ public abstract class AbstractMessageHandler {
         for (MessageEntity messageEntity : messageHistory) {
             if (messageEntity.isUserMessage()) {
                 List<String> fileUrls = messageEntity.getFileUrls();
-                for (String fileUrl : fileUrls) {
-                    memory.add(UserMessage.from(ImageContent.from(fileUrl)));
+                if (fileUrls != null && !fileUrls.isEmpty()) {
+                    for (String fileUrl : fileUrls) {
+                        if (isImageUrl(fileUrl)) {
+                            memory.add(UserMessage.from(ImageContent.from(fileUrl)));
+                        } else {
+                            logger.debug("跳过非图片URL: {}", fileUrl);
+                        }
+                    }
                 }
                 if (!StringUtils.isEmpty(messageEntity.getContent())) {
                     memory.add(new UserMessage(messageEntity.getContent()));
@@ -691,6 +728,24 @@ public abstract class AbstractMessageHandler {
         }
 
         // 将摘要消息插入到 message 第一条
+    }
+    
+    private boolean isImageUrl(String url) {
+        if (url == null || url.isBlank()) {
+            return false;
+        }
+        String lower = url.toLowerCase(Locale.ROOT).trim();
+        if (lower.startsWith("data:image/")) {
+            return true;
+        }
+        int qIndex = lower.indexOf('?');
+        String path = qIndex >= 0 ? lower.substring(0, qIndex) : lower;
+        return path.endsWith(".jpg")
+                || path.endsWith(".jpeg")
+                || path.endsWith(".png")
+                || path.endsWith(".gif")
+                || path.endsWith(".bmp")
+                || path.endsWith(".webp");
     }
 
     /** 构造“记忆要点”片段，合入系统提示词尾部 */

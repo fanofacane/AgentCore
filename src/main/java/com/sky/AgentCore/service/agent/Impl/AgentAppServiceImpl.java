@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.sky.AgentCore.config.Exceptions.BusinessException;
 import com.sky.AgentCore.config.Exceptions.InsufficientBalanceException;
 import com.sky.AgentCore.config.Exceptions.ParamValidationException;
+import com.sky.AgentCore.dto.memory.AgentExecutionDetailEntity;
 import com.sky.AgentCore.dto.model.LLMModelConfig;
 import com.sky.AgentCore.constant.UsageDataKeys;
 import com.sky.AgentCore.converter.assembler.AgentAssembler;
@@ -15,18 +16,20 @@ import com.sky.AgentCore.dto.agent.*;
 import com.sky.AgentCore.dto.billing.RuleContext;
 import com.sky.AgentCore.dto.rag.RagVersionEntity;
 import com.sky.AgentCore.dto.rag.UserRagEntity;
-import com.sky.AgentCore.dto.tool.UserToolEntity;
+import com.sky.AgentCore.dto.session.SessionEntity;
+import com.sky.AgentCore.dto.trace.AgentExecutionSummaryEntity;
 import com.sky.AgentCore.enums.BillingType;
 import com.sky.AgentCore.enums.PublishStatus;
 import com.sky.AgentCore.enums.RagPublishStatus;
-import com.sky.AgentCore.mapper.agent.AgentMapper;
-import com.sky.AgentCore.mapper.agent.AgentVersionMapper;
+import com.sky.AgentCore.mapper.agent.*;
+import com.sky.AgentCore.mapper.session.SessionMapper;
 import com.sky.AgentCore.service.agent.AgentAppService;
 import com.sky.AgentCore.service.agent.AgentVersionService;
 import com.sky.AgentCore.service.agent.AgentWorkspaceService;
 import com.sky.AgentCore.service.billing.BillingService;
 import com.sky.AgentCore.service.rag.domain.RagVersionDomainService;
 import com.sky.AgentCore.service.rag.UserRagService;
+import com.sky.AgentCore.service.task.ScheduledTaskExecutionService;
 import com.sky.AgentCore.service.tool.ToolService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,13 +53,21 @@ public class AgentAppServiceImpl extends ServiceImpl<AgentMapper, AgentEntity> i
     @Autowired
     private AgentVersionService agentVersionService;
     @Autowired
-    private ToolService toolService;
-    @Autowired
     private RagVersionDomainService ragVersionService;
     @Autowired
     private UserRagService userRagService;
     @Autowired
     private AgentVersionMapper agentVersionMapper;
+    @Autowired
+    private ScheduledTaskExecutionService scheduledTaskExecutionService;
+    @Autowired
+    private AgentExecutionSummaryMapper summaryMapper;
+    @Autowired
+    private AgentExecutionDetailMapper detailMapper;
+    @Autowired
+    private SessionMapper sessionMapper;
+    @Autowired
+    private AgentWidgetMapper agentWidgetMapper;
 
     /** 创建新Agent */
     @Override
@@ -189,14 +200,34 @@ public class AgentAppServiceImpl extends ServiceImpl<AgentMapper, AgentEntity> i
     @Override
     @Transactional
     public void deleteAgent(String agentId, String userId) {
-        // 先删除Agent关联的定时任务（包括取消延迟队列中的任务）TODO
-        //scheduledTaskExecutionService.deleteTasksByAgentId(agentId, userId);
-        // 再删除Agent本身
+        // 先删除Agent关联的定时任务（包括取消延迟队列中的任务）
+        scheduledTaskExecutionService.deleteTasksByAgentId(agentId, userId);
+        // 删除Agent本身
         boolean success = remove(new LambdaQueryWrapper<AgentEntity>().eq(AgentEntity::getId, agentId).eq(AgentEntity::getUserId, userId));
         if (!success) throw new BusinessException("Agent删除失败");
-        // 最后删除agent版本、工作区
+        // 删除agent版本、工作区
         agentVersionService.lambdaUpdate().eq(AgentVersionEntity::getAgentId, agentId).remove();
         agentWorkspaceService.lambdaUpdate().eq(AgentWorkspaceEntity::getAgentId, agentId).remove();
+        //删除小组件
+        LambdaQueryWrapper<AgentWidgetEntity> wrap = new LambdaQueryWrapper<>();
+        wrap.eq(AgentWidgetEntity::getAgentId,agentId);
+        agentWidgetMapper.checkedDelete(wrap);
+        // 获取会话
+        LambdaQueryWrapper<SessionEntity> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(SessionEntity::getAgentId,agentId).eq(SessionEntity::getUserId,userId);
+        List<SessionEntity> sessionEntities = sessionMapper.selectList(wrapper);
+        List<String> sessionIds = sessionEntities.stream().map(SessionEntity::getId).toList();
+        // 删除链路追踪相关内容
+        LambdaQueryWrapper<AgentExecutionDetailEntity> wrapper1 = new LambdaQueryWrapper<>();
+        wrapper1.in(AgentExecutionDetailEntity::getSessionId,sessionIds);
+        detailMapper.checkedDelete(wrapper1);
+        LambdaQueryWrapper<AgentExecutionSummaryEntity> wrapper2 = new LambdaQueryWrapper<>();
+        wrapper2.in(AgentExecutionSummaryEntity::getSessionId,sessionIds);
+        summaryMapper.checkedDelete(wrapper2);
+        //最后删除会话本身
+        LambdaQueryWrapper<SessionEntity> wrapper3 = new LambdaQueryWrapper<>();
+        wrapper3.in(SessionEntity::getId,sessionIds);
+        sessionMapper.checkedDelete(wrapper3);
     }
 
     @Override
@@ -263,7 +294,7 @@ public class AgentAppServiceImpl extends ServiceImpl<AgentMapper, AgentEntity> i
 
         // 获取当前Agent
         AgentEntity agent = lambdaQuery().eq(AgentEntity::getId, agentId).eq(AgentEntity::getUserId, userId).one();
-
+        System.out.println("是否支持多模态"+agent.getMultiModal());
         if (agent == null) throw new BusinessException("Agent不存在"+agentId);
         // 获取最新版本，检查版本号大小
         AgentVersionEntity agentVersionEntity = agentVersionService.getLatestAgentVersion(agentId);
@@ -423,12 +454,6 @@ public class AgentAppServiceImpl extends ServiceImpl<AgentMapper, AgentEntity> i
      * @param userId 当前用户ID
      * @throws BusinessException 当权限验证失败时抛出异常 */
     private void validateAgentDependencies(AgentVersionEntity versionEntity, String userId) {
-        // 验证工具权限
-        if (versionEntity.getToolIds() != null && !versionEntity.getToolIds().isEmpty()) {
-            for (String toolId : versionEntity.getToolIds()) {
-                validateToolPermission(toolId, userId);
-            }
-        }
 
         // 验证知识库权限
         if (versionEntity.getKnowledgeBaseIds() != null && !versionEntity.getKnowledgeBaseIds().isEmpty()) {
@@ -490,25 +515,7 @@ public class AgentAppServiceImpl extends ServiceImpl<AgentMapper, AgentEntity> i
         return knowledgeBaseId.length() > 8 ? knowledgeBaseId.substring(0, 8) + "..." : knowledgeBaseId;
     }
 
-    /** 验证工具权限
-     *
-     * @param toolId 工具ID
-     * @param userId 用户ID
-     * @throws BusinessException 当用户未安装该工具或工具版本未公开时抛出异常 */
-    private void validateToolPermission(String toolId, String userId) {
-        UserToolEntity userTool = toolService.findByToolIdAndUserId(toolId, userId);
-        if (userTool == null) {
-            // 尝试获取工具名称用于友好提示
-            String toolName = getToolDisplayName(toolId);
-            throw new BusinessException("您尚未安装工具「" + toolName + "」，无法发布使用该工具的Agent");
-        }
 
-        // 检查用户安装的工具版本是否为公开版本（创建者可以使用私有版本）
-        if (!userId.equals(userTool.getUserId()) && !Boolean.TRUE.equals(userTool.getPublicState())) {
-            throw new BusinessException(
-                    "工具「" + userTool.getName() + " v" + userTool.getVersion() + "」的版本未公开，无法发布使用该工具的Agent");
-        }
-    }
 
     /** 获取工具显示名称（用于错误提示）
      *

@@ -5,17 +5,14 @@ import com.sky.AgentCore.converter.assembler.AgentExecutionTraceAssembler;
 import com.sky.AgentCore.dto.agent.AgentEntity;
 import com.sky.AgentCore.dto.agent.AgentVersionEntity;
 import com.sky.AgentCore.dto.memory.AgentExecutionDetailEntity;
-import com.sky.AgentCore.dto.session.SessionEntity;
 import com.sky.AgentCore.dto.trace.*;
 import com.sky.AgentCore.service.agent.AgentAppService;
-import com.sky.AgentCore.service.agent.SessionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.AbstractMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -30,8 +27,6 @@ public class AgentExecutionTraceAppService {
     private AgentExecutionTraceDomainService traceDomainService;
     @Autowired
     private AgentAppService agentService;
-    @Autowired
-    private SessionService sessionService;
     
     /** 获取完整的执行链路信息
      *
@@ -256,56 +251,21 @@ public class AgentExecutionTraceAppService {
      * @param request 查询请求
      * @param userId 用户ID
      * @return 会话统计信息列表 */
-    public List<SessionTraceStatisticsDTO> getAgentSessionTraceStatistics(String agentId,
-                                                                          SessionTraceListRequest request, String userId) {
-        // 获取领域统计数据
-        List<AgentExecutionTraceDomainService.SessionStatistics> sessionStatistics = traceDomainService
-                .getAgentSessionStatistics(agentId, userId);
-
-        if (sessionStatistics.isEmpty()) {
-            return List.of();
+    public Page<SessionTraceStatisticsDTO> getAgentSessionTraceStatistics(String agentId, SessionTraceListRequest request,
+                                                                         String userId) {
+        Page<SessionTraceStatisticsDTO> page = traceDomainService.getAgentSessionStatisticsPage(agentId, userId,
+                request);
+        if (page == null || page.getRecords() == null || page.getRecords().isEmpty()) {
+            return page;
         }
 
-        // 获取Agent名称
         String agentName = getAgentName(agentId, userId);
-
-        // 提取所有sessionId，批量获取会话信息
-        List<String> sessionIds = sessionStatistics.stream()
-                .map(AgentExecutionTraceDomainService.SessionStatistics::getSessionId).collect(Collectors.toList());
-
-        // 批量获取会话标题映射（容错处理）
-        Map<String, SessionEntity> sessionMap = getSessionMap(sessionIds, userId);
-
-        // 转换为DTO并填充会话信息
-        return sessionStatistics.stream().map(stats -> {
-            SessionTraceStatisticsDTO dto = new SessionTraceStatisticsDTO();
-            dto.setSessionId(stats.getSessionId());
-            dto.setAgentId(stats.getAgentId());
-            dto.setAgentName(agentName);
-
-            // 设置会话标题和创建时间
-            SessionEntity session = sessionMap.get(stats.getSessionId());
-            if (session != null) {
-                dto.setSessionTitle(session.getTitle());
-                dto.setSessionCreatedTime(session.getCreatedAt());
-            } else {
-                dto.setSessionTitle("未知会话");
-                dto.setIsArchived(false);
+        for (SessionTraceStatisticsDTO dto : page.getRecords()) {
+            if (dto != null) {
+                dto.setAgentName(agentName);
             }
-
-            dto.setTotalExecutions(stats.getTotalExecutions());
-            dto.setSuccessfulExecutions(stats.getSuccessfulExecutions());
-            dto.setFailedExecutions(stats.getFailedExecutions());
-            dto.setSuccessRate(stats.getSuccessRate());
-            dto.setTotalTokens(stats.getTotalTokens());
-            dto.setTotalInputTokens(stats.getTotalInputTokens());
-            dto.setTotalOutputTokens(stats.getTotalOutputTokens());
-            dto.setTotalToolCalls(stats.getTotalToolCalls());
-            dto.setTotalExecutionTime(stats.getTotalExecutionTime());
-            dto.setLastExecutionTime(stats.getLastExecutionTime());
-            dto.setLastExecutionSuccess(stats.getLastExecutionSuccess());
-            return dto;
-        }).collect(Collectors.toList());
+        }
+        return page;
     }
 
     /** 批量获取Agent名称映射 */
@@ -320,7 +280,7 @@ public class AgentExecutionTraceAppService {
             // 1. 先尝试通过用户权限获取Agent（用户自己的Agent）
             AgentEntity agent = agentService.getAgent1(agentId, userId);
             logger.debug("成功获取用户 {} 自己的Agent {}，名称: {}", userId, agentId, agent.getName());
-            return agent != null ? agent.getName() : "未知助理";
+            return agent.getName();
         } catch (Exception e) {
             logger.debug("无法通过用户权限获取Agent {}，尝试其他查询方式: {}", agentId, e.getMessage());
 
@@ -351,30 +311,5 @@ public class AgentExecutionTraceAppService {
         }
     }
 
-    /** 批量获取会话映射 */
-    private Map<String, SessionEntity> getSessionMap(List<String> sessionIds, String userId) {
-        // 1. 先过滤掉 null 值，再收集为 Map，避免 toMap 遇到 null 抛 NPE
-        return sessionIds.stream()
-                // 先映射为键值对（保留非 null 的值）
-                .map(sessionId -> new AbstractMap.SimpleEntry<>(sessionId, getSession(sessionId, userId)))
-                // 过滤掉值为 null 的条目
-                .filter(entry -> entry.getValue() != null)
-                // 收集为 Map（此时键值均非 null，安全）
-                .collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        Map.Entry::getValue,
-                        // 额外处理：避免重复 key 导致的 IllegalStateException（可选但建议加）
-                        (existing, replacement) -> existing
-                ));
-    }
-
-    /** 获取单个会话信息（容错处理） */
-    private SessionEntity getSession(String sessionId, String userId) {
-        try {
-            return sessionService.getSession(sessionId, userId);
-        } catch (Exception e) {
-            // 如果会话不存在或无权限访问，返回null
-            return null;
-        }
-    }
+    
 }

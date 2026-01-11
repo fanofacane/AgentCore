@@ -25,10 +25,10 @@ public class RagSearchRequest {
     @Max(value = 100, message = "最大返回结果数量不能超过100")
     private Integer maxResults = 15;
 
-    /** 最小相似度阈值，默认0.7 */
+    /** 最小相似度阈值，默认0.64 */
     @DecimalMin(value = "0.0", message = "相似度阈值不能小于0")
     @DecimalMax(value = "1.0", message = "相似度阈值不能大于1")
-    private Double minScore = 0.7;
+    private Double minScore = 0.64;
 
     /** 是否启用重排序，默认true */
     private Boolean enableRerank = true;
@@ -58,11 +58,11 @@ public class RagSearchRequest {
 
         // 短查询（<10字符）提高阈值
         if (queryLength < 10) {
-            adjustedScore = Math.min(minScore + 0.05, 1.0);
+            adjustedScore = Math.min(minScore + 0.02, 1.0);
         }
         // 长查询（>50字符）降低阈值
         else if (queryLength > 50) {
-            adjustedScore = Math.max(minScore - 0.05, 0.0);
+            adjustedScore = Math.max(minScore - 0.02, 0.0);
         }
 
         return adjustedScore;

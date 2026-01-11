@@ -17,10 +17,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.sky.AgentCore.constant.ToolName.RAG_SEARCH;
+
+
 /** RAG内置工具提供者
  *
  * 负责创建和管理Agent的RAG工具，支持多知识库集成 使用融合架构：工具定义、规范创建、执行逻辑都在这一个类中 */
-@BuiltInTool(name = "rag_search", description = "知识库检索工具，支持在用户配置的知识库中进行智能搜索", priority = 10)
+@BuiltInTool(name = RAG_SEARCH, description = "知识库检索工具，支持在用户配置的知识库中进行智能搜索", priority = 10)
 public class RagBuiltInToolProvider extends AbstractBuiltInToolProvider {
 
     private static final Logger log = LoggerFactory.getLogger(RagBuiltInToolProvider.class);
@@ -39,9 +42,7 @@ public class RagBuiltInToolProvider extends AbstractBuiltInToolProvider {
         List<String> knowledgeBaseIds = agent.getKnowledgeBaseIds();
 
         // 如果没有配置知识库，返回空列表
-        if (knowledgeBaseIds == null || knowledgeBaseIds.isEmpty()) {
-            return Collections.emptyList();
-        }
+        if (knowledgeBaseIds == null || knowledgeBaseIds.isEmpty()) return Collections.emptyList();
 
         try {
             // 验证知识库是否存在且用户有权限访问
@@ -61,10 +62,10 @@ public class RagBuiltInToolProvider extends AbstractBuiltInToolProvider {
                 description += "。可用的知识库包括：" + String.join("、", knowledgeBaseNames);
             }
 
-            ToolDefinition ragTool = ToolDefinition.builder().name("rag_search").description(description)
+            ToolDefinition ragTool = ToolDefinition.builder().name(RAG_SEARCH).description(description)
                     .addRequiredStringParameter("query", "搜索查询内容，描述用户想要了解的问题或关键词")
                     .addIntegerParameter("maxResults", "最大返回结果数量，默认为10，范围1-20")
-                    .addNumberParameter("minScore", "最小相似度阈值，默认为0.5，范围0.0-1.0，值越高结果越精确")
+                    .addNumberParameter("minScore", "最小相似度阈值，默认为0.7，范围0-1.0，值越高结果越精确")
                     .addBooleanParameter("enableRerank", "是否启用重排序优化，默认为true，可提高搜索结果质量").build();
 
             log.info("为Agent {} 定义RAG工具成功，关联知识库数量: {}", agent.getId(), validKnowledgeBaseIds.size());
@@ -79,7 +80,7 @@ public class RagBuiltInToolProvider extends AbstractBuiltInToolProvider {
     /** 实现融合架构：执行RAG工具逻辑 替代原来的RagToolExecutor类 */
     @Override
     protected String doExecute(String toolName, JsonNode arguments, AgentEntity agent, Object memoryId) {
-        if (!"rag_search".equals(toolName)) return formatError("未知工具: " + toolName);
+        if (!RAG_SEARCH.equals(toolName)) return formatError("未知工具: " + toolName);
 
         try {
             log.info("执行RAG工具搜索，agent: {}, user: {}, memoryId: {}", agent.getId(), agent.getUserId(), memoryId);
@@ -161,8 +162,8 @@ public class RagBuiltInToolProvider extends AbstractBuiltInToolProvider {
             if (StringUtils.hasText(doc.getContent())) {
                 String content = doc.getContent().trim();
                 // 限制单个文档片段的长度，避免响应过长
-                if (content.length() > 1000) {
-                    content = content.substring(0, 1000) + "...";
+                if (content.length() > 500) {
+                    content = content.substring(0, 500) + "...";
                 }
                 result.append(content).append("\n");
             }

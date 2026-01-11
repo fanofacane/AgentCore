@@ -171,7 +171,7 @@ public class LoginAppServiceImpl extends ServiceImpl<UserMapper,UserEntity> impl
                 singleModelMap.get(ModelType.EMBEDDING).getId()
         );
         userSettingsEntity.setSettingConfig(userSettingsConfig);
-        userSettingMapper.insert(userSettingsEntity);
+        userSettingMapper.checkInsert(userSettingsEntity);
     }
     public void checkAccountExists(String email,String phone) {
         if (lambdaQuery().eq(UserEntity::getEmail, email).or().eq(UserEntity::getPhone, phone).count() > 0) {

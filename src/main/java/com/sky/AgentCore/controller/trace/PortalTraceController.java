@@ -99,12 +99,12 @@ public class PortalTraceController {
      *
      * @param agentId Agent ID
      * @param request 查询条件
-     * @return 会话统计信息列表 */
+     * @return 会话统计信息分页数据 */
     @GetMapping("/agents/{agentId}/sessions")
-    public Result<List<SessionTraceStatisticsDTO>> getAgentSessionTraceStatistics(@PathVariable String agentId,
+    public Result<Page<SessionTraceStatisticsDTO>> getAgentSessionTraceStatistics(@PathVariable String agentId,
                                                                                   SessionTraceListRequest request) {
         String userId = UserContext.getCurrentUserId();
-        List<SessionTraceStatisticsDTO> result = traceAppService.getAgentSessionTraceStatistics(agentId, request,
+        Page<SessionTraceStatisticsDTO> result = traceAppService.getAgentSessionTraceStatistics(agentId, request,
                 userId);
         return Result.success(result);
     }

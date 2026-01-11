@@ -68,7 +68,7 @@ public class TXTRagDocDocumentProcessing extends AbstractDocumentProcessingStrat
             Document document = parser.parse(inputStream);
 
             final DocumentBySentenceSplitter documentByCharacterSplitter =
-                    new DocumentBySentenceSplitter(500, 0);
+                    new DocumentBySentenceSplitter(300, 0);
             final List<TextSegment> split = documentByCharacterSplitter.split(document);
 
             int segmentCount = split.size();
@@ -144,12 +144,13 @@ public class TXTRagDocDocumentProcessing extends AbstractDocumentProcessingStrat
             document = parser.parse(inputStream);
 
             final DocumentBySentenceSplitter documentByCharacterSplitter =
-                    new DocumentBySentenceSplitter(500, 0);
+                    new DocumentBySentenceSplitter(300, 0);
             final List<TextSegment> split = documentByCharacterSplitter.split(document);
 
             Steam.of(split).forEachIdx((textSegment, index) -> {
                 //拼接文件名
-                final String text = finalFileNamePrefix + textSegment.text();
+                String segmentText = textSegment.text() == null ? "" : textSegment.text();
+                final String text = finalFileNamePrefix + segmentText;
                 ocrData.put(index, text.trim());
 
             });

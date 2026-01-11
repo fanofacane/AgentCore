@@ -40,7 +40,6 @@ public class OpenAIProvider implements Provider {
                 .temperature(llmModelConfig.getTemperature())
                 .modelName(providerConfig.getModel())
                 .timeout(Duration.ofMinutes(5))
-                .parallelToolCalls(true)
                 .build();
     }
 }

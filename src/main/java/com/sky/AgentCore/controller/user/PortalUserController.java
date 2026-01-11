@@ -58,6 +58,7 @@ public class PortalUserController {
     public Result<UserSettingsDTO> getUserSettings() {
         String userId = UserContext.getCurrentUserId();
         UserSettingsDTO settings = userSettingsService.getUserSettings(userId);
+        System.out.println("用户设置"+settings);
         return Result.success(settings);
     }
     /** 更新用户设置

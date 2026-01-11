@@ -7,6 +7,10 @@ public enum MessageType {
 
     /** 工具调用消息 */
     TOOL_CALL,
+    /** 工具结果（完整） */
+    TOOL_RESULT,
+    /** 工具结果分片（流式分段） */
+    TOOL_RESULT_CHUNK,
 
     /** 任务执行消息 */
     TASK_EXEC,
