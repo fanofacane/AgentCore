@@ -220,6 +220,17 @@ public class UserRagDomainService {
         return userRagMapper.exists(wrapper);
     }
 
+    public boolean isInstalledOrOwned(String userId, String ragVersionId) {
+        if (StringUtils.isBlank(userId) || StringUtils.isBlank(ragVersionId)) {
+            return false;
+        }
+        RagVersionEntity ragVersion = ragVersionDomainService.getRagVersion(ragVersionId);
+        if (ragVersion != null && userId.equals(ragVersion.getUserId())) {
+            return true;
+        }
+        return isRagInstalled(userId, ragVersionId);
+    }
+
     /** 检查RAG是否已安装（按原始RAG ID检查）
      *
      * @param userId 用户ID
@@ -316,7 +327,7 @@ public class UserRagDomainService {
     public boolean canUseRag(String userId, String ragId, String ragVersionId) {
         if (StringUtils.isNotBlank(ragVersionId)) {
             // 检查是否已安装该版本
-            return isRagInstalled(userId, ragVersionId);
+            return isInstalledOrOwned(userId, ragVersionId);
         } else if (StringUtils.isNotBlank(ragId)) {
             // 检查是否为创建者（需要调用其他服务）
             // 这里假设创建者总是有权限

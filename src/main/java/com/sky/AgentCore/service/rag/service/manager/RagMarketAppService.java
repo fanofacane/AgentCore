@@ -59,7 +59,7 @@ public class RagMarketAppService {
 
             // 设置是否已安装
             if (StringUtils.isNotBlank(currentUserId)) {
-                dto.setIsInstalled(userRagDomainService.isRagInstalled(currentUserId, dto.getId()));
+                dto.setIsInstalled(userRagDomainService.isInstalledOrOwned(currentUserId, dto.getId()));
             }
         }
 

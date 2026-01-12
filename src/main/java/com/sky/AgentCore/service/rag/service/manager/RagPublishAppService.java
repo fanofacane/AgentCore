@@ -37,12 +37,15 @@ public class RagPublishAppService {
         RagVersionEntity ragVersion = ragVersionDomainService.createRagVersionSnapshot(request.getRagId(),
                 request.getVersion(), request.getChangeLog(), userId);
 
+        userRagDomainService.installRag(userId, ragVersion.getId());
+
         // 转换为DTO
         RagVersionDTO dto = RagVersionAssembler.toDTO(ragVersion);
 
         // 设置用户信息
         enrichWithUserInfo(dto);
 
+        dto.setIsInstalled(true);
         return dto;
     }
 
@@ -124,7 +127,7 @@ public class RagPublishAppService {
 
         // 设置是否已安装
         if (StringUtils.isNotBlank(currentUserId)) {
-            dto.setIsInstalled(userRagDomainService.isRagInstalled(currentUserId, versionId));
+            dto.setIsInstalled(userRagDomainService.isInstalledOrOwned(currentUserId, versionId));
         }
 
         return dto;
