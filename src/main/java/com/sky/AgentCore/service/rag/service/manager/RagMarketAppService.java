@@ -59,7 +59,15 @@ public class RagMarketAppService {
 
             // 设置是否已安装
             if (StringUtils.isNotBlank(currentUserId)) {
-                dto.setIsInstalled(userRagDomainService.isInstalledOrOwned(currentUserId, dto.getId()));
+                boolean isInstalled = false;
+                if (currentUserId.equals(dto.getUserId())) {
+                    isInstalled = true;
+                } else if (StringUtils.isNotBlank(dto.getOriginalRagId())) {
+                    isInstalled = userRagDomainService.isRagInstalledByOriginalId(currentUserId, dto.getOriginalRagId());
+                } else {
+                    isInstalled = userRagDomainService.isInstalledOrOwned(currentUserId, dto.getId());
+                }
+                dto.setIsInstalled(isInstalled);
             }
         }
 
@@ -349,6 +357,11 @@ public class RagMarketAppService {
         return FileDetailAssembler.toDTO(entity);
     }
 
+    public FileDetailDTO getInstalledRagFileInfoDoc(String userRagId, String fileId, String userId) {
+        FileDetailEntity entity = ragDataAccessService.getRagFileInfoDoc(userId, userRagId, fileId);
+        return FileDetailAssembler.toDTO(entity);
+    }
+
     /** 获取已安装RAG特定文件的文档单元（返回DTO）
      *
      * @param userRagId 用户RAG安装记录ID
@@ -357,6 +370,10 @@ public class RagMarketAppService {
      * @return 文档单元DTO列表 */
     public List<DocumentUnitDTO> getInstalledRagFileDocumentsDTO(String userRagId, String fileId, String userId) {
         List<DocumentUnitEntity> entities = ragDataAccessService.getRagDocumentsByFile(userId, userRagId, fileId);
+        return DocumentUnitAssembler.toDTOs(entities);
+    }
+    public List<DocumentUnitDTO> getInstalledRagFileDocuments(String userRagId, String fileId, String userId) {
+        List<DocumentUnitEntity> entities = ragDataAccessService.getRagDocumentsByFileId(userId, userRagId, fileId);
         return DocumentUnitAssembler.toDTOs(entities);
     }
 
@@ -381,5 +398,6 @@ public class RagMarketAppService {
         DocumentUnitEntity installedRagDocumentUnit = ragDataAccessService.getInstalledRagDocumentUnit(userRagId, documentUnitId, userId);
         return DocumentUnitAssembler.toDTO(installedRagDocumentUnit);
     }
+
 }
 

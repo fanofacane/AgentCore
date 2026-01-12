@@ -29,6 +29,9 @@ public class RagMarketDTO {
     /** 标签列表 */
     private List<String> labels;
 
+    /** 原始RAG数据集ID */
+    private String originalRagId;
+
     /** 创建者ID */
     private String userId;
 

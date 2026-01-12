@@ -127,7 +127,15 @@ public class RagPublishAppService {
 
         // 设置是否已安装
         if (StringUtils.isNotBlank(currentUserId)) {
-            dto.setIsInstalled(userRagDomainService.isInstalledOrOwned(currentUserId, versionId));
+            boolean isInstalled = false;
+            if (version != null && currentUserId.equals(version.getUserId())) {
+                isInstalled = true;
+            } else if (version != null && StringUtils.isNotBlank(version.getOriginalRagId())) {
+                isInstalled = userRagDomainService.isRagInstalledByOriginalId(currentUserId, version.getOriginalRagId());
+            } else {
+                isInstalled = userRagDomainService.isInstalledOrOwned(currentUserId, versionId);
+            }
+            dto.setIsInstalled(isInstalled);
         }
 
         return dto;

@@ -142,6 +142,18 @@ public class RagMarketController {
         return Result.success(result);
     }
 
+    /** 获取已安装RAG特定文件的信息
+     *
+     * @param userRagId 用户RAG安装记录ID
+     * @param fileId 文件ID
+     * @return 文件详细信息 */
+    @GetMapping("/installed/{userRagId}/files/{fileId}/info/doc")
+    public Result<FileDetailDTO> getInstalledRagFileInfoDoc(@PathVariable String userRagId, @PathVariable String fileId) {
+        String userId = UserContext.getCurrentUserId();
+        FileDetailDTO result = ragMarketAppService.getInstalledRagFileInfoDoc(userRagId, fileId, userId);
+        return Result.success(result);
+    }
+
     /** 获取已安装RAG特定文件的文档单元
      *
      * @param userRagId 用户RAG安装记录ID
@@ -152,6 +164,19 @@ public class RagMarketController {
                                                                       @PathVariable String fileId) {
         String userId = UserContext.getCurrentUserId();
         List<DocumentUnitDTO> result = ragMarketAppService.getInstalledRagFileDocumentsDTO(userRagId, fileId, userId);
+        return Result.success(result);
+    }
+
+    /** 获取已安装RAG特定文件的文档单元
+     *
+     * @param userRagId 用户RAG安装记录ID
+     * @param fileId 文件ID
+     * @return 文档单元列表 */
+    @GetMapping("/installed/{userRagId}/files/{fileId}/documents/doc")
+    public Result<List<DocumentUnitDTO>> getInstalledRagFileDocumentsDoc(@PathVariable String userRagId,
+                                                                      @PathVariable String fileId) {
+        String userId = UserContext.getCurrentUserId();
+        List<DocumentUnitDTO> result = ragMarketAppService.getInstalledRagFileDocuments(userRagId, fileId, userId);
         return Result.success(result);
     }
 
