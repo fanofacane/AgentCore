@@ -7,24 +7,35 @@ import com.sky.AgentCore.converter.assembler.AgentAssembler;
 import com.sky.AgentCore.converter.assembler.AgentVersionAssembler;
 import com.sky.AgentCore.converter.assembler.AgentWorkspaceAssembler;
 import com.sky.AgentCore.dto.agent.*;
+import com.sky.AgentCore.dto.chat.ContextEntity;
+import com.sky.AgentCore.dto.memory.AgentExecutionDetailEntity;
+import com.sky.AgentCore.dto.message.MessageEntity;
 import com.sky.AgentCore.dto.model.LLMModelConfig;
 import com.sky.AgentCore.dto.model.ModelEntity;
 import com.sky.AgentCore.dto.model.ProviderEntity;
 import com.sky.AgentCore.dto.model.UpdateModelConfigRequest;
 import com.sky.AgentCore.dto.session.SessionEntity;
 import com.sky.AgentCore.enums.PublishStatus;
+import com.sky.AgentCore.mapper.agent.AgentExecutionDetailMapper;
+import com.sky.AgentCore.mapper.agent.AgentExecutionSummaryMapper;
+import com.sky.AgentCore.mapper.agent.ContextMapper;
 import com.sky.AgentCore.mapper.agent.AgentMapper;
 import com.sky.AgentCore.mapper.agent.AgentVersionMapper;
 import com.sky.AgentCore.mapper.agent.AgentWorkspaceMapper;
+import com.sky.AgentCore.mapper.session.SessionMapper;
+import com.sky.AgentCore.dto.trace.AgentExecutionSummaryEntity;
 import com.sky.AgentCore.service.agent.AgentWorkspaceService;
 import com.sky.AgentCore.service.agent.SessionService;
 import com.sky.AgentCore.service.chat.MessageService;
 import com.sky.AgentCore.service.llm.LLMAppService;
+import com.sky.AgentCore.service.task.ScheduledTaskExecutionService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -40,6 +51,16 @@ public class AgentWorkspaceServiceImpl extends ServiceImpl<AgentWorkspaceMapper,
     private SessionService sessionService;
     @Autowired
     private MessageService messageService;
+    @Autowired
+    private AgentExecutionDetailMapper detailMapper;
+    @Autowired
+    private AgentExecutionSummaryMapper summaryMapper;
+    @Autowired
+    private ContextMapper contextMapper;
+    @Autowired
+    private SessionMapper sessionMapper;
+    @Autowired
+    private ScheduledTaskExecutionService scheduledTaskExecutionService;
     @Override
     public List<AgentDTO> getAgents(String userId) {
         //获取用户添加到工作区的agent
@@ -52,46 +73,98 @@ public class AgentWorkspaceServiceImpl extends ServiceImpl<AgentWorkspaceMapper,
         List<String> agentIds = list.stream()
                 .map(AgentWorkspaceEntity::getAgentId).toList();
 
-        //过滤被禁用的agent
         LambdaQueryWrapper<AgentEntity> wrap = new LambdaQueryWrapper<>();
-        wrap.in(AgentEntity::getId,agentIds).eq(AgentEntity::getEnabled,true);
-        List<AgentEntity> agentEntities1 = agentMapper.selectList(wrap);
+        wrap.in(AgentEntity::getId, agentIds);
+        List<AgentEntity> agentEntities = agentMapper.selectList(wrap);
+        Map<String, AgentEntity> agentEntityMap = new HashMap<>();
+        Map<String, Boolean> agentEnabledMap;
+        if (!agentEntities.isEmpty()) {
+            agentEntityMap = agentEntities.stream()
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toMap(AgentEntity::getId, a -> a, (a, b) -> a));
+            agentEnabledMap = agentEntityMap.values().stream()
+                    .collect(Collectors.toMap(AgentEntity::getId, AgentEntity::getEnabled, (a, b) -> a));
+        } else {
+            agentEnabledMap = new HashMap<>();
+        }
 
-        //用户添加的并且启用的agentIds
-        Set<String> AgentIdSet = agentEntities1.stream()
-                .map(AgentEntity::getId)
-                .collect(Collectors.toSet());
-        if (AgentIdSet.isEmpty()) return Collections.emptyList();
+        Set<String> agentIdSet = new HashSet<>(agentIds);
+        if (agentIdSet.isEmpty()) return Collections.emptyList();
 
-        //获取agent的最新版本
-        LambdaQueryWrapper<AgentVersionEntity> wrapper = new LambdaQueryWrapper<>();
-        wrapper.in(AgentVersionEntity::getAgentId,AgentIdSet)
-                .eq(AgentVersionEntity::getPublishStatus,PublishStatus.PUBLISHED.getCode())
-                .orderByDesc(AgentVersionEntity::getPublishedAt);
-        List<AgentVersionEntity> agentVersionEntities = agentVersionMapper.selectList(wrapper);
-        List<AgentVersionEntity> finalResult = agentVersionEntities.stream()
-                // 1. 先按照 agentId 分组，把同一个agent的所有版本分到一组
-                .collect(Collectors.groupingBy(AgentVersionEntity::getAgentId))
-                // 2. 遍历每一个分组，每组内只保留【发布时间最新】的那一条数据
-                .values().stream()
-                .map(groupList -> groupList.stream()
-                        // 按发布时间倒序，取第一个就是最新版本
-                        .max(Comparator.comparing(AgentVersionEntity::getPublishedAt))
-                        .orElse(null)
-                )
-                // 过滤掉空值（防止有分组无数据的极端情况）
-                .filter(Objects::nonNull)
-                // 转成最终List集合
-                .toList();
-        return finalResult.stream().map(entity -> {
-            // 1. 新建一个空的DTO对象
+        Map<String, AgentVersionEntity> bestVersionMap = new HashMap<>();
+        List<AgentVersionEntity> latestPublished = agentVersionMapper.selectLatestVersionsByAgentIdsAndStatus(
+                new ArrayList<>(agentIdSet),
+                PublishStatus.PUBLISHED.getCode()
+        );
+        if (latestPublished != null && !latestPublished.isEmpty()) {
+            for (AgentVersionEntity v : latestPublished) {
+                if (v == null || !StringUtils.hasText(v.getAgentId())) continue;
+                bestVersionMap.merge(v.getAgentId(), v, (existing, incoming) -> {
+                    LocalDateTime existingPublishedAt = existing.getPublishedAt();
+                    LocalDateTime incomingPublishedAt = incoming.getPublishedAt();
+                    if (existingPublishedAt != null && incomingPublishedAt != null) {
+                        int compare = incomingPublishedAt.compareTo(existingPublishedAt);
+                        if (compare != 0) return compare > 0 ? incoming : existing;
+                    } else if (incomingPublishedAt != null) {
+                        return incoming;
+                    } else if (existingPublishedAt != null) {
+                        return existing;
+                    }
+
+                    LocalDateTime existingCreatedAt = existing.getCreatedAt();
+                    LocalDateTime incomingCreatedAt = incoming.getCreatedAt();
+                    if (existingCreatedAt != null && incomingCreatedAt != null) {
+                        int compare = incomingCreatedAt.compareTo(existingCreatedAt);
+                        if (compare != 0) return compare > 0 ? incoming : existing;
+                    } else if (incomingCreatedAt != null) {
+                        return incoming;
+                    } else if (existingCreatedAt != null) {
+                        return existing;
+                    }
+
+                    String existingId = existing.getId();
+                    String incomingId = incoming.getId();
+                    if (existingId == null) return incoming;
+                    if (incomingId == null) return existing;
+                    return incomingId.compareTo(existingId) > 0 ? incoming : existing;
+                });
+            }
+        }
+
+        Set<String> missingAgentIds = new HashSet<>(agentIdSet);
+        missingAgentIds.removeAll(bestVersionMap.keySet());
+        if (!missingAgentIds.isEmpty()) {
+            List<AgentVersionEntity> latestRemoved = agentVersionMapper.selectLatestVersionsByAgentIdsAndStatus(
+                    new ArrayList<>(missingAgentIds),
+                    PublishStatus.REMOVED.getCode()
+            );
+            if (latestRemoved != null && !latestRemoved.isEmpty()) {
+                for (AgentVersionEntity v : latestRemoved) {
+                    if (v == null || !StringUtils.hasText(v.getAgentId())) continue;
+                    bestVersionMap.putIfAbsent(v.getAgentId(), v);
+                }
+            }
+        }
+
+        List<AgentDTO> result = new ArrayList<>();
+        for (String agentId : agentIds) {
+            AgentVersionEntity bestVersion = bestVersionMap.get(agentId);
             AgentDTO dto = new AgentDTO();
-            // 2. 拷贝
-            BeanUtils.copyProperties(entity, dto);
-            dto.setId(entity.getAgentId());
-            // 3. 返回拷贝完成的DTO，流转为DTO的List
-            return dto;
-        }).toList();
+            if (bestVersion != null) {
+                BeanUtils.copyProperties(bestVersion, dto);
+                dto.setId(bestVersion.getAgentId());
+            } else {
+                AgentEntity agentEntity = agentEntityMap.get(agentId);
+                if (agentEntity == null) {
+                    continue;
+                }
+                BeanUtils.copyProperties(agentEntity, dto);
+                dto.setId(agentEntity.getId());
+            }
+            dto.setEnabled(agentEnabledMap.getOrDefault(agentId, Boolean.FALSE));
+            result.add(dto);
+        }
+        return result;
     }
     /** 保存agent的模型配置
      * @param agentId agent ID
@@ -123,17 +196,33 @@ public class AgentWorkspaceServiceImpl extends ServiceImpl<AgentWorkspaceMapper,
 
         // agent如果是自己的则不允许删除
         AgentEntity agent = agentMapper.selectById(agentId);
+        if (agent == null) throw new BusinessException("助理不存在");
         if (agent.getUserId().equals(userId)) throw new BusinessException("该助理属于自己，不允许删除");
         boolean deleteAgent = lambdaUpdate().eq(AgentWorkspaceEntity::getAgentId, agentId)
                 .eq(AgentWorkspaceEntity::getUserId, userId).remove();
         if (!deleteAgent) throw new BusinessException("删除助理失败");
 
+        scheduledTaskExecutionService.deleteTasksByAgentId(agentId, userId);
+
         List<String> sessionIds = sessionService.getSessionsByAgentId(agentId, userId).stream()
                 .map(SessionEntity::getId).collect(Collectors.toList());
         if (sessionIds.isEmpty()) return;
 
-        sessionService.deleteSessions(sessionIds);
-        messageService.deleteMessages(sessionIds);
+        int batchSize = 500;
+        for (int i = 0; i < sessionIds.size(); i += batchSize) {
+            List<String> batchSessionIds = sessionIds.subList(i, Math.min(i + batchSize, sessionIds.size()));
+            detailMapper.delete(new LambdaQueryWrapper<AgentExecutionDetailEntity>()
+                    .in(AgentExecutionDetailEntity::getSessionId, batchSessionIds));
+            summaryMapper.delete(new LambdaQueryWrapper<AgentExecutionSummaryEntity>()
+                    .in(AgentExecutionSummaryEntity::getSessionId, batchSessionIds));
+            contextMapper.delete(new LambdaQueryWrapper<ContextEntity>()
+                    .in(ContextEntity::getSessionId, batchSessionIds));
+            messageService.remove(new LambdaQueryWrapper<MessageEntity>()
+                    .in(MessageEntity::getSessionId, batchSessionIds));
+            sessionMapper.delete(new LambdaQueryWrapper<SessionEntity>()
+                    .in(SessionEntity::getId, batchSessionIds)
+                    .eq(SessionEntity::getUserId, userId));
+        }
 
     }
 
@@ -166,6 +255,9 @@ public class AgentWorkspaceServiceImpl extends ServiceImpl<AgentWorkspaceMapper,
     // 添加到工作区
     public void addAgent(String agentId, String userId) {
         AgentEntity agent = agentMapper.selectById(agentId);
+        if (agent == null) {
+            throw new BusinessException("助理不存在");
+        }
         if (agent.getUserId().equals(userId)) throw new BusinessException("不可添加自己的助理");
 
         boolean exists = lambdaQuery().eq(AgentWorkspaceEntity::getAgentId, agentId)

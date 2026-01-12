@@ -155,6 +155,18 @@ public class RagMarketController {
         return Result.success(result);
     }
 
+    /** 根据语料ID获取单个语料详情
+     *
+     * @param documentUnitId 语料ID
+     * @return 语料详情 */
+    @GetMapping("/installed/{userRagId}/document-units/{documentUnitId}")
+    public Result<DocumentUnitDTO> getDocumentUnit(@PathVariable String userRagId,
+                                                   @PathVariable String documentUnitId) {
+        String userId = UserContext.getCurrentUserId();
+        DocumentUnitDTO documentUnit = ragMarketAppService.getInstalledRagDocumentUnit(userRagId,documentUnitId, userId);
+        return Result.success(documentUnit);
+    }
+
     /** 获取市场上RAG版本的文件列表
      *
      * @param ragVersionId RAG版本ID

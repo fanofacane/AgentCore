@@ -99,7 +99,7 @@ public class EmbeddingDomainService implements MetadataConstant {
 
         // 设置默认值和合理上限
         int finalMaxResults = maxResults != null ? Math.min(maxResults, 100) : 15;
-        double finalMinScore = minScore != null ? Math.max(0.66, Math.min(minScore, 1.0)) : 0.7;
+        double finalMinScore = minScore != null ? Math.max(0.8, Math.min(minScore, 1.0)) : 0.7;
         boolean finalEnableRerank = enableRerank != null ? enableRerank : true;
         int finalCandidateMultiplier = candidateMultiplier != null ? Math.max(1, Math.min(candidateMultiplier, 5)) : 2;
 

@@ -11,6 +11,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -45,6 +46,7 @@ public class ToolServiceImpl extends ServiceImpl<ToolMapper, ToolEntity> impleme
 
     @Override
     public List<ToolEntity> getAllEnableTools(List<String> toolIds){
+        if (toolIds.isEmpty()) return Collections.emptyList();
         return lambdaQuery().eq(ToolEntity::getStatus, true)
                 .in(ToolEntity::getId,toolIds)
                 .list();

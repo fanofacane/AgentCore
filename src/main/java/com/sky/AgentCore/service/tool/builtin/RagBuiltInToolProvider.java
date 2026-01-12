@@ -180,7 +180,6 @@ public class RagBuiltInToolProvider extends AbstractBuiltInToolProvider {
             result.append("\n");
         }
 
-        result.append("以上内容来自知识库，请基于这些信息回答用户问题。本次调用已经成功，不要重复调用同一工具");
 
         return result.toString();
     }

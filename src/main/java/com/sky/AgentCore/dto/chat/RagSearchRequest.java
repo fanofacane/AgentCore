@@ -28,7 +28,7 @@ public class RagSearchRequest {
     /** 最小相似度阈值，默认0.64 */
     @DecimalMin(value = "0.0", message = "相似度阈值不能小于0")
     @DecimalMax(value = "1.0", message = "相似度阈值不能大于1")
-    private Double minScore = 0.64;
+    private Double minScore = 0.7;
 
     /** 是否启用重排序，默认true */
     private Boolean enableRerank = true;

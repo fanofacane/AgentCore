@@ -47,6 +47,8 @@ public class UserRagSnapshotDomainService {
         logger.info("开始为用户RAG [{}] 创建版本 [{}] 的完整快照", userRagId, ragVersionId);
 
         try {
+            deleteUserSnapshot(userRagId);
+
             // 复制文件快照
             copyVersionFilesToUser(userRagId, ragVersionId);
 
@@ -174,7 +176,7 @@ public class UserRagSnapshotDomainService {
     /** 转换版本文件为用户文件 */
     private UserRagFileEntity convertToUserRagFile(RagVersionFileEntity versionFile, String userRagId) {
         UserRagFileEntity userFile = new UserRagFileEntity();
-        BeanUtils.copyProperties(versionFile, userFile);
+        BeanUtils.copyProperties(versionFile, userFile, "id", "createdAt", "updatedAt", "deletedAt");
         userFile.setUserRagId(userRagId);
         return userFile;
     }

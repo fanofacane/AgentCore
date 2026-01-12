@@ -4,6 +4,7 @@ import cn.hutool.core.collection.CollectionUtil;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.sky.AgentCore.config.Exceptions.BusinessException;
 import com.sky.AgentCore.config.Exceptions.InsufficientBalanceException;
+import com.sky.AgentCore.constant.prompt.PromptConstant;
 import com.sky.AgentCore.dto.gateway.HighAvailabilityResult;
 import com.sky.AgentCore.dto.memory.MemoryResult;
 import com.sky.AgentCore.dto.tool.ToolEntity;
@@ -73,7 +74,7 @@ import java.util.stream.Collectors;
 public abstract class AbstractMessageHandler {
     /** 日志记录器 */
     private static final Logger logger = LoggerFactory.getLogger(AbstractMessageHandler.class);
-    private static final String MEMORY_SECTION_TITLE = "[记忆要点]-['我'通常指的是用户]";
+    private static final String MEMORY_SECTION_TITLE = "[记忆要点-这段记忆是关于用户的信息]";
     private static final int MEMORY_TOP_K = 5;
     private static final int MAX_TOOL_EXECUTION_COUNT = 4;
 
@@ -604,7 +605,7 @@ public abstract class AbstractMessageHandler {
         if (toolProvider != null) toolProviders.add(toolProvider);
         List<ToolEntity> tools = toolService.getAllEnableTools(agent.getToolIds());
         // 从配置文件加载 MCP 服务
-        if (tools != null) {
+        if (!tools.isEmpty()) {
             for (ToolEntity tool : tools) {
                 try {
                     McpTransport transport = new HttpMcpTransport.Builder()
@@ -691,18 +692,20 @@ public abstract class AbstractMessageHandler {
         String summary = chatContext.getContextEntity().getSummary();
         if (StringUtils.isNotEmpty(summary)) memory.add(new AiMessage(AgentPromptTemplates.getSummaryPrefix() + summary));
 
-        String presetToolPrompt = "";
+
+
         // 设置预先工具设置的参数到系统提示词中
+/*        String presetToolPrompt = "";
         Map<String, Map<String, Map<String, String>>> toolPresetParams = chatContext.getAgent().getToolPresetParams();
-        if (toolPresetParams != null) presetToolPrompt = AgentPromptTemplates.generatePresetToolPrompt(toolPresetParams);
+        if (toolPresetParams != null) presetToolPrompt = AgentPromptTemplates.generatePresetToolPrompt(toolPresetParams);*/
 
-        // 读取长期记忆，组装为要点，直接合入系统提示词尾部
+        // 读取长期记忆，组装为要点
         String memorySection = buildMemorySection(chatContext);
+        String fullSystemPrompt = chatContext.getAgent().getSystemPrompt()+"\n"+ PromptConstant.taskSystemPrompt;
 
-        String fullSystemPrompt = chatContext.getAgent().getSystemPrompt() + "\n" + presetToolPrompt
-                + (memorySection.isEmpty() ? "" : ("\n" + memorySection));
+        if (!fullSystemPrompt.isBlank()) memory.add(new SystemMessage(fullSystemPrompt));
+        if (!memorySection.isBlank()) memory.add(new UserMessage(memorySection));
 
-        memory.add(new SystemMessage(fullSystemPrompt));
         List<MessageEntity> messageHistory = chatContext.getMessageHistory();
         for (MessageEntity messageEntity : messageHistory) {
             if (messageEntity.isUserMessage()) {

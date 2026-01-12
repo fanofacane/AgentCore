@@ -376,5 +376,10 @@ public class RagMarketAppService {
                 ragVersion.getUserId());
         return FileDetailAssembler.toDTOs(entities);
     }
+
+    public DocumentUnitDTO getInstalledRagDocumentUnit(String userRagId, String documentUnitId, String userId) {
+        DocumentUnitEntity installedRagDocumentUnit = ragDataAccessService.getInstalledRagDocumentUnit(userRagId, documentUnitId, userId);
+        return DocumentUnitAssembler.toDTO(installedRagDocumentUnit);
+    }
 }
 

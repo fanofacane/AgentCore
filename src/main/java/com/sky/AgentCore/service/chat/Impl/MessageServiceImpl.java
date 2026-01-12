@@ -64,7 +64,7 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, MessageEntity
 
     @Override
     public void deleteMessages(List<String> sessionIds) {
-        boolean remove = lambdaUpdate().in(MessageEntity::getSessionId, sessionIds).remove();
-        if (!remove) throw new RuntimeException("删除消息失败");
+        if (sessionIds == null || sessionIds.isEmpty()) return;
+        lambdaUpdate().in(MessageEntity::getSessionId, sessionIds).remove();
     }
 }

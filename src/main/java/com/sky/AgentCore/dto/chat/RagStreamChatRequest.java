@@ -25,6 +25,6 @@ public class RagStreamChatRequest {
 
     /** RAG搜索相关配置 */
     private Integer maxResults = 5; // 默认检索5个相关文档
-    private Double minScore = 0.64; // 默认相似度阈值
+    private Double minScore = 0.70; // 默认相似度阈值
     private Boolean enableRerank = true; // 默认启用重排序
 }

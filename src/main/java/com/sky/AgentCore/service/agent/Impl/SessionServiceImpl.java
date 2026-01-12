@@ -67,8 +67,8 @@ public class SessionServiceImpl extends ServiceImpl<SessionMapper, SessionEntity
 
     @Override
     public void deleteSessions(List<String> sessionIds) {
-        boolean remove = lambdaUpdate().in(SessionEntity::getId, sessionIds).remove();
-        if (!remove) throw new RuntimeException("删除会话失败");
+        if (sessionIds == null || sessionIds.isEmpty()) return;
+        lambdaUpdate().in(SessionEntity::getId, sessionIds).remove();
     }
 
 

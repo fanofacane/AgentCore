@@ -76,8 +76,11 @@ public class AgentSessionServiceImpl implements AgentSessionService {
         }
 
         AgentEntity agent = agentAppService.getById(agentId);
+        if (agent == null) {
+            agent = agentAppService.getAgentWithPermissionCheck(agentId, userId);
+        }
         Boolean multiModal = agent.getMultiModal();
-        if (!agent.getUserId().equals(userId)) {
+        if (multiModal == null) {
             AgentVersionEntity latestAgentVersion = agentVersionService.lambdaQuery()
                     .eq(AgentVersionEntity::getAgentId, agentId)
                     .orderByDesc(AgentVersionEntity::getPublishedAt)

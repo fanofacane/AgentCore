@@ -7,13 +7,16 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.sky.AgentCore.config.Exceptions.BusinessException;
 import com.sky.AgentCore.config.Exceptions.InsufficientBalanceException;
 import com.sky.AgentCore.config.Exceptions.ParamValidationException;
-import com.sky.AgentCore.dto.memory.AgentExecutionDetailEntity;
+import com.sky.AgentCore.dto.agent.AgentWidgetEntity;
+import com.sky.AgentCore.dto.chat.ContextEntity;
+import com.sky.AgentCore.dto.message.MessageEntity;
 import com.sky.AgentCore.dto.model.LLMModelConfig;
 import com.sky.AgentCore.constant.UsageDataKeys;
 import com.sky.AgentCore.converter.assembler.AgentAssembler;
 import com.sky.AgentCore.converter.assembler.AgentVersionAssembler;
 import com.sky.AgentCore.dto.agent.*;
 import com.sky.AgentCore.dto.billing.RuleContext;
+import com.sky.AgentCore.dto.memory.AgentExecutionDetailEntity;
 import com.sky.AgentCore.dto.rag.RagVersionEntity;
 import com.sky.AgentCore.dto.rag.UserRagEntity;
 import com.sky.AgentCore.dto.session.SessionEntity;
@@ -23,12 +26,14 @@ import com.sky.AgentCore.enums.PublishStatus;
 import com.sky.AgentCore.enums.RagPublishStatus;
 import com.sky.AgentCore.mapper.agent.*;
 import com.sky.AgentCore.mapper.session.SessionMapper;
+import com.sky.AgentCore.service.agent.SessionService;
 import com.sky.AgentCore.service.agent.AgentAppService;
 import com.sky.AgentCore.service.agent.AgentVersionService;
 import com.sky.AgentCore.service.agent.AgentWorkspaceService;
 import com.sky.AgentCore.service.billing.BillingService;
 import com.sky.AgentCore.service.rag.domain.RagVersionDomainService;
 import com.sky.AgentCore.service.rag.UserRagService;
+import com.sky.AgentCore.service.chat.MessageService;
 import com.sky.AgentCore.service.task.ScheduledTaskExecutionService;
 import com.sky.AgentCore.service.tool.ToolService;
 import org.slf4j.Logger;
@@ -39,6 +44,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -68,6 +74,12 @@ public class AgentAppServiceImpl extends ServiceImpl<AgentMapper, AgentEntity> i
     private SessionMapper sessionMapper;
     @Autowired
     private AgentWidgetMapper agentWidgetMapper;
+    @Autowired
+    private SessionService sessionService;
+    @Autowired
+    private MessageService messageService;
+    @Autowired
+    private ContextMapper contextMapper;
 
     /** 创建新Agent */
     @Override
@@ -114,6 +126,7 @@ public class AgentAppServiceImpl extends ServiceImpl<AgentMapper, AgentEntity> i
     public List<AgentDTO> getUserAgents(String userId, SearchAgentsRequest searchAgentsRequest) {
         // 获取匹配的agentId
         List<AgentEntity> agentList = lambdaQuery().eq(AgentEntity::getUserId, userId)
+                .isNull(AgentEntity::getDeletedAt)
                 .like(!StringUtils.isEmpty(searchAgentsRequest.getName()),AgentEntity::getName, searchAgentsRequest.getName()).list();
         List<String> list = agentList.stream().map(AgentEntity::getId).toList();
         if (list.isEmpty()) return Collections.emptyList();
@@ -200,34 +213,59 @@ public class AgentAppServiceImpl extends ServiceImpl<AgentMapper, AgentEntity> i
     @Override
     @Transactional
     public void deleteAgent(String agentId, String userId) {
-        // 先删除Agent关联的定时任务（包括取消延迟队列中的任务）
+        AgentEntity agent = lambdaQuery().eq(AgentEntity::getId, agentId).eq(AgentEntity::getUserId, userId).one();
+        if (agent == null) {
+            throw new BusinessException("Agent不存在:" + agentId);
+        }
+
         scheduledTaskExecutionService.deleteTasksByAgentId(agentId, userId);
-        // 删除Agent本身
-        boolean success = remove(new LambdaQueryWrapper<AgentEntity>().eq(AgentEntity::getId, agentId).eq(AgentEntity::getUserId, userId));
-        if (!success) throw new BusinessException("Agent删除失败");
-        // 删除agent版本、工作区
-        agentVersionService.lambdaUpdate().eq(AgentVersionEntity::getAgentId, agentId).remove();
-        agentWorkspaceService.lambdaUpdate().eq(AgentWorkspaceEntity::getAgentId, agentId).remove();
-        //删除小组件
-        LambdaQueryWrapper<AgentWidgetEntity> wrap = new LambdaQueryWrapper<>();
-        wrap.eq(AgentWidgetEntity::getAgentId,agentId);
-        agentWidgetMapper.checkedDelete(wrap);
-        // 获取会话
-        LambdaQueryWrapper<SessionEntity> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(SessionEntity::getAgentId,agentId).eq(SessionEntity::getUserId,userId);
-        List<SessionEntity> sessionEntities = sessionMapper.selectList(wrapper);
-        List<String> sessionIds = sessionEntities.stream().map(SessionEntity::getId).toList();
-        // 删除链路追踪相关内容
-        LambdaQueryWrapper<AgentExecutionDetailEntity> wrapper1 = new LambdaQueryWrapper<>();
-        wrapper1.in(AgentExecutionDetailEntity::getSessionId,sessionIds);
-        detailMapper.checkedDelete(wrapper1);
-        LambdaQueryWrapper<AgentExecutionSummaryEntity> wrapper2 = new LambdaQueryWrapper<>();
-        wrapper2.in(AgentExecutionSummaryEntity::getSessionId,sessionIds);
-        summaryMapper.checkedDelete(wrapper2);
-        //最后删除会话本身
-        LambdaQueryWrapper<SessionEntity> wrapper3 = new LambdaQueryWrapper<>();
-        wrapper3.in(SessionEntity::getId,sessionIds);
-        sessionMapper.checkedDelete(wrapper3);
+
+        boolean disableSuccess = lambdaUpdate()
+                .eq(AgentEntity::getId, agentId)
+                .eq(AgentEntity::getUserId, userId)
+                .set(AgentEntity::getEnabled, false)
+                .set(AgentEntity::getDeletedAt, LocalDateTime.now())
+                .update();
+        if (!disableSuccess) {
+            throw new BusinessException("Agent删除失败");
+        }
+
+        agentVersionService.lambdaUpdate()
+                .eq(AgentVersionEntity::getAgentId, agentId)
+                .eq(AgentVersionEntity::getPublishStatus, PublishStatus.PUBLISHED.getCode())
+                .set(AgentVersionEntity::getPublishStatus, PublishStatus.REMOVED.getCode())
+                .update();
+
+        agentWorkspaceService.lambdaUpdate()
+                .eq(AgentWorkspaceEntity::getAgentId, agentId)
+                .eq(AgentWorkspaceEntity::getUserId, userId)
+                .remove();
+
+        agentWidgetMapper.delete(new LambdaQueryWrapper<AgentWidgetEntity>()
+                .eq(AgentWidgetEntity::getAgentId, agentId)
+                .eq(AgentWidgetEntity::getUserId, userId));
+
+        List<String> sessionIds = sessionService.getSessionsByAgentId(agentId, userId).stream()
+                .map(SessionEntity::getId)
+                .filter(Objects::nonNull)
+                .toList();
+        if (sessionIds.isEmpty()) return;
+
+        int batchSize = 500;
+        for (int i = 0; i < sessionIds.size(); i += batchSize) {
+            List<String> batchSessionIds = sessionIds.subList(i, Math.min(i + batchSize, sessionIds.size()));
+            detailMapper.delete(new LambdaQueryWrapper<AgentExecutionDetailEntity>()
+                    .in(AgentExecutionDetailEntity::getSessionId, batchSessionIds));
+            summaryMapper.delete(new LambdaQueryWrapper<AgentExecutionSummaryEntity>()
+                    .in(AgentExecutionSummaryEntity::getSessionId, batchSessionIds));
+            contextMapper.delete(new LambdaQueryWrapper<ContextEntity>()
+                    .in(ContextEntity::getSessionId, batchSessionIds));
+            messageService.remove(new LambdaQueryWrapper<MessageEntity>()
+                    .in(MessageEntity::getSessionId, batchSessionIds));
+            sessionMapper.delete(new LambdaQueryWrapper<SessionEntity>()
+                    .in(SessionEntity::getId, batchSessionIds)
+                    .eq(SessionEntity::getUserId, userId));
+        }
     }
 
     @Override
@@ -240,6 +278,23 @@ public class AgentAppServiceImpl extends ServiceImpl<AgentMapper, AgentEntity> i
         if (!b1 && !b2) throw new BusinessException("助理不存在");
 
         AgentEntity agentEntity = lambdaQuery().eq(AgentEntity::getId, agentId).one();
+        if (agentEntity == null) {
+            AgentVersionEntity latestAgentVersion = agentVersionService.lambdaQuery()
+                    .eq(AgentVersionEntity::getAgentId, agentId)
+                    .in(AgentVersionEntity::getPublishStatus,
+                            PublishStatus.PUBLISHED.getCode(),
+                            PublishStatus.REMOVED.getCode())
+                    .orderByDesc(AgentVersionEntity::getPublishedAt)
+                    .orderByDesc(AgentVersionEntity::getId)
+                    .last("LIMIT 1")
+                    .one();
+            if (latestAgentVersion == null) {
+                throw new BusinessException("该Agent暂无版本记录");
+            }
+            agentEntity = new AgentEntity();
+            BeanUtils.copyProperties(latestAgentVersion, agentEntity);
+            agentEntity.setId(agentId);
+        }
 
         // 如果有版本则使用版本
         String publishedVersion = agentEntity.getPublishedVersion();
@@ -294,8 +349,7 @@ public class AgentAppServiceImpl extends ServiceImpl<AgentMapper, AgentEntity> i
 
         // 获取当前Agent
         AgentEntity agent = lambdaQuery().eq(AgentEntity::getId, agentId).eq(AgentEntity::getUserId, userId).one();
-        System.out.println("是否支持多模态"+agent.getMultiModal());
-        if (agent == null) throw new BusinessException("Agent不存在"+agentId);
+
         // 获取最新版本，检查版本号大小
         AgentVersionEntity agentVersionEntity = agentVersionService.getLatestAgentVersion(agentId);
         if (agentVersionEntity != null) {

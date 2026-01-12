@@ -3,6 +3,7 @@ package com.sky.AgentCore.mapper.agent;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.sky.AgentCore.dto.agent.AgentVersionEntity;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
@@ -33,4 +34,31 @@ public interface AgentVersionMapper extends BaseMapper<AgentVersionEntity> {
             "</script>"
     })
     List<AgentVersionEntity> selectLatestVersionsByNameAndStatus(String name, Integer status);
+
+    @Select({
+            "<script>",
+            "SELECT v.* FROM agent_versions v ",
+            "INNER JOIN (",
+            "    SELECT agent_id, MAX(published_at) as latest_date ",
+            "    FROM agent_versions ",
+            "    WHERE deleted_at IS NULL ",
+            "    <if test='status != null'>",
+            "        AND publish_status = #{status} ",
+            "    </if>",
+            "    <if test='agentIds != null and agentIds.size() > 0'>",
+            "        AND agent_id IN ",
+            "        <foreach collection='agentIds' item='id' open='(' separator=',' close=')'>",
+            "            #{id}",
+            "        </foreach>",
+            "    </if>",
+            "    GROUP BY agent_id",
+            ") latest ON v.agent_id = latest.agent_id AND v.published_at = latest.latest_date ",
+            "WHERE v.deleted_at IS NULL ",
+            "<if test='status != null'>",
+            "    AND v.publish_status = #{status} ",
+            "</if>",
+            "</script>"
+    })
+    List<AgentVersionEntity> selectLatestVersionsByAgentIdsAndStatus(@Param("agentIds") List<String> agentIds,
+                                                                     @Param("status") Integer status);
 }
