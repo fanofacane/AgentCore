@@ -12,6 +12,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /** RAG知识库数据集领域服务
@@ -38,6 +39,7 @@ public class RagQaDatasetDomainService {
     public RagQaDatasetEntity getDataset(String datasetId, String userId) {
         LambdaQueryWrapper<RagQaDatasetEntity> wrapper = Wrappers.<RagQaDatasetEntity>lambdaQuery()
                 .eq(RagQaDatasetEntity::getId, datasetId).eq(RagQaDatasetEntity::getUserId, userId);
+
         RagQaDatasetEntity dataset = ragQaDatasetMapper.selectOne(wrapper);
         if (dataset == null) throw new BusinessException("数据集不存在");
 
@@ -58,7 +60,7 @@ public class RagQaDatasetDomainService {
      * @param datasetId 数据集ID
      * @return 数据集实体，如果不存在返回null */
     public RagQaDatasetEntity findDatasetById(String datasetId) {
-        return ragQaDatasetMapper.selectById(datasetId);
+        return ragQaDatasetMapper.getDatasetByIdForDelete(datasetId);
     }
 
     /** 检查数据集是否存在
@@ -96,10 +98,11 @@ public class RagQaDatasetDomainService {
     /** 删除数据集
      * @param datasetId 数据集ID
      * @param userId 用户ID */
-    public void deleteDataset(String datasetId, String userId) {
+    public void updateDataset1(String datasetId, String userId) {
         LambdaUpdateWrapper<RagQaDatasetEntity> wrapper = Wrappers.<RagQaDatasetEntity>lambdaUpdate()
-                .eq(RagQaDatasetEntity::getId, datasetId).eq(RagQaDatasetEntity::getUserId, userId);
-        ragQaDatasetMapper.checkedDelete(wrapper);
+                .eq(RagQaDatasetEntity::getId, datasetId).eq(RagQaDatasetEntity::getUserId, userId)
+                .set(RagQaDatasetEntity::getDeletedAt, LocalDateTime.now());
+        ragQaDatasetMapper.checkedUpdate(wrapper);
     }
 
     /** 分页查询用户的数据集
@@ -128,9 +131,12 @@ public class RagQaDatasetDomainService {
      * @param userId 用户ID
      * @return 数据集列表 */
     public List<RagQaDatasetEntity> listAllDatasets(String userId) {
-        LambdaQueryWrapper<RagQaDatasetEntity> wrapper = Wrappers.<RagQaDatasetEntity>lambdaQuery()
-                .eq(RagQaDatasetEntity::getUserId, userId).orderByDesc(RagQaDatasetEntity::getCreatedAt);
-        return ragQaDatasetMapper.selectList(wrapper);
+/*        LambdaQueryWrapper<RagQaDatasetEntity> wrapper = Wrappers.<RagQaDatasetEntity>lambdaQuery()
+                .eq(RagQaDatasetEntity::getUserId, userId)
+                .isNull(RagQaDatasetEntity::getDeletedAt)
+                .orderByDesc(RagQaDatasetEntity::getCreatedAt);
+        return ragQaDatasetMapper.selectList(wrapper);*/
+        return ragQaDatasetMapper.selectAll(userId);
     }
 
     /** 校验数据集名称唯一性
@@ -157,6 +163,11 @@ public class RagQaDatasetDomainService {
         if (ragQaDatasetMapper.exists(wrapper)) {
             throw new BusinessException("数据集名称已存在");
         }
+    }
+
+    public RagQaDatasetEntity getDatasetById(String originalRagId) {
+
+        return ragQaDatasetMapper.getDatasetByIdForDelete(originalRagId);
     }
 }
 

@@ -1,5 +1,6 @@
 package com.sky.AgentCore.dto.agent;
 
+import com.sky.AgentCore.dto.model.LLMModelConfig;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -80,6 +81,15 @@ public class AgentVersionDTO {
      */
     private LocalDateTime reviewTime;
 
+    /**
+     * llm配置
+     */
+    private LLMModelConfig llmModelConfig;
+
+    /**
+     * 是否启用多模态
+     */
+    private Boolean multiModal;
     /**
      * 发布时间
      */

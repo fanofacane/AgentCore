@@ -76,90 +76,44 @@ public class AgentWorkspaceServiceImpl extends ServiceImpl<AgentWorkspaceMapper,
         LambdaQueryWrapper<AgentEntity> wrap = new LambdaQueryWrapper<>();
         wrap.in(AgentEntity::getId, agentIds);
         List<AgentEntity> agentEntities = agentMapper.selectList(wrap);
-        Map<String, AgentEntity> agentEntityMap = new HashMap<>();
-        Map<String, Boolean> agentEnabledMap;
-        if (!agentEntities.isEmpty()) {
-            agentEntityMap = agentEntities.stream()
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toMap(AgentEntity::getId, a -> a, (a, b) -> a));
-            agentEnabledMap = agentEntityMap.values().stream()
-                    .collect(Collectors.toMap(AgentEntity::getId, AgentEntity::getEnabled, (a, b) -> a));
-        } else {
-            agentEnabledMap = new HashMap<>();
-        }
+        if (agentEntities == null || agentEntities.isEmpty()) return Collections.emptyList();
+        Map<String, AgentEntity> agentEntityMap = agentEntities.stream()
+                .filter(Objects::nonNull)
+                .collect(Collectors.toMap(AgentEntity::getId, a -> a, (a, b) -> a));
+        Map<String, Boolean> agentEnabledMap = agentEntityMap.values().stream()
+                .collect(Collectors.toMap(AgentEntity::getId, AgentEntity::getEnabled, (a, b) -> a));
 
-        Set<String> agentIdSet = new HashSet<>(agentIds);
-        if (agentIdSet.isEmpty()) return Collections.emptyList();
-
-        Map<String, AgentVersionEntity> bestVersionMap = new HashMap<>();
-        List<AgentVersionEntity> latestPublished = agentVersionMapper.selectLatestVersionsByAgentIdsAndStatus(
-                new ArrayList<>(agentIdSet),
-                PublishStatus.PUBLISHED.getCode()
-        );
-        if (latestPublished != null && !latestPublished.isEmpty()) {
-            for (AgentVersionEntity v : latestPublished) {
-                if (v == null || !StringUtils.hasText(v.getAgentId())) continue;
-                bestVersionMap.merge(v.getAgentId(), v, (existing, incoming) -> {
-                    LocalDateTime existingPublishedAt = existing.getPublishedAt();
-                    LocalDateTime incomingPublishedAt = incoming.getPublishedAt();
-                    if (existingPublishedAt != null && incomingPublishedAt != null) {
-                        int compare = incomingPublishedAt.compareTo(existingPublishedAt);
-                        if (compare != 0) return compare > 0 ? incoming : existing;
-                    } else if (incomingPublishedAt != null) {
-                        return incoming;
-                    } else if (existingPublishedAt != null) {
-                        return existing;
-                    }
-
-                    LocalDateTime existingCreatedAt = existing.getCreatedAt();
-                    LocalDateTime incomingCreatedAt = incoming.getCreatedAt();
-                    if (existingCreatedAt != null && incomingCreatedAt != null) {
-                        int compare = incomingCreatedAt.compareTo(existingCreatedAt);
-                        if (compare != 0) return compare > 0 ? incoming : existing;
-                    } else if (incomingCreatedAt != null) {
-                        return incoming;
-                    } else if (existingCreatedAt != null) {
-                        return existing;
-                    }
-
-                    String existingId = existing.getId();
-                    String incomingId = incoming.getId();
-                    if (existingId == null) return incoming;
-                    if (incomingId == null) return existing;
-                    return incomingId.compareTo(existingId) > 0 ? incoming : existing;
-                });
-            }
-        }
-
-        Set<String> missingAgentIds = new HashSet<>(agentIdSet);
-        missingAgentIds.removeAll(bestVersionMap.keySet());
-        if (!missingAgentIds.isEmpty()) {
-            List<AgentVersionEntity> latestRemoved = agentVersionMapper.selectLatestVersionsByAgentIdsAndStatus(
-                    new ArrayList<>(missingAgentIds),
-                    PublishStatus.REMOVED.getCode()
-            );
-            if (latestRemoved != null && !latestRemoved.isEmpty()) {
-                for (AgentVersionEntity v : latestRemoved) {
-                    if (v == null || !StringUtils.hasText(v.getAgentId())) continue;
-                    bestVersionMap.putIfAbsent(v.getAgentId(), v);
-                }
+        Set<String> publishedVersionIds = agentEntities.stream()
+                .map(AgentEntity::getPublishedVersion)
+                .filter(StringUtils::hasText)
+                .collect(Collectors.toSet());
+        Map<String, AgentVersionEntity> versionByIdMap = new HashMap<>();
+        if (!publishedVersionIds.isEmpty()) {
+            List<AgentVersionEntity> agentVersionEntities = agentVersionMapper.selectBatchIds(new ArrayList<>(publishedVersionIds));
+            if (agentVersionEntities != null && !agentVersionEntities.isEmpty()) {
+                versionByIdMap = agentVersionEntities.stream()
+                        .filter(Objects::nonNull)
+                        .filter(v -> StringUtils.hasText(v.getId()))
+                        .collect(Collectors.toMap(AgentVersionEntity::getId, v -> v, (a, b) -> a));
             }
         }
 
         List<AgentDTO> result = new ArrayList<>();
         for (String agentId : agentIds) {
-            AgentVersionEntity bestVersion = bestVersionMap.get(agentId);
+            AgentEntity agentEntity = agentEntityMap.get(agentId);
+            if (agentEntity == null) continue;
+
+            String publishedVersion = agentEntity.getPublishedVersion();
+            AgentVersionEntity versionEntity = StringUtils.hasText(publishedVersion) ? versionByIdMap.get(publishedVersion) : null;
             AgentDTO dto = new AgentDTO();
-            if (bestVersion != null) {
-                BeanUtils.copyProperties(bestVersion, dto);
-                dto.setId(bestVersion.getAgentId());
+
+            if (versionEntity != null && agentId.equals(versionEntity.getAgentId())) {
+                BeanUtils.copyProperties(versionEntity, dto);
+                dto.setId(agentId);
+                dto.setPublishedVersion(publishedVersion);
             } else {
-                AgentEntity agentEntity = agentEntityMap.get(agentId);
-                if (agentEntity == null) {
-                    continue;
-                }
                 BeanUtils.copyProperties(agentEntity, dto);
-                dto.setId(agentEntity.getId());
+                dto.setId(agentId);
             }
             dto.setEnabled(agentEnabledMap.getOrDefault(agentId, Boolean.FALSE));
             result.add(dto);

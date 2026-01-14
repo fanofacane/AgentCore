@@ -3,12 +3,14 @@ package com.sky.AgentCore.dto.rag;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.sky.AgentCore.dto.common.BaseEntity;
 import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.time.LocalDateTime;
 
 /** RAG知识库数据集实体
  * @author fanofacane
@@ -35,4 +37,7 @@ public class RagQaDatasetEntity extends BaseEntity implements Serializable {
 
     /** 用户ID */
     private String userId;
+
+    @TableLogic
+    private LocalDateTime deletedAt;
 }

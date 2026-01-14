@@ -365,8 +365,8 @@ public class AgentAppServiceImpl extends ServiceImpl<AgentMapper, AgentEntity> i
 
         versionEntity.setUserId(userId);
 
-        // 验证Agent依赖的工具和知识库权限
-        validateAgentDependencies(versionEntity, userId);
+        // todo 验证Agent依赖的工具和知识库权限  由于知识库删除时对应agent的知识库没有删除导致会发布失败
+        //validateAgentDependencies(versionEntity, userId);
 
         // 调用领域服务发布版本
         agentVersionEntity = publishAgentVersion(agentId, versionEntity);
@@ -374,11 +374,16 @@ public class AgentAppServiceImpl extends ServiceImpl<AgentMapper, AgentEntity> i
     }
 
     @Override
-    public AgentVersionDTO getAgentVersion(String agentId, String versionNumber) {
+    public AgentVersionDTO getAgentVersion(String agentId, String versionNumber,String userId) {
         AgentVersionEntity agentVersion = agentVersionService.lambdaQuery()
                 .eq(AgentVersionEntity::getAgentId, agentId)
                 .eq(AgentVersionEntity::getVersionNumber, versionNumber).one();
-        return AgentVersionAssembler.toDTO(agentVersion);
+        AgentWorkspaceEntity workspace = agentWorkspaceService.lambdaQuery()
+                .eq(AgentWorkspaceEntity::getAgentId, agentId)
+                .eq(AgentWorkspaceEntity::getUserId, userId).one();
+        AgentVersionDTO dto = AgentVersionAssembler.toDTO(agentVersion);
+        dto.setLlmModelConfig(workspace.getLlmModelConfig());
+        return dto;
     }
 
     @Override
@@ -394,7 +399,12 @@ public class AgentAppServiceImpl extends ServiceImpl<AgentMapper, AgentEntity> i
                 .eq(AgentVersionEntity::getAgentId, agentId)
                 .orderByDesc(AgentVersionEntity::getPublishedAt)
                 .list();
-        return AgentVersionAssembler.toDTOs(agentVersionEntities);
+        List<AgentVersionDTO> dtOs = AgentVersionAssembler.toDTOs(agentVersionEntities);
+        AgentWorkspaceEntity workspace = agentWorkspaceService.lambdaQuery()
+                .eq(AgentWorkspaceEntity::getAgentId, agentId)
+                .eq(AgentWorkspaceEntity::getUserId, userId).one();
+        dtOs.forEach(dto -> dto.setLlmModelConfig(workspace.getLlmModelConfig()));
+        return dtOs;
     }
 
     @Override

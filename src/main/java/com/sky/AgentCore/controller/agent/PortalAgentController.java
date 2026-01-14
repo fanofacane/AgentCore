@@ -58,8 +58,10 @@ public class PortalAgentController {
 
     /** 获取Agent的特定版本 */
     @GetMapping("/{agentId}/versions/{versionNumber}")
-    public Result<AgentVersionDTO> getAgentVersion(@PathVariable String agentId, @PathVariable String versionNumber) {
-        return Result.success(agentAppService.getAgentVersion(agentId, versionNumber));
+    public Result<AgentVersionDTO> getAgentVersion(@PathVariable String agentId,
+                                                   @PathVariable String versionNumber) {
+        String userId = UserContext.getCurrentUserId();
+        return Result.success(agentAppService.getAgentVersion(agentId, versionNumber,userId));
     }
 
     /** 获取Agent的最新版本 */

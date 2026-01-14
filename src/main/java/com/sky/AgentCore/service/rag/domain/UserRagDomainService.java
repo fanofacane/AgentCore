@@ -188,7 +188,19 @@ public class UserRagDomainService {
     public void uninstallRag(String userId, String ragVersionId) {
         // 获取安装记录
         UserRagEntity userRag = getInstalledRag(userId, ragVersionId);
+        RagQaDatasetEntity originalDataset = ragQaDatasetDomainService.getDatasetById(userRag.getOriginalRagId());
+        if (originalDataset.getDeletedAt()!=null){
+            // 如果是SNAPSHOT类型，删除用户快照数据
+            if (userRag.isSnapshotType()) {
+                userRagSnapshotService.deleteUserSnapshot(userRag.getId());
+            }
 
+            LambdaUpdateWrapper<UserRagEntity> wrapper = Wrappers.<UserRagEntity>lambdaUpdate()
+                    .eq(UserRagEntity::getUserId, userId).eq(UserRagEntity::getRagVersionId, ragVersionId);
+
+            userRagMapper.delete(wrapper);
+            return;
+        }
         // 检查是否为用户自己的知识库
         RagVersionEntity ragVersion = ragVersionDomainService.getRagVersion(ragVersionId);
 

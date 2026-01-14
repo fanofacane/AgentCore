@@ -175,10 +175,10 @@ public class RagQaDatasetAppService {
         }
 
         // 先删除数据集下的所有文件
-        fileDetailDomainService.deleteAllFilesByDataset(datasetId, userId);
+        //fileDetailDomainService.deleteAllFilesByDataset(datasetId, userId);
 
-        // 再删除数据集
-        ragQaDatasetDomainService.deleteDataset(datasetId, userId);
+        // 逻辑删除
+        ragQaDatasetDomainService.updateDataset1(datasetId, userId);
     }
 
     /** 获取数据集详情
